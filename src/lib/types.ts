@@ -1,0 +1,38 @@
+export type RoleKey = "owner" | "admin" | "manager" | "member";
+
+export type PermissionKey =
+  | "projects.read"
+  | "projects.write"
+  | "tasks.read"
+  | "tasks.write";
+
+export type SessionUser = {
+  userId: string;
+  email: string;
+  name: string;
+  activeTenantId: string | null;
+  role: RoleKey;
+};
+
+export type Tenant = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
+export type Project = {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string;
+  createdBy: string;
+};
+
+export type Task = {
+  id: string;
+  tenantId: string;
+  projectId: string;
+  title: string;
+  status: "todo" | "in_progress" | "done";
+  assigneeUserId?: string;
+};
