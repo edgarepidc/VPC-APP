@@ -1,6 +1,7 @@
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { requireTenantId } from "@/lib/tenancy";
+import { getProjectStatusBadge } from "@/lib/ui";
 import { listProjectsByTenant } from "@/modules/projects/service";
 
 export default async function ProjectsPage() {
@@ -8,11 +9,11 @@ export default async function ProjectsPage() {
   if (!session) return null;
 
   const tenantId = await requireTenantId();
-  const items = listProjectsByTenant(tenantId);
+  const items = await listProjectsByTenant(tenantId);
 
   return (
-    <main className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-      <h1 className="text-2xl font-semibold text-zinc-900">Proyectos</h1>
+    <main className="pmo-card p-6">
+      <h1 className="pmo-title text-zinc-900">Proyectos</h1>
       <p className="mt-1 text-sm text-zinc-600">
         Scope actual por tenant: <span className="font-medium">{tenantId}</span>
       </p>
@@ -20,14 +21,38 @@ export default async function ProjectsPage() {
         Permiso projects.write:{" "}
         {hasPermission(session.role, "projects.write") ? "si" : "no"}
       </p>
-      <ul className="mt-6 space-y-3">
-        {items.map((project) => (
-          <li key={project.id} className="rounded-md border border-zinc-200 p-3">
-            <p className="font-medium text-zinc-900">{project.name}</p>
-            <p className="text-sm text-zinc-600">{project.description}</p>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-6 overflow-x-auto">
+        <table className="pmo-table pmo-row-hover w-full min-w-[680px] text-sm">
+          <thead>
+            <tr className="border-b border-zinc-200 text-left text-zinc-500">
+              <th>Proyecto</th>
+              <th>Estado</th>
+              <th>Descripcion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((project) => {
+              const statusBadge = getProjectStatusBadge(project.status);
+              return (
+                <tr key={project.id}>
+                  <td className="font-medium text-zinc-900">{project.name}</td>
+                  <td>
+                    <span className={statusBadge.className}>{statusBadge.label}</span>
+                  </td>
+                  <td className="text-zinc-600">{project.description ?? "-"}</td>
+                </tr>
+              );
+            })}
+            {items.length === 0 && (
+              <tr>
+                <td colSpan={3} className="py-8 text-center text-zinc-500">
+                  Aun no hay proyectos registrados para este tenant.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </main>
   );
 }

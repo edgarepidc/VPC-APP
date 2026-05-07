@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  plan        String       @default("starter")
+  memberships Membership[]
+  invitations Invitation[]
+  roles       Role[]
+  projects    Project[]
+  deliverables Deliverable[]
+  risks       Risk[]
+  stakeholders Stakeholder[]
+  tasks       Task[]
+  createdAt   DateTime     @default(now())
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  name        String?
+  passwordHash String?
+  isActive    Boolean      @default(true)
+  memberships Membership[]
+  sentInvitations Invitation[] @relation("InvitationSender")
+  createdAt   DateTime     @default(now())
+}
+
+model Membership {
+  id        String   @id @default(uuid())
+  tenantId  String
+  userId    String
+  roleId    String
+  status    String   @default("active")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id])
+
+  @@unique([tenantId, userId])
+}
+
+model Role {
+  id              String           @id @default(uuid())
+  tenantId        String
+  key             String
+  name            String
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  memberships     Membership[]
+  rolePermissions RolePermission[]
+
+  @@unique([tenantId, key])
+}
+
+model Permission {
+  id              String           @id @default(uuid())
+  key             String           @unique
+  description     String?
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  status      String   @default("active")
+  createdBy   String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deliverables Deliverable[]
+  risks       Risk[]
+  stakeholders Stakeholder[]
+  tasks       Task[]
+  createdAt   DateTime @default(now())
+}
+
+model Task {
+  id             String   @id @default(uuid())
+  tenantId       String
+  projectId      String
+  title          String
+  status         String   @default("todo")
+  assigneeUserId String?
+  dueDate        DateTime?
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+}
+
+model Invitation {
+  id          String   @id @default(uuid())
+  tenantId    String
+  email       String
+  roleKey     String
+  status      String   @default("pending")
+  invitedBy   String
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sender      User     @relation("InvitationSender", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, email, status])
+}
+
+model Deliverable {
+  id         String   @id @default(uuid())
+  tenantId   String
+  projectId  String
+  title      String
+  cell       String?
+  ownerName  String?
+  status     String   @default("pending")
+  dueDate    DateTime?
+  weight     Int      @default(10)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  risks      Risk[]
+
+  @@index([tenantId, projectId, status])
+}
+
+model Risk {
+  id             String      @id @default(uuid())
+  tenantId       String
+  projectId      String
+  deliverableId  String?
+  title          String
+  category       String      @default("Tecnico")
+  ownerName      String
+  probability    Int
+  residualProb   Int
+  impactAmount   Float
+  status         String      @default("open")
+  mitigation     String?
+  contingency    String?
+  trigger        String?
+  dueDate        DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project        Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deliverable    Deliverable? @relation(fields: [deliverableId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, projectId, status])
+}
+
+model Stakeholder {
+  id           String   @id @default(uuid())
+  tenantId     String
+  projectId    String
+  name         String
+  role         String?
+  influence    Int
+  interest     Int
+  observation  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, projectId])
+}

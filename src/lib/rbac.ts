@@ -10,3 +10,7 @@ const rolePermissions: Record<RoleKey, PermissionKey[]> = {
 export function hasPermission(role: RoleKey, permission: PermissionKey) {
   return rolePermissions[role].includes(permission);
 }
+
+export function canManageMembers(role: RoleKey) {
+  return role === "owner" || role === "admin";
+}

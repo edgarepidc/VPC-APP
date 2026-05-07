@@ -15,7 +15,7 @@ export async function GET() {
     }
 
     const tenantId = await requireTenantId();
-    return NextResponse.json({ data: listTasksByTenant(tenantId) });
+    return NextResponse.json({ data: await listTasksByTenant(tenantId) });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const task = createTask({
+    const task = await createTask({
       tenantId,
       projectId: body.projectId,
       title: body.title,

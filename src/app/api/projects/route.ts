@@ -15,7 +15,7 @@ export async function GET() {
     }
 
     const tenantId = await requireTenantId();
-    return NextResponse.json({ data: listProjectsByTenant(tenantId) });
+    return NextResponse.json({ data: await listProjectsByTenant(tenantId) });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
     }
 
-    const project = createProject({
+    const project = await createProject({
       tenantId,
       name: body.name,
       description: body.description ?? "",

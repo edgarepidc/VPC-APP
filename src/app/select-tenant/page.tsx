@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 
 import { getSessionUser, setActiveTenant } from "@/lib/auth/session";
-import { tenants } from "@/lib/data/mock-db";
+import { listTenantsForUser } from "@/modules/tenancy/service";
 
 export default async function SelectTenantPage() {
   const session = await getSessionUser();
   if (!session) redirect("/login");
+  const tenants = await listTenantsForUser(session.userId);
 
   async function selectTenantAction(formData: FormData) {
     "use server";
@@ -27,6 +28,11 @@ export default async function SelectTenantPage() {
         </p>
 
         <form action={selectTenantAction} className="mt-6 space-y-3">
+          {tenants.length === 0 && (
+            <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              No hay tenants asignados para este usuario.
+            </p>
+          )}
           {tenants.map((tenant) => (
             <button
               key={tenant.id}

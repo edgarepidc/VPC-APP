@@ -8,10 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "node prisma/seed.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.3",
     "next": "16.2.5",
     "react": "19.2.4",
     "react-dom": "19.2.4"

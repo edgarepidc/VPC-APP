@@ -1,22 +1,23 @@
-import { tasks } from "@/lib/data/mock-db";
+import { db } from "@/lib/db";
 
-export function listTasksByTenant(tenantId: string) {
-  return tasks.filter((task) => task.tenantId === tenantId);
+export async function listTasksByTenant(tenantId: string) {
+  return db.task.findMany({
+    where: { tenantId },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
-export function createTask(input: {
+export async function createTask(input: {
   tenantId: string;
   projectId: string;
   title: string;
 }) {
-  const task = {
-    id: `tsk-${tasks.length + 1}`,
-    tenantId: input.tenantId,
-    projectId: input.projectId,
-    title: input.title,
-    status: "todo" as const,
-  };
-
-  tasks.push(task);
-  return task;
+  return db.task.create({
+    data: {
+      tenantId: input.tenantId,
+      projectId: input.projectId,
+      title: input.title,
+      status: "todo",
+    },
+  });
 }
