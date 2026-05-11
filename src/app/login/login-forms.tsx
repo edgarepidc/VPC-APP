@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { createClient } from "@/utils/supabase/client";
+import {
+  getSupabasePublicKey,
+  getSupabasePublicUrl,
+} from "@/utils/supabase/env";
 
 type LoginFormsProps = {
   initialError?: string;
@@ -15,9 +19,7 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
   const [message, setMessage] = useState(initialMessage ?? "");
   const [pending, setPending] = useState(false);
 
-  const envOk =
-    !!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
+  const envOk = !!getSupabasePublicUrl() && !!getSupabasePublicKey();
 
   async function handleSignIn(formData: FormData) {
     setError("");
@@ -86,8 +88,9 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
 
         {!envOk && (
           <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2 text-sm text-amber-900">
-            Config incompleta: define NEXT_PUBLIC_SUPABASE_URL y
-            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY en Vercel y redeploy.
+            Config incompleta: en Vercel agrega NEXT_PUBLIC_SUPABASE_URL y
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (o la legada
+            NEXT_PUBLIC_SUPABASE_ANON_KEY), guarda y vuelve a desplegar.
           </p>
         )}
 
