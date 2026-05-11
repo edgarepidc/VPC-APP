@@ -12,6 +12,8 @@ export type SessionUser = {
   name: string;
   activeTenantId: string | null;
   role: RoleKey;
+  /** Acceso a /admin (plataforma). DB isSuperAdmin o PLATFORM_SUPERADMIN_EMAILS en Vercel. */
+  isSuperAdmin: boolean;
 };
 
 export type Tenant = {

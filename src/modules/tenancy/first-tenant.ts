@@ -1,24 +1,10 @@
 import { db } from "@/lib/db";
+import {
+  createStandardRolesForTenantWithClient,
+  ensureGlobalPermissions,
+} from "@/modules/tenancy/tenant-roles";
 
 const SLUG_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-
-const PERMISSION_SEED: [string, string][] = [
-  ["projects.read", "Read projects"],
-  ["projects.write", "Create and update projects"],
-  ["tasks.read", "Read tasks"],
-  ["tasks.write", "Create and update tasks"],
-];
-
-async function ensurePermissions() {
-  for (const [key, description] of PERMISSION_SEED) {
-    await db.permission.upsert({
-      where: { key },
-      update: { description },
-      create: { key, description },
-    });
-  }
-  return db.permission.findMany({ select: { id: true, key: true } });
-}
 
 type CreateResult =
   | { ok: true; tenantId: string }
@@ -69,14 +55,7 @@ export async function createFirstOrganizationAsOwner(input: {
     };
   }
 
-  const allPermissions = await ensurePermissions();
-
-  const roleDefs: [string, string][] = [
-    ["owner", "Owner"],
-    ["admin", "Admin"],
-    ["manager", "Manager"],
-    ["member", "Member"],
-  ];
+  const allPermissions = await ensureGlobalPermissions();
 
   try {
     const tenantId = await db.$transaction(async (tx) => {
@@ -84,30 +63,11 @@ export async function createFirstOrganizationAsOwner(input: {
         data: { name, slug, plan: "starter" },
       });
 
-      const roles: Record<string, { id: string }> = {};
-      for (const [key, roleName] of roleDefs) {
-        const role = await tx.role.create({
-          data: { tenantId: tenant.id, key, name: roleName },
-        });
-        roles[key] = role;
-      }
-
-      for (const [key, role] of Object.entries(roles)) {
-        const allowedKeys =
-          key === "member"
-            ? ["projects.read", "tasks.read"]
-            : ["projects.read", "projects.write", "tasks.read", "tasks.write"];
-
-        for (const permission of allPermissions) {
-          if (!allowedKeys.includes(permission.key)) continue;
-          await tx.rolePermission.create({
-            data: {
-              roleId: role.id,
-              permissionId: permission.id,
-            },
-          });
-        }
-      }
+      const roles = await createStandardRolesForTenantWithClient(
+        tx,
+        tenant.id,
+        allPermissions,
+      );
 
       await tx.membership.create({
         data: {

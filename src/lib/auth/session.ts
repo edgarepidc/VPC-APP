@@ -73,6 +73,23 @@ export async function getSessionUser(
     return null;
   }
 
+  let isSuperAdminDb = false;
+  try {
+    const row = await db.user.findUnique({
+      where: { id: authUser.id },
+      select: { isSuperAdmin: true },
+    });
+    isSuperAdminDb = row?.isSuperAdmin ?? false;
+  } catch {
+    /* columna aun no migrada */
+  }
+
+  const envSuperList =
+    process.env.PLATFORM_SUPERADMIN_EMAILS?.split(/[,;]/)
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean) ?? [];
+  const isSuperAdmin = isSuperAdminDb || envSuperList.includes(authEmail);
+
   const cookieStore = await cookies();
   const activeTenantId = cookieStore.get(TENANT_COOKIE)?.value ?? null;
   const role = activeTenantId
@@ -85,6 +102,7 @@ export async function getSessionUser(
     name: authUser.user_metadata?.name ?? authEmail ?? "User",
     role,
     activeTenantId,
+    isSuperAdmin,
   };
 }
 

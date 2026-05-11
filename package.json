@@ -10,7 +10,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.mjs",
-    "prisma:bootstrap-tenant": "node prisma/bootstrap-tenant.mjs"
+    "prisma:bootstrap-tenant": "node prisma/bootstrap-tenant.mjs",
+    "prisma:seed-demo": "node prisma/seed-demo.mjs",
+    "prisma:promote-superadmin": "node prisma/promote-superadmin.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",

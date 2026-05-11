@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { getAppUrl } from "@/lib/env";
+import { ROLE_LABELS } from "@/lib/role-labels";
 import { canManageMembers } from "@/lib/rbac";
 import type { RoleKey } from "@/lib/types";
 import { requireTenantId } from "@/lib/tenancy";
@@ -124,7 +125,9 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
                   <td className="font-medium text-zinc-900">{member.user.name ?? "-"}</td>
                   <td>{member.user.email}</td>
                   <td>
-                    <span className="pmo-badge pmo-badge--blue">{member.role.name}</span>
+                    <span className="pmo-badge pmo-badge--blue">
+                      {ROLE_LABELS[member.role.key as RoleKey] ?? member.role.name}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -152,7 +155,8 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
         )}
         {!canManage ? (
           <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Solo owner/admin pueden gestionar miembros.
+            Solo Admin del tenant o Administrador pueden invitar y asignar PM /
+            Consultante.
           </p>
         ) : (
           <form action={assignRoleAction} className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -168,10 +172,11 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
               defaultValue="member"
               className="pmo-select"
             >
-              <option value="owner">Owner</option>
-              <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
-              <option value="member">Member</option>
+              {(Object.keys(ROLE_LABELS) as RoleKey[]).map((key) => (
+                <option key={key} value={key}>
+                  {ROLE_LABELS[key]}
+                </option>
+              ))}
             </select>
             <button
               type="submit"

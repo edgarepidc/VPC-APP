@@ -13,7 +13,11 @@ const navItems = [
   { href: "/dashboard/members", label: "Miembros" },
 ];
 
-export function SidebarNav() {
+type SidebarNavProps = {
+  showPlatformAdmin?: boolean;
+};
+
+export function SidebarNav({ showPlatformAdmin }: SidebarNavProps) {
   const pathname = usePathname();
 
   return (
@@ -43,6 +47,15 @@ export function SidebarNav() {
       >
         Cambiar tenant
       </Link>
+
+      {showPlatformAdmin && (
+        <Link
+          className="mt-2 block rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-amber-950 hover:bg-amber-100"
+          href="/admin"
+        >
+          Admin plataforma
+        </Link>
+      )}
     </nav>
   );
 }

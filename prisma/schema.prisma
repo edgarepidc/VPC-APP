@@ -29,6 +29,8 @@ model User {
   name        String?
   passwordHash String?
   isActive    Boolean      @default(true)
+  /** Plataforma: gestiona tenants y usuarios globales (ademas de env PLATFORM_SUPERADMIN_EMAILS). */
+  isSuperAdmin Boolean     @default(false)
   memberships Membership[]
   sentInvitations Invitation[] @relation("InvitationSender")
   createdAt   DateTime     @default(now())
