@@ -3,9 +3,8 @@ import { cookies } from "next/headers";
 import type { SessionUser } from "@/lib/types";
 import { db } from "@/lib/db";
 import { acceptPendingInvitationsForUser } from "@/modules/invitations/service";
+import { TENANT_COOKIE } from "@/lib/tenant-cookie";
 import { createClient } from "@/utils/supabase/server";
-
-export const TENANT_COOKIE = "embus_tenant";
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   const supabase = await createClient();

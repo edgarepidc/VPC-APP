@@ -1,8 +1,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { TENANT_COOKIE } from "@/lib/auth/session";
+import { TENANT_COOKIE } from "@/lib/tenant-cookie";
 import { createClient } from "@/utils/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const supabase = await createClient();
