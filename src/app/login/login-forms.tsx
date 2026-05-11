@@ -1,31 +1,40 @@
 "use client";
 
+import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
-import { useState } from "react";
-
-import { createClient } from "@/utils/supabase/client";
-import { hasSupabasePublicEnv } from "@/utils/supabase/env";
+import { useMemo, useState } from "react";
 
 type LoginFormsProps = {
+  supabaseUrl: string | null;
+  supabaseKey: string | null;
   initialError?: string;
   initialMessage?: string;
 };
 
-export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
+export function LoginForms({
+  supabaseUrl,
+  supabaseKey,
+  initialError,
+  initialMessage,
+}: LoginFormsProps) {
   const [error, setError] = useState(initialError ?? "");
   const [message, setMessage] = useState(initialMessage ?? "");
   const [pending, setPending] = useState(false);
 
-  const envOk = hasSupabasePublicEnv();
+  const envOk = !!(supabaseUrl && supabaseKey);
+  const supabase = useMemo(() => {
+    if (!supabaseUrl || !supabaseKey) return null;
+    return createBrowserClient(supabaseUrl, supabaseKey);
+  }, [supabaseUrl, supabaseKey]);
 
   async function handleSignIn(formData: FormData) {
     setError("");
     setMessage("");
+    if (!supabase) return;
     setPending(true);
     try {
       const email = String(formData.get("signin_email") ?? "").trim();
       const password = String(formData.get("signin_password") ?? "");
-      const supabase = createClient();
       const { error: err } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -34,7 +43,6 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
         setError(err.message);
         return;
       }
-      // Full navigation avoids router.refresh() hanging if RSC/server is slow or errors.
       window.location.assign("/select-tenant");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al iniciar sesion.");
@@ -46,12 +54,12 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
   async function handleSignUp(formData: FormData) {
     setError("");
     setMessage("");
+    if (!supabase) return;
     setPending(true);
     try {
       const email = String(formData.get("signup_email") ?? "").trim();
       const password = String(formData.get("signup_password") ?? "");
       const name = String(formData.get("signup_name") ?? "").trim();
-      const supabase = createClient();
       const { data, error: err } = await supabase.auth.signUp({
         email,
         password,
@@ -85,10 +93,14 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
 
         {!envOk && (
           <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2 text-sm text-amber-900">
-            En Vercel → Settings → Environment Variables (Production): agrega
-            NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, o
-            NEXT_PUBLIC_SUPABASE_ANON_KEY (anon legacy). Marca las tres entornos
-            si usas Preview. Guarda y Redeploy sin caché.
+            Faltan credenciales de Supabase en Vercel (entorno Production). Agrega
+            la URL del proyecto y la clave anon o publishable. Puedes usar
+            nombres con prefijo{" "}
+            <code className="rounded bg-amber-100 px-1">NEXT_PUBLIC_</code> o
+            solo servidor:{" "}
+            <code className="rounded bg-amber-100 px-1">SUPABASE_URL</code> +{" "}
+            <code className="rounded bg-amber-100 px-1">SUPABASE_ANON_KEY</code>.
+            Guarda y vuelve a desplegar.
           </p>
         )}
 
