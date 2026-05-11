@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; message?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -27,7 +27,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     const name = String(formData.get("name") ?? "");
 
     const supabase = await createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -36,6 +36,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     });
 
     if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
+
+    if (!data.session) {
+      redirect(
+        `/login?message=${encodeURIComponent(
+          "Cuenta creada. Si tu proyecto exige confirmar el correo, revisa tu bandeja y abre el enlace antes de entrar.",
+        )}`,
+      );
+    }
+
     redirect("/select-tenant");
   }
 
@@ -49,6 +58,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {params.error && (
           <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
             {params.error}
+          </p>
+        )}
+        {params.message && (
+          <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-800">
+            {params.message}
           </p>
         )}
 

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 import type { SessionUser } from "@/lib/types";
 import { db } from "@/lib/db";
@@ -6,7 +7,16 @@ import { acceptPendingInvitationsForUser } from "@/modules/invitations/service";
 import { TENANT_COOKIE } from "@/lib/tenant-cookie";
 import { createClient } from "@/utils/supabase/server";
 
-export async function getSessionUser(): Promise<SessionUser | null> {
+export type GetSessionUserOptions = {
+  /** Default true. Set false in Route Handlers so failed DB does not call redirect(). */
+  redirectOnDbFailure?: boolean;
+};
+
+export async function getSessionUser(
+  options?: GetSessionUserOptions,
+): Promise<SessionUser | null> {
+  const redirectOnDbFailure = options?.redirectOnDbFailure !== false;
+
   const supabase = await createClient();
   const {
     data: { user: authUser },
@@ -14,24 +24,36 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!authUser) return null;
   const authEmail = (authUser.email ?? "").trim().toLowerCase();
 
-  await db.user.upsert({
-    where: { id: authUser.id },
-    update: {
-      email: authEmail,
-      name: authUser.user_metadata?.name ?? authEmail,
-    },
-    create: {
-      id: authUser.id,
-      email: authEmail,
-      name: authUser.user_metadata?.name ?? authEmail,
-    },
-  });
-
-  if (authEmail) {
-    await acceptPendingInvitationsForUser({
-      userId: authUser.id,
-      email: authEmail,
+  try {
+    await db.user.upsert({
+      where: { id: authUser.id },
+      update: {
+        email: authEmail,
+        name: authUser.user_metadata?.name ?? authEmail,
+      },
+      create: {
+        id: authUser.id,
+        email: authEmail,
+        name: authUser.user_metadata?.name ?? authEmail,
+      },
     });
+
+    if (authEmail) {
+      await acceptPendingInvitationsForUser({
+        userId: authUser.id,
+        email: authEmail,
+      });
+    }
+  } catch (err) {
+    console.error("[getSessionUser] database sync failed:", err);
+    if (redirectOnDbFailure) {
+      redirect(
+        `/login?error=${encodeURIComponent(
+          "No se pudo conectar con la base de datos. En Vercel revisa DATABASE_URL (Postgres de Supabase) y que las migraciones Prisma esten aplicadas.",
+        )}`,
+      );
+    }
+    return null;
   }
 
   const cookieStore = await cookies();
