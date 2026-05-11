@@ -3,7 +3,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import type { SessionUser } from "@/lib/types";
-import { db } from "@/lib/db";
+import {
+  db,
+  getDatabaseUrlDiagnostics,
+  hintsForDatabaseUrl,
+} from "@/lib/db";
 import { acceptPendingInvitationsForUser } from "@/modules/invitations/service";
 import { TENANT_COOKIE } from "@/lib/tenant-cookie";
 import { getSupabasePublicEnv } from "@/utils/supabase/env";
@@ -13,6 +17,16 @@ export type GetSessionUserOptions = {
   /** Default true. Set false in Route Handlers so failed DB does not call redirect(). */
   redirectOnDbFailure?: boolean;
 };
+
+function envDatabaseHints(): string {
+  const raw = process.env.DATABASE_URL?.trim() ?? "";
+  if (!raw) {
+    return " Falta DATABASE_URL en Vercel (Production). Agrégala y redeploy.";
+  }
+  const diag = getDatabaseUrlDiagnostics(raw);
+  const hints = diag ? hintsForDatabaseUrl(diag) : [];
+  return hints.length ? ` ${hints.join(" ")}` : "";
+}
 
 function prismaFailureMessage(err: unknown): string {
   const code =
@@ -26,7 +40,32 @@ function prismaFailureMessage(err: unknown): string {
     return "La base de datos no tiene las tablas de la app. En tu PC (o CI) ejecuta prisma migrate deploy con DATABASE_URL apuntando a Supabase, o aplica prisma/migrations en el SQL Editor.";
   }
 
-  return "No se pudo conectar con la base de datos. En Vercel usa DATABASE_URL del Session pooler o Transaction pooler de Supabase (IPv4), con contraseña correcta; Prisma añade sslmode=require. Luego prisma migrate deploy.";
+  const tail = envDatabaseHints();
+  const healthHint =
+    " Si sigue igual, abre /api/health/db en el mismo entorno (muestra pistas sin contraseña).";
+
+  if (err instanceof Prisma.PrismaClientInitializationError) {
+    if (err.errorCode === "P1000") {
+      return (
+        "Postgres rechazó usuario o contraseña (P1000). En Supabase resetea la contraseña de la base, copia de nuevo la URI del pooler y pégala entera en DATABASE_URL. Si la contraseña tiene caracteres especiales, deben ir codificados en la URL." +
+        tail +
+        healthHint
+      );
+    }
+    if (err.errorCode === "P1001") {
+      return (
+        "No se alcanza el servidor de base de datos (P1001: red, host o puerto). En Vercel suele fallar el host directo db.*.supabase.co:5432; usa la cadena del Session pooler o Transaction pooler (host *.pooler.supabase.com). Puerto 6543 = modo transacción (Prisma añade pgbouncer=true)." +
+        tail +
+        healthHint
+      );
+    }
+  }
+
+  return (
+    "No se pudo conectar con la base de datos. En Vercel usa DATABASE_URL del Session pooler o Transaction pooler de Supabase (IPv4), con contraseña correcta; Prisma añade sslmode=require y pgbouncer en puerto 6543. Luego prisma migrate deploy contra esa misma base." +
+    tail +
+    healthHint
+  );
 }
 
 export async function getSessionUser(

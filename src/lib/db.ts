@@ -100,9 +100,8 @@ export function hintsForDatabaseUrl(d: DatabaseUrlDiagnostics): string[] {
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
 
-export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient({
     ...(databaseUrl
       ? {
           datasources: {
@@ -112,7 +111,7 @@ export const db =
       : {}),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = db;
 }
+
+export const db = globalForPrisma.prisma ?? createPrismaClient();
+globalForPrisma.prisma = db;
