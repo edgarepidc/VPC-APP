@@ -34,7 +34,7 @@ export default async function DashboardLayout({
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-1 gap-6 px-6 py-8">
       <aside className="pmo-card w-64 p-4">
         <p className="text-xs uppercase tracking-wide text-slate-500">
           Organizacion
