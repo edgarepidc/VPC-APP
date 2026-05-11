@@ -93,14 +93,28 @@ export function LoginForms({
 
         {!envOk && (
           <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2 text-sm text-amber-900">
-            Faltan credenciales de Supabase en Vercel (entorno Production). Agrega
-            la URL del proyecto y la clave anon o publishable. Puedes usar
-            nombres con prefijo{" "}
-            <code className="rounded bg-amber-100 px-1">NEXT_PUBLIC_</code> o
-            solo servidor:{" "}
+            Faltan credenciales de Supabase en Vercel (Production o todos los
+            entornos). Agrega la URL HTTPS del proyecto (
+            <code className="rounded bg-amber-100 px-1">*.supabase.co</code>) y
+            la clave anon o publishable. No uses{" "}
+            <code className="rounded bg-amber-100 px-1">DATABASE_URL</code> como
+            URL. Nombres admitidos:{" "}
+            <code className="rounded bg-amber-100 px-1">
+              NEXT_PUBLIC_SUPABASE_URL
+            </code>{" "}
+            + publishable/anon, o{" "}
             <code className="rounded bg-amber-100 px-1">SUPABASE_URL</code> +{" "}
             <code className="rounded bg-amber-100 px-1">SUPABASE_ANON_KEY</code>.
-            Guarda y vuelve a desplegar.
+            Tras guardar, redeploy. Para ver qué ve el servidor:{" "}
+            <Link
+              className="font-medium underline"
+              href="/api/health/env"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              /api/health/env
+            </Link>
+            .
           </p>
         )}
 
