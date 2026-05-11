@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { createClient } from "@/utils/supabase/client";
@@ -12,18 +11,21 @@ type LoginFormsProps = {
 };
 
 export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
-  const router = useRouter();
   const [error, setError] = useState(initialError ?? "");
   const [message, setMessage] = useState(initialMessage ?? "");
   const [pending, setPending] = useState(false);
+
+  const envOk =
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
+    !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
 
   async function handleSignIn(formData: FormData) {
     setError("");
     setMessage("");
     setPending(true);
     try {
-      const email = String(formData.get("email") ?? "").trim();
-      const password = String(formData.get("password") ?? "");
+      const email = String(formData.get("signin_email") ?? "").trim();
+      const password = String(formData.get("signin_password") ?? "");
       const supabase = createClient();
       const { error: err } = await supabase.auth.signInWithPassword({
         email,
@@ -33,8 +35,10 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
         setError(err.message);
         return;
       }
-      router.refresh();
-      router.push("/select-tenant");
+      // Full navigation avoids router.refresh() hanging if RSC/server is slow or errors.
+      window.location.assign("/select-tenant");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al iniciar sesion.");
     } finally {
       setPending(false);
     }
@@ -45,9 +49,9 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
     setMessage("");
     setPending(true);
     try {
-      const email = String(formData.get("email") ?? "").trim();
-      const password = String(formData.get("password") ?? "");
-      const name = String(formData.get("name") ?? "").trim();
+      const email = String(formData.get("signup_email") ?? "").trim();
+      const password = String(formData.get("signup_password") ?? "");
+      const name = String(formData.get("signup_name") ?? "").trim();
       const supabase = createClient();
       const { data, error: err } = await supabase.auth.signUp({
         email,
@@ -64,8 +68,9 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
         );
         return;
       }
-      router.refresh();
-      router.push("/select-tenant");
+      window.location.assign("/select-tenant");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al crear la cuenta.");
     } finally {
       setPending(false);
     }
@@ -78,6 +83,14 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
         <p className="mt-2 text-sm text-zinc-600">
           Accede con Supabase Auth para usar la plataforma multitenant.
         </p>
+
+        {!envOk && (
+          <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2 text-sm text-amber-900">
+            Config incompleta: define NEXT_PUBLIC_SUPABASE_URL y
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY en Vercel y redeploy.
+          </p>
+        )}
+
         {error && (
           <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
             {error}
@@ -97,27 +110,29 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
           }}
         >
           <input
-            name="email"
+            name="signin_email"
             type="email"
             required
             disabled={pending}
+            autoComplete="email"
             placeholder="email@empresa.com"
             className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
           <input
-            name="password"
+            name="signin_password"
             type="password"
             required
             disabled={pending}
+            autoComplete="current-password"
             placeholder="Contrasena"
             className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
           <button
             type="submit"
-            disabled={pending}
+            disabled={pending || !envOk}
             className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-60"
           >
-            Entrar
+            {pending ? "Procesando..." : "Entrar"}
           </button>
         </form>
 
@@ -129,34 +144,37 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
           }}
         >
           <input
-            name="name"
+            name="signup_name"
             type="text"
             disabled={pending}
+            autoComplete="name"
             placeholder="Nombre"
             className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
           <input
-            name="email"
+            name="signup_email"
             type="email"
             required
             disabled={pending}
+            autoComplete="email"
             placeholder="email@empresa.com"
             className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
           <input
-            name="password"
+            name="signup_password"
             type="password"
             required
             disabled={pending}
+            autoComplete="new-password"
             placeholder="Contrasena nueva"
             className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
           <button
             type="submit"
-            disabled={pending}
+            disabled={pending || !envOk}
             className="w-full rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-100 disabled:opacity-60"
           >
-            Crear cuenta
+            {pending ? "Procesando..." : "Crear cuenta"}
           </button>
         </form>
 
