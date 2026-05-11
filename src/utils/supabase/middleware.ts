@@ -16,12 +16,18 @@ export const createClient = async (request: NextRequest) => {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+      setAll(cookiesToSet, headers?: Record<string, string | string[]>) {
+        // Do not call request.cookies.set — it throws on Vercel Edge / Next 15+.
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),
         );
+        if (headers) {
+          Object.entries(headers).forEach(([key, value]) => {
+            if (value === undefined) return;
+            response.headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+          });
+        }
       },
     },
   });
