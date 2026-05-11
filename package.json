@@ -9,7 +9,8 @@
     "lint": "eslint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "node prisma/seed.mjs"
+    "prisma:seed": "node prisma/seed.mjs",
+    "prisma:bootstrap-tenant": "node prisma/bootstrap-tenant.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
