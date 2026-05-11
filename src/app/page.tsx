@@ -1,22 +1,12 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-import { TENANT_COOKIE } from "@/lib/tenant-cookie";
-import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const cookieStore = await cookies();
-  const tenantId = cookieStore.get(TENANT_COOKIE)?.value;
-  if (!tenantId) redirect("/select-tenant");
-
-  redirect("/dashboard/pmo");
+/**
+ * Root URL: send users to login. Avoids Supabase `getUser()` here without a working
+ * Edge middleware refresh (Next/Vercel + @supabase/ssr can throw otherwise).
+ * Logged-in users can use /select-tenant or /dashboard from the app shell after login.
+ */
+export default function HomePage() {
+  redirect("/login");
 }
