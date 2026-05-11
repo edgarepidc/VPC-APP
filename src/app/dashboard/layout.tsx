@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { clearActiveTenant, getSessionUser } from "@/lib/auth/session";
+import { getSupabasePublicEnv } from "@/utils/supabase/env";
 import { createClient } from "@/utils/supabase/server";
 import { SidebarNav } from "./sidebar-nav";
 
@@ -9,6 +10,10 @@ export default async function DashboardLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   async function signOutAction() {
     "use server";
+    if (!getSupabasePublicEnv()) {
+      await clearActiveTenant();
+      redirect("/login");
+    }
     const supabase = await createClient();
     await supabase.auth.signOut();
     await clearActiveTenant();

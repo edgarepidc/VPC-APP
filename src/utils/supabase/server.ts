@@ -1,13 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { assertSupabasePublicEnv } from "@/utils/supabase/env";
+import { getSupabasePublicEnv } from "@/utils/supabase/env";
 
 export const createClient = async () => {
-  const { url, key } = assertSupabasePublicEnv();
+  const env = getSupabasePublicEnv();
+  if (!env) {
+    throw new Error("SUPABASE_PUBLIC_ENV_MISSING");
+  }
   const cookieStore = await cookies();
 
-  return createServerClient(url, key, {
+  return createServerClient(env.url, env.key, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

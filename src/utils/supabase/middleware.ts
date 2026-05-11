@@ -1,10 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { assertSupabasePublicEnv } from "@/utils/supabase/env";
+import { getSupabasePublicEnv } from "@/utils/supabase/env";
 
 export const createClient = async (request: NextRequest) => {
-  const { url, key } = assertSupabasePublicEnv();
+  const env = getSupabasePublicEnv();
+  if (!env) {
+    throw new Error("SUPABASE_PUBLIC_ENV_MISSING");
+  }
+  const { url, key } = env;
   let response = NextResponse.next({
     request: {
       headers: request.headers,

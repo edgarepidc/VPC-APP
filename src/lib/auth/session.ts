@@ -5,6 +5,7 @@ import type { SessionUser } from "@/lib/types";
 import { db } from "@/lib/db";
 import { acceptPendingInvitationsForUser } from "@/modules/invitations/service";
 import { TENANT_COOKIE } from "@/lib/tenant-cookie";
+import { getSupabasePublicEnv } from "@/utils/supabase/env";
 import { createClient } from "@/utils/supabase/server";
 
 export type GetSessionUserOptions = {
@@ -16,6 +17,10 @@ export async function getSessionUser(
   options?: GetSessionUserOptions,
 ): Promise<SessionUser | null> {
   const redirectOnDbFailure = options?.redirectOnDbFailure !== false;
+
+  if (!getSupabasePublicEnv()) {
+    return null;
+  }
 
   const supabase = await createClient();
   const {

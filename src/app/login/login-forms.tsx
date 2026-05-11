@@ -4,10 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { createClient } from "@/utils/supabase/client";
-import {
-  getSupabasePublicKey,
-  getSupabasePublicUrl,
-} from "@/utils/supabase/env";
+import { hasSupabasePublicEnv } from "@/utils/supabase/env";
 
 type LoginFormsProps = {
   initialError?: string;
@@ -19,7 +16,7 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
   const [message, setMessage] = useState(initialMessage ?? "");
   const [pending, setPending] = useState(false);
 
-  const envOk = !!getSupabasePublicUrl() && !!getSupabasePublicKey();
+  const envOk = hasSupabasePublicEnv();
 
   async function handleSignIn(formData: FormData) {
     setError("");
@@ -88,9 +85,10 @@ export function LoginForms({ initialError, initialMessage }: LoginFormsProps) {
 
         {!envOk && (
           <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2 text-sm text-amber-900">
-            Config incompleta: en Vercel agrega NEXT_PUBLIC_SUPABASE_URL y
-            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (o la legada
-            NEXT_PUBLIC_SUPABASE_ANON_KEY), guarda y vuelve a desplegar.
+            En Vercel → Settings → Environment Variables (Production): agrega
+            NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, o
+            NEXT_PUBLIC_SUPABASE_ANON_KEY (anon legacy). Marca las tres entornos
+            si usas Preview. Guarda y Redeploy sin caché.
           </p>
         )}
 
