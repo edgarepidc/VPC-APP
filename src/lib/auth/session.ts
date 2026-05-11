@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { acceptPendingInvitationsForUser } from "@/modules/invitations/service";
 import { createClient } from "@/utils/supabase/server";
 
-const TENANT_COOKIE = "embus_tenant";
+export const TENANT_COOKIE = "embus_tenant";
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   const supabase = await createClient();
@@ -65,6 +65,7 @@ export async function setActiveTenant(tenantId: string) {
 
   if (!membership) return;
 
+  const cookieStore = await cookies();
   cookieStore.set(TENANT_COOKIE, tenantId);
 }
 

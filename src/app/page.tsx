@@ -1,19 +1,20 @@
-import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-type Todo = {
-  id: string;
-  name: string;
-};
+import { TENANT_COOKIE } from "@/lib/auth/session";
+import { createClient } from "@/utils/supabase/server";
 
 export default async function Page() {
   const supabase = await createClient();
-  const { data: todos } = await supabase.from("todos").select("id, name");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return (
-    <ul>
-      {(todos as Todo[] | null)?.map((todo) => (
-        <li key={todo.id}>{todo.name}</li>
-      ))}
-    </ul>
-  );
+  if (!user) redirect("/login");
+
+  const cookieStore = await cookies();
+  const tenantId = cookieStore.get(TENANT_COOKIE)?.value;
+  if (!tenantId) redirect("/select-tenant");
+
+  redirect("/dashboard/pmo");
 }
