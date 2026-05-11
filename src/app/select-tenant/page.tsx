@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getSessionUser, setActiveTenant } from "@/lib/auth/session";
 import { listTenantsForUser } from "@/modules/tenancy/service";
 
+export const dynamic = "force-dynamic";
+
 export default async function SelectTenantPage() {
   const session = await getSessionUser();
   if (!session) redirect("/login");

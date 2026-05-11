@@ -5,6 +5,9 @@ import { getSupabasePublicEnv } from "@/utils/supabase/env";
 import { createClient } from "@/utils/supabase/server";
 import { SidebarNav } from "./sidebar-nav";
 
+/** Auth + cookies: do not prerender at build without Supabase env. */
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
