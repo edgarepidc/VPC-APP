@@ -53,7 +53,7 @@ export function SidebarNav({ showPlatformAdmin }: SidebarNavProps) {
           className="mt-2 block rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-amber-950 hover:bg-amber-100"
           href="/admin"
         >
-          Admin plataforma
+          Vista consultora
         </Link>
       )}
     </nav>

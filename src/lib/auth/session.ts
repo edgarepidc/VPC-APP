@@ -88,12 +88,16 @@ export async function getSessionUser(
     process.env.PLATFORM_SUPERADMIN_EMAILS?.split(/[,;]/)
       .map((s) => s.trim().toLowerCase())
       .filter(Boolean) ?? [];
-  const isSuperAdmin = isSuperAdminDb || envSuperList.includes(authEmail);
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
+  const isSuperAdmin =
+    isSuperAdminDb ||
+    envSuperList.includes(authEmail) ||
+    (!!ownerEmail && ownerEmail === authEmail);
 
   const cookieStore = await cookies();
   const activeTenantId = cookieStore.get(TENANT_COOKIE)?.value ?? null;
   const role = activeTenantId
-    ? await getRoleForTenant(authUser.id, activeTenantId)
+    ? await getRoleForTenant(authUser.id, activeTenantId, isSuperAdmin)
     : "member";
 
   return {
@@ -125,6 +129,25 @@ export async function setActiveTenant(tenantId: string) {
   cookieStore.set(TENANT_COOKIE, tenantId);
 }
 
+/**
+ * Solo superadmin consultora: entra al workspace de un tenant sin ser miembro.
+ * En sesión tendrá rol owner para ese tenant (ver getRoleForTenant).
+ */
+export async function setActiveTenantAsPlatformOwner(tenantId: string) {
+  const session = await getSessionUser();
+  if (!session?.isSuperAdmin) return false;
+
+  const tenant = await db.tenant.findUnique({
+    where: { id: tenantId },
+    select: { id: true },
+  });
+  if (!tenant) return false;
+
+  const cookieStore = await cookies();
+  cookieStore.set(TENANT_COOKIE, tenantId);
+  return true;
+}
+
 export async function clearActiveTenant() {
   const cookieStore = await cookies();
   cookieStore.delete(TENANT_COOKIE);
@@ -133,6 +156,7 @@ export async function clearActiveTenant() {
 async function getRoleForTenant(
   userId: string,
   tenantId: string,
+  isSuperAdmin: boolean,
 ): Promise<SessionUser["role"]> {
   const membership = await db.membership.findFirst({
     where: { userId, tenantId, status: "active" },
@@ -140,5 +164,11 @@ async function getRoleForTenant(
   });
 
   const roleKey = membership?.role.key as SessionUser["role"] | undefined;
-  return roleKey ?? "member";
+  if (roleKey) return roleKey;
+
+  if (isSuperAdmin) {
+    return "owner";
+  }
+
+  return "member";
 }

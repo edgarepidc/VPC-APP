@@ -15,7 +15,7 @@ export async function listAllTenants() {
       slug: true,
       plan: true,
       createdAt: true,
-      _count: { select: { memberships: true } },
+      _count: { select: { memberships: true, projects: true } },
     },
   });
 }

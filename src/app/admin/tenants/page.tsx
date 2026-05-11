@@ -97,6 +97,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                 <th className="text-left">Nombre</th>
                 <th className="text-left">Slug</th>
                 <th className="text-left">Plan</th>
+                <th className="text-right">Proyectos</th>
                 <th className="text-right">Miembros</th>
               </tr>
             </thead>
@@ -106,6 +107,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                   <td className="font-medium">{t.name}</td>
                   <td className="text-slate-600">{t.slug}</td>
                   <td>{t.plan}</td>
+                  <td className="text-right">{t._count.projects}</td>
                   <td className="text-right">{t._count.memberships}</td>
                 </tr>
               ))}
