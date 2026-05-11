@@ -10,6 +10,9 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/** Cambia si despliegas una versión nueva del diagnóstico; sirve para comprobar caché/deploy. */
+const HEALTH_DB_SCHEMA = 2;
+
 function redactDbErrorMessage(message: string): string {
   return message
     .replace(/postgresql:\/\/[^\s)]+/gi, "postgresql://***")
@@ -21,6 +24,7 @@ export async function GET() {
   const hasUrl = !!process.env.DATABASE_URL?.trim();
   if (!hasUrl) {
     return NextResponse.json({
+      schema: HEALTH_DB_SCHEMA,
       ok: false,
       hasDatabaseUrl: false,
       hint: "Define DATABASE_URL en Vercel (Production).",
@@ -31,6 +35,7 @@ export async function GET() {
     await db.$queryRaw`SELECT 1`;
     const raw = process.env.DATABASE_URL?.trim() ?? "";
     return NextResponse.json({
+      schema: HEALTH_DB_SCHEMA,
       ok: true,
       hasDatabaseUrl: true,
       effectiveUrlHasSslMode: /sslmode=/i.test(normalizeDatabaseUrl(raw)),
@@ -65,6 +70,7 @@ export async function GET() {
 
     return NextResponse.json(
       {
+        schema: HEALTH_DB_SCHEMA,
         ok: false,
         hasDatabaseUrl: true,
         prismaCode: code,
