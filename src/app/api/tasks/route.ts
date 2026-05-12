@@ -42,7 +42,11 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    const body = (await req.json()) as { projectId?: string; title?: string };
+    const body = (await req.json()) as {
+      projectId?: string;
+      title?: string;
+      dueDate?: string | null;
+    };
     if (!body.projectId || !body.title) {
       return NextResponse.json(
         { error: "projectId and title are required" },
@@ -50,10 +54,19 @@ export async function POST(req: Request) {
       );
     }
 
+    const due =
+      body.dueDate && String(body.dueDate).trim()
+        ? new Date(String(body.dueDate))
+        : undefined;
+    if (due && Number.isNaN(due.getTime())) {
+      return NextResponse.json({ error: "invalid dueDate" }, { status: 400 });
+    }
+
     const task = await createTask({
       tenantId,
       projectId: body.projectId,
       title: body.title,
+      dueDate: due,
     });
 
     return NextResponse.json({ data: task }, { status: 201 });
