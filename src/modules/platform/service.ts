@@ -6,8 +6,17 @@ import {
 
 const SLUG_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-export async function listAllTenants() {
+export async function listAllTenants(search?: string) {
+  const q = search?.trim();
   return db.tenant.findMany({
+    where: q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { slug: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : undefined,
     orderBy: { name: "asc" },
     select: {
       id: true,

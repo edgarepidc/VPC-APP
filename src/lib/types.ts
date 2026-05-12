@@ -14,6 +14,11 @@ export type SessionUser = {
   role: RoleKey;
   /** Acceso a /admin (plataforma). DB isSuperAdmin o PLATFORM_SUPERADMIN_EMAILS en Vercel. */
   isSuperAdmin: boolean;
+  /**
+   * Superadmin entró con “Entrar al workspace” sin membresía en ese tenant.
+   * Rol efectivo owner; útil para avisos de gobernanza en UI.
+   */
+  isPlatformVisit: boolean;
 };
 
 export type Tenant = {

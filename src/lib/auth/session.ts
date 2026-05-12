@@ -202,6 +202,19 @@ export async function getSessionUser(
     ? await getRoleForTenant(authUser.id, activeTenantId, isSuperAdmin)
     : "member";
 
+  let isPlatformVisit = false;
+  if (isSuperAdmin && activeTenantId) {
+    const membership = await db.membership.findFirst({
+      where: {
+        userId: authUser.id,
+        tenantId: activeTenantId,
+        status: "active",
+      },
+      select: { id: true },
+    });
+    isPlatformVisit = !membership;
+  }
+
   return {
     userId: authUser.id,
     email: authEmail,
@@ -209,6 +222,7 @@ export async function getSessionUser(
     role,
     activeTenantId,
     isSuperAdmin,
+    isPlatformVisit,
   };
 }
 

@@ -5,12 +5,13 @@ import {
   getSessionUser,
   setActiveTenantAsPlatformOwner,
 } from "@/lib/auth/session";
+import { db } from "@/lib/db";
 import { listAllTenants } from "@/modules/platform/service";
 
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; q?: string }>;
 };
 
 export default async function AdminHomePage({ searchParams }: Props) {
@@ -18,8 +19,16 @@ export default async function AdminHomePage({ searchParams }: Props) {
   const session = await getSessionUser();
   if (!session?.isSuperAdmin) redirect("/dashboard/projects");
 
-  const tenants = await listAllTenants();
-  const totalProjects = tenants.reduce((acc, t) => acc + t._count.projects, 0);
+  const rawQ = params.q?.trim() ?? "";
+  const [tenants, totalOrgCount] = await Promise.all([
+    listAllTenants(rawQ || undefined),
+    db.tenant.count(),
+  ]);
+  const totalProjectsInView = tenants.reduce(
+    (acc, t) => acc + t._count.projects,
+    0,
+  );
+  const isFiltered = rawQ.length > 0;
 
   async function enterWorkspace(formData: FormData) {
     "use server";
@@ -60,15 +69,22 @@ export default async function AdminHomePage({ searchParams }: Props) {
         <div className="mt-5 flex flex-wrap gap-6 text-sm">
           <div>
             <p className="text-[11px] uppercase tracking-wide text-white/50">
-              Organizaciones
+              {isFiltered ? "Coincidencias" : "Organizaciones"}
             </p>
             <p className="text-2xl font-semibold tabular-nums">{tenants.length}</p>
+            {isFiltered && (
+              <p className="mt-1 text-[11px] text-white/55">
+                de {totalOrgCount} en cartera
+              </p>
+            )}
           </div>
           <div>
             <p className="text-[11px] uppercase tracking-wide text-white/50">
-              Proyectos (todos los tenants)
+              Proyectos {isFiltered ? "(esta vista)" : "(todos los tenants)"}
             </p>
-            <p className="text-2xl font-semibold tabular-nums">{totalProjects}</p>
+            <p className="text-2xl font-semibold tabular-nums">
+              {totalProjectsInView}
+            </p>
           </div>
         </div>
       </section>
@@ -90,6 +106,38 @@ export default async function AdminHomePage({ searchParams }: Props) {
             Crear organizacion nueva
           </Link>
         </div>
+
+        <form
+          method="get"
+          action="/admin"
+          className="mt-5 flex flex-wrap items-center gap-2"
+        >
+          <label className="sr-only" htmlFor="admin-q">
+            Buscar organizacion
+          </label>
+          <input
+            id="admin-q"
+            name="q"
+            type="search"
+            placeholder="Nombre o slug..."
+            defaultValue={rawQ}
+            className="min-w-[200px] flex-1 rounded-md border border-[#e8e6e1] bg-white px-3 py-2 text-[13px] text-[#1a1916] placeholder:text-[#a09d98] focus:border-[#1a1916] focus:outline-none focus:ring-1 focus:ring-[#1a1916]"
+          />
+          <button
+            type="submit"
+            className="rounded-md bg-[#1a1916] px-4 py-2 text-[13px] font-medium text-white hover:bg-[#2d2c29]"
+          >
+            Buscar
+          </button>
+          {isFiltered && (
+            <Link
+              href="/admin"
+              className="text-[13px] font-medium text-[#2563eb] underline"
+            >
+              Limpiar filtro
+            </Link>
+          )}
+        </form>
 
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-[13px]">

@@ -4,13 +4,25 @@
 
 - [ ] Definir `NEXT_PUBLIC_APP_URL` con origen final HTTPS (ejemplo: `https://app.tudominio.com`).
 - [ ] Confirmar `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` y `DATABASE_URL`.
+- [ ] **Migraciones:** tras cada cambio en `prisma/schema` o `prisma/migrations`, ejecutar `npx prisma migrate deploy` contra la base de producción (desde tu PC con `DATABASE_URL` del pooler o en CI con secret). El deploy en Vercel **no** aplica migraciones solo.
+- [ ] **Consultora:** si usas la vista `/admin`, definir `PLATFORM_OWNER_EMAIL` (o `PLATFORM_SUPERADMIN_EMAILS`) en Vercel Production y redeploy.
 - [ ] En Supabase Auth, registrar `Site URL` y `Redirect URLs` del subdominio.
 - [ ] Ejecutar `npm run lint`.
-- [ ] Ejecutar `npm run build`.
+- [ ] Ejecutar `npm run build` (el workflow de GitHub Actions hace lint + tsc + build en cada push a `main`).
+
+## Consultora / gobernanza
+
+- [ ] Los usuarios listados en `PLATFORM_OWNER_EMAIL` / `PLATFORM_SUPERADMIN_EMAILS` pueden entrar a cualquier tenant desde `/admin` sin invitación; dentro del dashboard verán el aviso **Modo consultora** si no tienen membresía en ese cliente.
+- [ ] Acuerdo interno: quién puede tener ese correo en variables de entorno y cuándo usar “Entrar al workspace” frente a invitar como miembro formal.
+
+## Demo / piloto
+
+- [ ] Crear una organización de prueba (`/admin/tenants`), proyectos y un usuario invitado para validar el flujo con un cliente piloto.
 
 ## Smoke Test Funcional
 
 - [ ] Auth: `signup/login/logout` funciona en el subdominio.
+- [ ] Consultora: `/admin` lista tenants, busqueda por nombre/slug, **Entrar al workspace** y banner **Modo consultora** en dashboard si no hay membresía.
 - [ ] Tenant: seleccion de tenant y persistencia de tenant activo.
 - [ ] RBAC: owner/admin/manager/member ven solo acciones permitidas.
 - [ ] Projects: listar y crear (si rol tiene permisos).

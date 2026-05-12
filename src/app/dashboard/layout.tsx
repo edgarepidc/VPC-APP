@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { clearActiveTenant, getSessionUser } from "@/lib/auth/session";
@@ -34,7 +35,21 @@ export default async function DashboardLayout({
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-1 gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-6 px-6 py-8">
+      {session.isPlatformVisit && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-950">
+          <p className="font-semibold">Modo consultora (sin membresía en este cliente)</p>
+          <p className="mt-1 text-amber-900/90">
+            Estás operando este workspace como dueño de plataforma. Los cambios afectan datos del
+            cliente; úsalo con criterio interno. Para volver a la cartera:{" "}
+            <Link href="/admin" className="font-medium underline">
+              Vista consultora
+            </Link>
+            .
+          </p>
+        </div>
+      )}
+      <div className="flex flex-1 gap-6">
       <aside className="pmo-card w-64 p-4">
         <p className="text-xs uppercase tracking-wide text-slate-500">
           Organizacion
@@ -55,6 +70,7 @@ export default async function DashboardLayout({
         </form>
       </aside>
       <section className="flex-1">{children}</section>
+      </div>
     </div>
   );
 }
