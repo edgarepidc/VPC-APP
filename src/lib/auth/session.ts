@@ -40,6 +40,18 @@ function prismaFailureMessage(err: unknown): string {
     return "La base de datos no tiene las tablas de la app. En tu PC (o CI) ejecuta prisma migrate deploy con DATABASE_URL apuntando a Supabase, o aplica prisma/migrations en el SQL Editor.";
   }
 
+  if (code === "P2022") {
+    const col =
+      err instanceof Prisma.PrismaClientKnownRequestError
+        ? String((err.meta as { column?: unknown })?.column ?? "")
+        : "";
+    return (
+      "Falta una columna en Postgres (P2022" +
+      (col ? `: ${col}` : "") +
+      '). Lo habitual es la migración user_superadmin: en Supabase → SQL Editor ejecuta: ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isSuperAdmin" BOOLEAN NOT NULL DEFAULT false; O en tu PC: npx prisma migrate deploy con DATABASE_URL de producción.'
+    );
+  }
+
   const tail = envDatabaseHints();
   const healthHint =
     " /api/health/db solo hace SELECT 1; el login además escribe en User (upsert).";
