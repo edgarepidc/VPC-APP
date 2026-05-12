@@ -48,13 +48,21 @@ function parseOptionalLocalDate(raw: string): Date | null {
 export async function createTaskWithContextAction(formData: FormData) {
   const s = await getSessionUser();
   if (!s?.activeTenantId) redirect("/login");
+
+  const view = String(formData.get("view") ?? "kanban");
+  const projectFilter = String(formData.get("project") ?? "");
+  const q = String(formData.get("q") ?? "");
+  const month = String(formData.get("month") ?? "").trim();
+  const monthExtra =
+    view === "calendar" && /^\d{4}-\d{2}$/.test(month) ? { month } : undefined;
+
   if (!hasPermission(s.role, "tasks.write")) {
     redirect(
       buildTasksUrl({
-        view: String(formData.get("view") ?? "kanban"),
-        project: String(formData.get("project") ?? ""),
-        q: String(formData.get("q") ?? ""),
-        extra: { error: "No tienes permiso para crear tareas" },
+        view,
+        project: projectFilter,
+        q,
+        extra: { ...monthExtra, error: "No tienes permiso para crear tareas" },
       }),
     );
   }
@@ -63,10 +71,7 @@ export async function createTaskWithContextAction(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const dueRaw = String(formData.get("dueDate") ?? "");
   const dueDate = parseOptionalLocalDate(dueRaw);
-
-  const view = String(formData.get("view") ?? "kanban");
-  const projectFilter = String(formData.get("project") ?? "");
-  const q = String(formData.get("q") ?? "");
+  const assigneeUserId = String(formData.get("assigneeUserId") ?? "").trim() || undefined;
 
   if (!projectId || !title) {
     redirect(
@@ -74,7 +79,7 @@ export async function createTaskWithContextAction(formData: FormData) {
         view,
         project: projectFilter,
         q,
-        extra: { error: "Proyecto y título son obligatorios" },
+        extra: { ...monthExtra, error: "Proyecto y título son obligatorios" },
       }),
     );
   }
@@ -85,13 +90,14 @@ export async function createTaskWithContextAction(formData: FormData) {
       projectId,
       title,
       dueDate: dueDate ?? undefined,
+      assigneeUserId,
     });
     redirect(
       buildTasksUrl({
         view,
         project: projectFilter,
         q,
-        extra: { ok: "Tarea creada" },
+        extra: { ...monthExtra, ok: "Tarea creada" },
       }),
     );
   } catch (e) {
@@ -101,7 +107,7 @@ export async function createTaskWithContextAction(formData: FormData) {
         view,
         project: projectFilter,
         q,
-        extra: { error: msg },
+        extra: { ...monthExtra, error: msg },
       }),
     );
   }
@@ -140,6 +146,8 @@ export async function updateTaskAction(formData: FormData) {
   const status = String(formData.get("status") ?? "").trim();
   const projectId = String(formData.get("projectId") ?? "").trim();
   const dueRaw = String(formData.get("dueDate") ?? "");
+  const assigneeRaw = String(formData.get("assigneeUserId") ?? "").trim();
+  const assigneeUserId = assigneeRaw === "" ? null : assigneeRaw;
 
   if (!taskId) throw new Error("Tarea inválida");
   if (!title) throw new Error("El título es obligatorio");
@@ -151,6 +159,7 @@ export async function updateTaskAction(formData: FormData) {
     status: normalizeTaskStatus(status),
     projectId,
     dueDate: parseOptionalLocalDate(dueRaw),
+    assigneeUserId,
   });
   revalidatePath("/dashboard/tasks");
 }

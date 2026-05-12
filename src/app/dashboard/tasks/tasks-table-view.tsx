@@ -8,17 +8,18 @@ import {
   type TaskKanbanStatus,
 } from "@/modules/tasks/constants";
 
-import { TaskEditDialog, type TaskCardDTO } from "./task-edit-dialog";
+import { TaskEditDialog, type TaskCardDTO, type TaskMemberOption } from "./task-edit-dialog";
 
 type ProjectOption = { id: string; name: string };
 
 type Props = {
   tasks: TaskCardDTO[];
   projects: ProjectOption[];
+  members: TaskMemberOption[];
   canWrite: boolean;
 };
 
-export function TasksTableView({ tasks, projects, canWrite }: Props) {
+export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
   const [editTask, setEditTask] = useState<TaskCardDTO | null>(null);
 
   return (
@@ -30,6 +31,7 @@ export function TasksTableView({ tasks, projects, canWrite }: Props) {
               <th>Tarea</th>
               <th>Estado</th>
               <th>Proyecto</th>
+              <th>Responsable</th>
               <th>Vence</th>
               {canWrite ? <th className="text-right">Acciones</th> : null}
             </tr>
@@ -46,6 +48,12 @@ export function TasksTableView({ tasks, projects, canWrite }: Props) {
                     </span>
                   </td>
                   <td className="text-zinc-700">{task.projectName}</td>
+                  <td className="text-zinc-600">
+                    {task.assigneeName?.trim() ||
+                      (task.assigneeEmail
+                        ? task.assigneeEmail.split("@")[0]
+                        : "—")}
+                  </td>
                   <td className="text-zinc-600">
                     {task.dueDate
                       ? new Date(task.dueDate).toLocaleDateString()
@@ -68,7 +76,7 @@ export function TasksTableView({ tasks, projects, canWrite }: Props) {
             {tasks.length === 0 && (
               <tr>
                 <td
-                  colSpan={canWrite ? 5 : 4}
+                  colSpan={canWrite ? 6 : 5}
                   className="py-8 text-center text-zinc-500"
                 >
                   No hay tareas con los filtros actuales.
@@ -81,6 +89,7 @@ export function TasksTableView({ tasks, projects, canWrite }: Props) {
       <TaskEditDialog
         task={editTask}
         projects={projects}
+        members={members}
         onClose={() => setEditTask(null)}
       />
     </>

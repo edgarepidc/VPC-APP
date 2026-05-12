@@ -46,6 +46,7 @@ export async function POST(req: Request) {
       projectId?: string;
       title?: string;
       dueDate?: string | null;
+      assigneeUserId?: string | null;
     };
     if (!body.projectId || !body.title) {
       return NextResponse.json(
@@ -62,11 +63,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "invalid dueDate" }, { status: 400 });
     }
 
+    const assignee =
+      body.assigneeUserId != null && String(body.assigneeUserId).trim()
+        ? String(body.assigneeUserId).trim()
+        : undefined;
+
     const task = await createTask({
       tenantId,
       projectId: body.projectId,
       title: body.title,
       dueDate: due,
+      assigneeUserId: assignee,
     });
 
     return NextResponse.json({ data: task }, { status: 201 });

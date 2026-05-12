@@ -1,0 +1,140 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+import { getSessionUser } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/rbac";
+import {
+  addDeliverableAcuse,
+  createDeliverable,
+  deleteDeliverable,
+  removeDeliverableAcuse,
+  toggleDeliverableAcuse,
+  updateDeliverable,
+  updateDeliverableStatus,
+} from "@/modules/deliverables/service";
+
+function parseLocalDate(s: string): Date | null {
+  const t = s.trim();
+  if (!t) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  if (!y || !mo || !d) return null;
+  return new Date(y, mo - 1, d);
+}
+
+async function requireWriteTenantId(): Promise<string> {
+  const s = await getSessionUser();
+  if (!s?.activeTenantId) throw new Error("No autorizado");
+  if (!hasPermission(s.role, "tasks.write")) throw new Error("Sin permiso");
+  return s.activeTenantId;
+}
+
+export type CreateDeliverableInput = {
+  projectId: string;
+  title: string;
+  phase?: string;
+  ownerName: string;
+  clientName?: string;
+  dueDate: string;
+  status?: string;
+  weight: number;
+  description?: string;
+  acceptanceCriteria?: string;
+  notes?: string;
+};
+
+export async function createDeliverableAction(input: CreateDeliverableInput) {
+  const tenantId = await requireWriteTenantId();
+  const due = parseLocalDate(input.dueDate);
+  if (!due) throw new Error("La fecha compromiso es obligatoria.");
+
+  await createDeliverable({
+    tenantId,
+    projectId: input.projectId.trim(),
+    title: input.title.trim(),
+    cell: input.phase?.trim() || null,
+    ownerName: input.ownerName.trim(),
+    clientName: input.clientName?.trim() || null,
+    dueDate: due,
+    status: input.status,
+    weight: input.weight,
+    description: input.description?.trim() || null,
+    acceptanceCriteria: input.acceptanceCriteria?.trim() || null,
+    notes: input.notes?.trim() || null,
+  });
+  revalidatePath("/dashboard/deliverables");
+}
+
+export type UpdateDeliverableDetailInput = {
+  id: string;
+  projectId: string;
+  title: string;
+  phase?: string;
+  ownerName: string;
+  clientName?: string;
+  dueDate: string;
+  weight: number;
+  description?: string;
+  acceptanceCriteria?: string;
+  notes?: string;
+};
+
+export async function updateDeliverableDetailAction(input: UpdateDeliverableDetailInput) {
+  const tenantId = await requireWriteTenantId();
+  const due = parseLocalDate(input.dueDate);
+  if (!due) throw new Error("La fecha compromiso es obligatoria.");
+
+  await updateDeliverable({
+    tenantId,
+    id: input.id,
+    projectId: input.projectId.trim(),
+    title: input.title.trim(),
+    cell: input.phase?.trim() || null,
+    ownerName: input.ownerName.trim(),
+    clientName: input.clientName?.trim() || null,
+    dueDate: due,
+    weight: input.weight,
+    description: input.description?.trim() || null,
+    acceptanceCriteria: input.acceptanceCriteria?.trim() || null,
+    notes: input.notes?.trim() || null,
+  });
+  revalidatePath("/dashboard/deliverables");
+}
+
+export async function setDeliverableStatusAction(id: string, status: string) {
+  const tenantId = await requireWriteTenantId();
+  await updateDeliverableStatus({ tenantId, id, status });
+  revalidatePath("/dashboard/deliverables");
+}
+
+export async function deleteDeliverableAction(id: string) {
+  const tenantId = await requireWriteTenantId();
+  await deleteDeliverable({ tenantId, id });
+  revalidatePath("/dashboard/deliverables");
+}
+
+export async function toggleDeliverableAcuseAction(id: string, index: number) {
+  const tenantId = await requireWriteTenantId();
+  await toggleDeliverableAcuse({ tenantId, id, index });
+  revalidatePath("/dashboard/deliverables");
+}
+
+export async function addDeliverableAcuseAction(
+  id: string,
+  name: string,
+  role?: string,
+) {
+  const tenantId = await requireWriteTenantId();
+  await addDeliverableAcuse({ tenantId, id, name, role });
+  revalidatePath("/dashboard/deliverables");
+}
+
+export async function removeDeliverableAcuseAction(id: string, index: number) {
+  const tenantId = await requireWriteTenantId();
+  await removeDeliverableAcuse({ tenantId, id, index });
+  revalidatePath("/dashboard/deliverables");
+}

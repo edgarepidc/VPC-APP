@@ -2,6 +2,18 @@ import type { RoleKey } from "@/lib/types";
 import { db } from "@/lib/db";
 import { canAddMemberSeat, PlanLimitError } from "@/modules/platform/limits";
 
+/** Usuarios con membresía activa (selector de responsable en tareas, etc.). */
+export async function listMemberUsersForTenant(tenantId: string) {
+  const rows = await db.membership.findMany({
+    where: { tenantId, status: "active" },
+    select: {
+      user: { select: { id: true, name: true, email: true } },
+    },
+    orderBy: { user: { email: "asc" } },
+  });
+  return rows.map((r) => r.user);
+}
+
 export async function listMembersByTenant(tenantId: string) {
   return db.membership.findMany({
     where: { tenantId, status: "active" },

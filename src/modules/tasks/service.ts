@@ -28,8 +28,19 @@ export async function listTasksByTenant(
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
     include: {
       project: { select: { id: true, name: true } },
+      assignee: { select: { id: true, name: true, email: true } },
     },
   });
+}
+
+async function assertActiveMember(tenantId: string, userId: string) {
+  const m = await db.membership.findFirst({
+    where: { tenantId, userId, status: "active" },
+    select: { id: true },
+  });
+  if (!m) {
+    throw new Error("El responsable debe ser miembro activo de la organización.");
+  }
 }
 
 export async function createTask(input: {
@@ -37,6 +48,7 @@ export async function createTask(input: {
   projectId: string;
   title: string;
   dueDate?: Date | null;
+  assigneeUserId?: string | null;
 }) {
   const project = await db.project.findFirst({
     where: { id: input.projectId, tenantId: input.tenantId },
@@ -51,6 +63,10 @@ export async function createTask(input: {
     throw new Error("El título de la tarea es obligatorio.");
   }
 
+  if (input.assigneeUserId) {
+    await assertActiveMember(input.tenantId, input.assigneeUserId);
+  }
+
   return db.task.create({
     data: {
       tenantId: input.tenantId,
@@ -58,6 +74,7 @@ export async function createTask(input: {
       title,
       status: "todo",
       dueDate: input.dueDate ?? undefined,
+      assigneeUserId: input.assigneeUserId ?? undefined,
     },
   });
 }
@@ -69,6 +86,7 @@ export async function updateTask(input: {
   status?: string;
   projectId?: string;
   dueDate?: Date | null;
+  assigneeUserId?: string | null;
 }) {
   const existing = await db.task.findFirst({
     where: { id: input.taskId, tenantId: input.tenantId },
@@ -88,6 +106,10 @@ export async function updateTask(input: {
     }
   }
 
+  if (input.assigneeUserId !== undefined && input.assigneeUserId !== null) {
+    await assertActiveMember(input.tenantId, input.assigneeUserId);
+  }
+
   const data: Prisma.TaskUpdateInput = {};
 
   if (input.title !== undefined) {
@@ -103,6 +125,13 @@ export async function updateTask(input: {
   }
   if (input.dueDate !== undefined) {
     data.dueDate = input.dueDate;
+  }
+  if (input.assigneeUserId !== undefined) {
+    if (input.assigneeUserId === null) {
+      data.assignee = { disconnect: true };
+    } else {
+      data.assignee = { connect: { id: input.assigneeUserId } };
+    }
   }
 
   await db.task.update({

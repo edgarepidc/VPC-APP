@@ -11,17 +11,18 @@ import {
 } from "@/modules/tasks/constants";
 
 import { moveTaskAction } from "./actions";
-import { TaskEditDialog, type TaskCardDTO } from "./task-edit-dialog";
+import { TaskEditDialog, type TaskCardDTO, type TaskMemberOption } from "./task-edit-dialog";
 
 type ProjectOption = { id: string; name: string };
 
 type Props = {
   tasks: TaskCardDTO[];
   projects: ProjectOption[];
+  members: TaskMemberOption[];
   canWrite: boolean;
 };
 
-export function KanbanBoard({ tasks, projects, canWrite }: Props) {
+export function KanbanBoard({ tasks, projects, members, canWrite }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [dragId, setDragId] = useState<string | null>(null);
@@ -102,6 +103,12 @@ export function KanbanBoard({ tasks, projects, canWrite }: Props) {
                 >
                   <p className="text-sm font-medium text-zinc-900">{task.title}</p>
                   <p className="mt-1 text-[11px] text-zinc-500">{task.projectName}</p>
+                  {(task.assigneeName?.trim() || task.assigneeEmail) && (
+                    <p className="mt-0.5 text-[11px] text-sky-900">
+                      {task.assigneeName?.trim() ||
+                        (task.assigneeEmail?.split("@")[0] ?? task.assigneeEmail)}
+                    </p>
+                  )}
                   {task.dueDate && (
                     <p className="mt-1 text-[11px] text-amber-800">
                       Vence:{" "}
@@ -136,6 +143,7 @@ export function KanbanBoard({ tasks, projects, canWrite }: Props) {
       <TaskEditDialog
         task={editTask}
         projects={projects}
+        members={members}
         onClose={() => setEditTask(null)}
       />
     </>

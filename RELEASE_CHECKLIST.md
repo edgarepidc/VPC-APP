@@ -4,7 +4,7 @@
 
 - [ ] Definir `NEXT_PUBLIC_APP_URL` con origen final HTTPS (ejemplo: `https://app.tudominio.com`).
 - [ ] Confirmar `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` y `DATABASE_URL`.
-- [ ] **Migraciones:** tras cada cambio en `prisma/schema` o `prisma/migrations`, ejecutar `npx prisma migrate deploy` contra la base de producción (desde tu PC con `DATABASE_URL` del pooler o en CI con secret). El deploy en Vercel **no** aplica migraciones solo.
+- [ ] **Migraciones:** opción A — configurar el secreto `DATABASE_URL` en GitHub Actions y dejar que el workflow **Database migrate** (`db-migrate.yml`) ejecute `prisma migrate deploy` al subir cambios en `prisma/`, o lanzarlo manualmente en Actions. Opción B — `npx prisma migrate deploy` desde tu PC (requiere que tu red resuelva y alcance el host de Postgres).
 - [ ] **Consultora:** si usas la vista `/admin`, definir `PLATFORM_OWNER_EMAIL` (o `PLATFORM_SUPERADMIN_EMAILS`) en Vercel Production y redeploy.
 - [ ] En Supabase Auth, registrar `Site URL` y `Redirect URLs` del subdominio.
 - [ ] Ejecutar `npm run lint`.

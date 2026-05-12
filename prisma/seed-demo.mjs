@@ -105,7 +105,7 @@ async function main() {
       title: "Matriz de interesados v1",
       cell: "PMO",
       ownerName: "PM Mobility",
-      status: "in_progress",
+      status: "review",
       weight: 20,
     },
     create: {
@@ -115,7 +115,7 @@ async function main() {
       title: "Matriz de interesados v1",
       cell: "PMO",
       ownerName: "PM Mobility",
-      status: "in_progress",
+      status: "review",
       weight: 20,
     },
   });

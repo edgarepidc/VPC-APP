@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { requireTenantId } from "@/lib/tenancy";
 import { normalizeTaskStatus } from "@/modules/tasks/constants";
+import { listMemberUsersForTenant } from "@/modules/memberships/service";
 import { listProjectsByTenant } from "@/modules/projects/service";
 import { listTasksByTenant } from "@/modules/tasks/service";
 
@@ -13,7 +14,7 @@ import { KanbanBoard } from "./kanban-board";
 import { TasksCalendarView } from "./tasks-calendar-view";
 import { TasksGanttView } from "./tasks-gantt-view";
 import { TasksTableView } from "./tasks-table-view";
-import type { TaskCardDTO } from "./task-edit-dialog";
+import type { TaskCardDTO, TaskMemberOption } from "./task-edit-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +26,35 @@ function normalizeView(raw: string | undefined): View {
   return VIEWS.includes(v as View) ? (v as View) : "kanban";
 }
 
-function tasksHref(view: View, project: string, q: string): string {
+/** `m` es índice de mes 0–11. */
+function parseYearMonth(raw: string | undefined): { y: number; m: number } {
+  const now = new Date();
+  const defY = now.getFullYear();
+  const defM = now.getMonth();
+  if (!raw?.trim()) return { y: defY, m: defM };
+  const match = /^(\d{4})-(\d{2})$/.exec(raw.trim());
+  if (!match) return { y: defY, m: defM };
+  const y = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  if (y < 1970 || y > 2100 || month < 0 || month > 11) return { y: defY, m: defM };
+  return { y, m: month };
+}
+
+function formatYearMonth(y: number, mIndex: number): string {
+  return `${y}-${String(mIndex + 1).padStart(2, "0")}`;
+}
+
+function addMonths(y: number, mIndex: number, delta: number): { y: number; m: number } {
+  const d = new Date(y, mIndex + delta, 1);
+  return { y: d.getFullYear(), m: d.getMonth() };
+}
+
+function tasksHref(view: View, project: string, q: string, month?: string): string {
   const sp = new URLSearchParams();
   sp.set("view", view);
   if (project.trim()) sp.set("project", project.trim());
   if (q.trim()) sp.set("q", q.trim());
+  if (month && /^\d{4}-\d{2}$/.test(month)) sp.set("month", month);
   return `/dashboard/tasks?${sp.toString()}`;
 }
 
@@ -40,6 +65,7 @@ type PageProps = {
     view?: string;
     project?: string;
     q?: string;
+    month?: string;
   }>;
 };
 
@@ -53,14 +79,35 @@ export default async function TasksPage({ searchParams }: PageProps) {
   const view = normalizeView(params.view);
   const projectFilter = params.project?.trim() || undefined;
   const qFilter = params.q?.trim() || undefined;
+  const pf = projectFilter ?? "";
+  const qf = qFilter ?? "";
 
-  const [items, projects] = await Promise.all([
+  const { y: calY, m: calM } = parseYearMonth(params.month);
+  const monthQueryValue = formatYearMonth(calY, calM);
+  const prevCal = addMonths(calY, calM, -1);
+  const nextCal = addMonths(calY, calM, 1);
+  const prevMonthHref = tasksHref("calendar", pf, qf, formatYearMonth(prevCal.y, prevCal.m));
+  const nextMonthHref = tasksHref("calendar", pf, qf, formatYearMonth(nextCal.y, nextCal.m));
+  const serverNow = new Date();
+  const highlightTodayDay =
+    serverNow.getFullYear() === calY && serverNow.getMonth() === calM
+      ? serverNow.getDate()
+      : null;
+
+  const [items, projects, memberRows] = await Promise.all([
     listTasksByTenant(tenantId, {
       projectId: projectFilter,
       q: qFilter,
     }),
     listProjectsByTenant(tenantId),
+    listMemberUsersForTenant(tenantId),
   ]);
+
+  const members: TaskMemberOption[] = memberRows.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+  }));
 
   const taskCards: TaskCardDTO[] = items.map((t) => ({
     id: t.id,
@@ -70,13 +117,15 @@ export default async function TasksPage({ searchParams }: PageProps) {
     projectName: t.project.name,
     dueDate: t.dueDate?.toISOString() ?? null,
     createdAt: t.createdAt.toISOString(),
+    assigneeUserId: t.assigneeUserId ?? null,
+    assigneeName: t.assignee?.name ?? null,
+    assigneeEmail: t.assignee?.email ?? null,
   }));
+
+  const undatedTasks = taskCards.filter((t) => !t.dueDate);
 
   const projectOptions = projects.map((p) => ({ id: p.id, name: p.name }));
   const hasProjects = projects.length > 0;
-
-  const pf = projectFilter ?? "";
-  const qf = qFilter ?? "";
 
   return (
     <main className="space-y-6">
@@ -85,11 +134,11 @@ export default async function TasksPage({ searchParams }: PageProps) {
           <div>
             <h1 className="pmo-title text-zinc-900">Tareas</h1>
             <p className="mt-1 max-w-2xl text-sm text-zinc-600">
-              Kanban con arrastre entre columnas, tabla con edición, calendario
-              por fecha límite y un diagrama de tiempo simple. Inspirado en
-              herramientas como Trello, Linear y Jira: filtros por proyecto y
-              texto, varias vistas; lo que falta para un Gantt “de libro” son
-              dependencias entre tareas y librería de timeline.
+              Kanban con arrastre, tabla con edición, calendario por fecha límite
+              (navegación por mes y tareas sin fecha), línea de tiempo simple y
+              responsable por miembro del tenant. Filtros por proyecto y
+              texto; un Gantt “de libro” añadiría dependencias y librería de
+              timeline.
             </p>
           </div>
         </div>
@@ -116,7 +165,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
           ).map(([v, label]) => (
             <Link
               key={v}
-              href={tasksHref(v, pf, qf)}
+              href={tasksHref(v, pf, qf, v === "calendar" ? monthQueryValue : undefined)}
               className={
                 view === v
                   ? "rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white"
@@ -134,6 +183,9 @@ export default async function TasksPage({ searchParams }: PageProps) {
           className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 bg-zinc-50/80 p-4"
         >
           <input type="hidden" name="view" value={view} />
+          {view === "calendar" ? (
+            <input type="hidden" name="month" value={monthQueryValue} />
+          ) : null}
           <div>
             <label className="text-xs font-medium text-zinc-600">Proyecto</label>
             <select
@@ -167,7 +219,12 @@ export default async function TasksPage({ searchParams }: PageProps) {
           </button>
           {(pf || qf) && (
             <Link
-              href={tasksHref(view, "", "")}
+              href={tasksHref(
+                view,
+                "",
+                "",
+                view === "calendar" ? monthQueryValue : undefined,
+              )}
               className="text-sm font-medium text-zinc-600 underline"
             >
               Limpiar
@@ -182,6 +239,9 @@ export default async function TasksPage({ searchParams }: PageProps) {
               <input type="hidden" name="view" value={view} />
               <input type="hidden" name="project" value={pf} />
               <input type="hidden" name="q" value={qf} />
+              {view === "calendar" ? (
+                <input type="hidden" name="month" value={monthQueryValue} />
+              ) : null}
               <div className="sm:col-span-2">
                 <label className="text-xs font-medium text-zinc-600">Proyecto</label>
                 <select
@@ -222,6 +282,22 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 />
               </div>
               <div className="sm:col-span-2">
+                <label className="text-xs font-medium text-zinc-600">
+                  Responsable (opcional)
+                </label>
+                <select
+                  name="assigneeUserId"
+                  className="mt-1 w-full max-w-md rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                >
+                  <option value="">Sin asignar</option>
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name?.trim() || m.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="sm:col-span-2">
                 <button
                   type="submit"
                   className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
@@ -252,12 +328,32 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
       <section className="pmo-card overflow-hidden p-6">
         {view === "kanban" && (
-          <KanbanBoard tasks={taskCards} projects={projectOptions} canWrite={canWrite} />
+          <KanbanBoard
+            tasks={taskCards}
+            projects={projectOptions}
+            members={members}
+            canWrite={canWrite}
+          />
         )}
         {view === "table" && (
-          <TasksTableView tasks={taskCards} projects={projectOptions} canWrite={canWrite} />
+          <TasksTableView
+            tasks={taskCards}
+            projects={projectOptions}
+            members={members}
+            canWrite={canWrite}
+          />
         )}
-        {view === "calendar" && <TasksCalendarView tasks={taskCards} />}
+        {view === "calendar" && (
+          <TasksCalendarView
+            tasks={taskCards}
+            calendarMonth={calM + 1}
+            calendarYear={calY}
+            prevMonthHref={prevMonthHref}
+            nextMonthHref={nextMonthHref}
+            highlightTodayDay={highlightTodayDay}
+            undatedTasks={undatedTasks}
+          />
+        )}
         {view === "gantt" && <TasksGanttView tasks={taskCards} />}
       </section>
     </main>

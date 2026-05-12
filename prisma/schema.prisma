@@ -33,6 +33,7 @@ model User {
   isSuperAdmin Boolean     @default(false)
   memberships Membership[]
   sentInvitations Invitation[] @relation("InvitationSender")
+  assignedTasks Task[]
   createdAt   DateTime     @default(now())
 }
 
@@ -102,6 +103,7 @@ model Task {
   dueDate        DateTime?
   tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee       User?    @relation(fields: [assigneeUserId], references: [id], onDelete: SetNull)
   createdAt      DateTime @default(now())
 }
 
@@ -121,21 +123,31 @@ model Invitation {
 }
 
 model Deliverable {
-  id         String   @id @default(uuid())
-  tenantId   String
-  projectId  String
-  title      String
-  cell       String?
-  ownerName  String?
-  status     String   @default("pending")
-  dueDate    DateTime?
-  weight     Int      @default(10)
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  risks      Risk[]
+  id                  String    @id @default(uuid())
+  tenantId            String
+  projectId           String
+  title               String
+  /** Fase del proyecto (p. ej. Diseño, QA). */
+  cell                String?
+  ownerName           String?
+  /** Cliente o área destinataria del entregable. */
+  clientName          String?
+  status              String    @default("pending")
+  dueDate             DateTime?
+  /** Peso / esfuerzo relativo (puntos, días, etc.) para avance ponderado. */
+  weight              Int       @default(5)
+  description         String?
+  acceptanceCriteria  String?
+  notes               String?
+  /** Lista de acuses: [{ "name", "role", "ok", "confirmedAt" }]. */
+  acuses              Json      @default("[]")
+  /** Historial: [{ "at", "text", "color?" }]. */
+  activityLog         Json      @default("[]")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project             Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  risks               Risk[]
 
   @@index([tenantId, projectId, status])
 }

@@ -11,6 +11,12 @@ import {
 
 import { updateTaskAction } from "./actions";
 
+export type TaskMemberOption = {
+  id: string;
+  name: string | null;
+  email: string;
+};
+
 export type TaskCardDTO = {
   id: string;
   title: string;
@@ -19,6 +25,9 @@ export type TaskCardDTO = {
   projectName: string;
   dueDate: string | null;
   createdAt: string;
+  assigneeUserId: string | null;
+  assigneeName: string | null;
+  assigneeEmail: string | null;
 };
 
 type ProjectOption = { id: string; name: string };
@@ -26,6 +35,7 @@ type ProjectOption = { id: string; name: string };
 type Props = {
   task: TaskCardDTO | null;
   projects: ProjectOption[];
+  members: TaskMemberOption[];
   onClose: () => void;
 };
 
@@ -39,7 +49,7 @@ function toDateInputValue(iso: string | null): string {
   return `${y}-${mo}-${day}`;
 }
 
-export function TaskEditDialog({ task, projects, onClose }: Props) {
+export function TaskEditDialog({ task, projects, members, onClose }: Props) {
   const router = useRouter();
 
   if (!task) return null;
@@ -109,6 +119,21 @@ export function TaskEditDialog({ task, projects, onClose }: Props) {
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-zinc-600">Responsable</label>
+            <select
+              name="assigneeUserId"
+              defaultValue={task.assigneeUserId ?? ""}
+              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            >
+              <option value="">Sin asignar</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name?.trim() || m.email}
                 </option>
               ))}
             </select>
