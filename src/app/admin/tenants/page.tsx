@@ -10,6 +10,9 @@ import {
   TENANT_PLAN_KEYS,
 } from "@/modules/platform";
 
+import { DeleteTenantForm } from "../delete-tenant-form";
+import { deleteTenantPlatformAction } from "../tenant-delete-actions";
+
 export const dynamic = "force-dynamic";
 
 const PLAN_LABEL: Record<(typeof TENANT_PLAN_KEYS)[number], string> = {
@@ -198,6 +201,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                 <th className="text-left">Plan</th>
                 <th className="text-right">Proyectos</th>
                 <th className="text-right">Miembros</th>
+                <th className="text-right">Eliminar</th>
               </tr>
             </thead>
             <tbody>
@@ -208,6 +212,17 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                   <td>{t.plan}</td>
                   <td className="text-right">{t._count.projects}</td>
                   <td className="text-right">{t._count.memberships}</td>
+                  <td className="text-right align-top">
+                    <div className="flex justify-end">
+                      <DeleteTenantForm
+                        deleteAction={deleteTenantPlatformAction}
+                        tenantId={t.id}
+                        tenantSlug={t.slug}
+                        tenantName={t.name}
+                        next="tenants"
+                      />
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

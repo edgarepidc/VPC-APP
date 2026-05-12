@@ -269,6 +269,14 @@ export async function clearActiveTenant() {
   cookieStore.delete(TENANT_COOKIE);
 }
 
+/** Si el tenant activo en cookie es el indicado, lo borra (p. ej. tras eliminar esa org). */
+export async function clearActiveTenantIfMatches(tenantId: string) {
+  const cookieStore = await cookies();
+  if (cookieStore.get(TENANT_COOKIE)?.value === tenantId) {
+    cookieStore.delete(TENANT_COOKIE);
+  }
+}
+
 async function getRoleForTenant(
   userId: string,
   tenantId: string,

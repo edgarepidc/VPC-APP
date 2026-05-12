@@ -90,3 +90,43 @@ export async function createTenantFromPlatform(input: {
     };
   }
 }
+
+export type DeleteTenantPlatformResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
+/**
+ * Elimina un tenant y todos sus datos en cascada (Prisma).
+ * `confirmSlug` debe coincidir con el slug real (confirmación humana).
+ */
+export async function deleteTenantFromPlatform(input: {
+  tenantId: string;
+  confirmSlug: string;
+}): Promise<DeleteTenantPlatformResult> {
+  const confirm = input.confirmSlug.trim().toLowerCase();
+  const tenant = await db.tenant.findUnique({
+    where: { id: input.tenantId },
+    select: { id: true, slug: true },
+  });
+  if (!tenant) {
+    return { ok: false, message: "Organización no encontrada." };
+  }
+  if (tenant.slug !== confirm) {
+    return {
+      ok: false,
+      message:
+        "El slug no coincide. Escríbelo exactamente como aparece en la tabla para confirmar la eliminación.",
+    };
+  }
+
+  try {
+    await db.tenant.delete({ where: { id: tenant.id } });
+    return { ok: true };
+  } catch (e: unknown) {
+    console.error("[deleteTenantFromPlatform]", e);
+    return {
+      ok: false,
+      message: "No se pudo eliminar la organización. Revisa los logs.",
+    };
+  }
+}

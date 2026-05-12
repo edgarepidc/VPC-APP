@@ -8,10 +8,13 @@ import {
 import { db } from "@/lib/db";
 import { listAllTenants } from "@/modules/platform";
 
+import { DeleteTenantForm } from "./delete-tenant-form";
+import { deleteTenantPlatformAction } from "./tenant-delete-actions";
+
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams: Promise<{ error?: string; q?: string }>;
+  searchParams: Promise<{ error?: string; q?: string; ok?: string }>;
 };
 
 export default async function AdminHomePage({ searchParams }: Props) {
@@ -49,6 +52,11 @@ export default async function AdminHomePage({ searchParams }: Props) {
             : params.error === "no_encontrado"
               ? "Organizacion no encontrada."
               : params.error}
+        </p>
+      )}
+      {params.ok && (
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+          {params.ok}
         </p>
       )}
 
@@ -159,7 +167,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
                   Miembros
                 </th>
                 <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
-                  Accion
+                  Acciones
                 </th>
               </tr>
             </thead>
@@ -182,16 +190,26 @@ export default async function AdminHomePage({ searchParams }: Props) {
                   <td className="py-3 pr-3 text-right tabular-nums">
                     {t._count.memberships}
                   </td>
-                  <td className="py-3 text-right">
-                    <form action={enterWorkspace}>
-                      <input type="hidden" name="tenantId" value={t.id} />
-                      <button
-                        type="submit"
-                        className="rounded-md bg-[#1a1916] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#2d2c29]"
-                      >
-                        Entrar al workspace
-                      </button>
-                    </form>
+                  <td className="py-3 text-right align-top">
+                    <div className="flex flex-col items-end gap-2">
+                      <form action={enterWorkspace}>
+                        <input type="hidden" name="tenantId" value={t.id} />
+                        <button
+                          type="submit"
+                          className="rounded-md bg-[#1a1916] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#2d2c29]"
+                        >
+                          Entrar al workspace
+                        </button>
+                      </form>
+                      <DeleteTenantForm
+                        deleteAction={deleteTenantPlatformAction}
+                        tenantId={t.id}
+                        tenantSlug={t.slug}
+                        tenantName={t.name}
+                        next="cartera"
+                        compact
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}

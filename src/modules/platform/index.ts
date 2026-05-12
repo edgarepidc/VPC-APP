@@ -4,8 +4,10 @@
  */
 export {
   createTenantFromPlatform,
+  deleteTenantFromPlatform,
   listAllTenants,
   type CreateTenantPlatformResult,
+  type DeleteTenantPlatformResult,
 } from "./service";
 export {
   PlanLimitError,
