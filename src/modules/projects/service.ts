@@ -31,3 +31,15 @@ export async function createProject(input: {
     },
   });
 }
+
+export async function deleteProject(input: {
+  tenantId: string;
+  projectId: string;
+}) {
+  const result = await db.project.deleteMany({
+    where: { id: input.projectId, tenantId: input.tenantId },
+  });
+  if (result.count === 0) {
+    throw new Error("Proyecto no encontrado en esta organización.");
+  }
+}
