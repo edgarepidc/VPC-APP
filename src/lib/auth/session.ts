@@ -42,7 +42,37 @@ function prismaFailureMessage(err: unknown): string {
 
   const tail = envDatabaseHints();
   const healthHint =
-    " Si sigue igual, abre /api/health/db en el mismo entorno (muestra pistas sin contraseña).";
+    " /api/health/db solo hace SELECT 1; el login además escribe en User (upsert).";
+
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (code === "P2002") {
+      const target = Array.isArray(err.meta?.target)
+        ? (err.meta?.target as string[]).join(", ")
+        : String(err.meta?.target ?? "");
+      return (
+        "Conflicto de datos únicos en la base (P2002" +
+        (target ? `: ${target}` : "") +
+        "). Suele ocurrir si ya existe una fila en User con este correo pero otro id (p. ej. borraste la cuenta en Auth y volviste a registrarte). En Supabase SQL Editor revisa public.\"User\" por email duplicado o id distinto al de auth.users; ajusta o elimina la fila vieja si corresponde." +
+        healthHint
+      );
+    }
+    if (code === "P1017") {
+      return (
+        "El servidor Postgres cerró la conexión (P1017), a veces con el pooler transaccional bajo carga. Prueba Session pooler en Supabase o reduce concurrencia; en la URI de transacciones debe ir pgbouncer=true (la app lo añade en puerto 6543)." +
+        tail +
+        healthHint
+      );
+    }
+    if (code === "P1002" || code === "P1008") {
+      return (
+        "Tiempo de espera agotado al hablar con la base (" +
+        code +
+        "). Revisa el pooler de Supabase, latencia, o si la instancia está pausada." +
+        tail +
+        healthHint
+      );
+    }
+  }
 
   if (err instanceof Prisma.PrismaClientInitializationError) {
     if (err.errorCode === "P1000") {
@@ -61,8 +91,22 @@ function prismaFailureMessage(err: unknown): string {
     }
   }
 
+  if (err instanceof Prisma.PrismaClientUnknownRequestError) {
+    const msg = err.message ?? "";
+    if (/prepared statement/i.test(msg)) {
+      return (
+        "Error del pooler con sentencias preparadas (típico con PgBouncer en modo transacción). Usa la cadena Session pooler de Supabase, o confirma que DATABASE_URL en puerto 6543 incluye pgbouncer=true (Prisma lo añade automático)." +
+        tail +
+        healthHint
+      );
+    }
+  }
+
+  const codeSuffix = code ? ` Código Prisma: ${code}.` : "";
   return (
-    "No se pudo conectar con la base de datos. En Vercel usa DATABASE_URL del Session pooler o Transaction pooler de Supabase (IPv4), con contraseña correcta; Prisma añade sslmode=require y pgbouncer en puerto 6543. Luego prisma migrate deploy contra esa misma base." +
+    "Falló la sincronización del usuario con Postgres (no es solo el ping de salud)." +
+    codeSuffix +
+    " Revisa logs del despliegue en Vercel para el stack completo. Si acabas de cambiar Auth o correos, mira duplicados en User (P2002)." +
     tail +
     healthHint
   );
@@ -97,19 +141,26 @@ export async function getSessionUser(
         name: authUser.user_metadata?.name ?? authEmail,
       },
     });
-
-    if (authEmail) {
-      await acceptPendingInvitationsForUser({
-        userId: authUser.id,
-        email: authEmail,
-      });
-    }
   } catch (err) {
-    console.error("[getSessionUser] database sync failed:", err);
+    console.error("[getSessionUser] user upsert failed:", err);
     if (redirectOnDbFailure) {
       redirect(`/login?error=${encodeURIComponent(prismaFailureMessage(err))}`);
     }
     return null;
+  }
+
+  if (authEmail) {
+    try {
+      await acceptPendingInvitationsForUser({
+        userId: authUser.id,
+        email: authEmail,
+      });
+    } catch (invErr) {
+      console.error(
+        "[getSessionUser] acceptPendingInvitationsForUser failed (non-fatal):",
+        invErr,
+      );
+    }
   }
 
   let isSuperAdminDb = false;
