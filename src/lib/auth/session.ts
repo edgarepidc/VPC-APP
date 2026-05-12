@@ -115,9 +115,12 @@ function prismaFailureMessage(err: unknown): string {
   }
 
   const codeSuffix = code ? ` Código Prisma: ${code}.` : "";
+  const rawMsg =
+    err instanceof Error ? ` ${err.name}: ${err.message.slice(0, 400)}` : "";
   return (
     "Falló la sincronización del usuario con Postgres (no es solo el ping de salud)." +
     codeSuffix +
+    rawMsg +
     " Revisa logs del despliegue en Vercel para el stack completo. Si acabas de cambiar Auth o correos, mira duplicados en User (P2002)." +
     tail +
     healthHint
@@ -141,6 +144,29 @@ export async function getSessionUser(
   const authEmail = (authUser.email ?? "").trim().toLowerCase();
 
   try {
+    /** Mismo email en otro id = típico tras re-registro en Auth; el upsert fallaría por @unique en email. */
+    if (authEmail) {
+      const stale = await db.user.findFirst({
+        where: { email: authEmail, id: { not: authUser.id } },
+        select: {
+          id: true,
+          _count: { select: { memberships: true } },
+        },
+      });
+      if (stale) {
+        if (stale._count.memberships > 0) {
+          redirect(
+            `/login?error=${encodeURIComponent(
+              "Hay otra cuenta en Postgres con este correo y datos de organización (memberships). " +
+                "Un admin debe unificar usuarios o borrar la fila duplicada en public.\"User\". " +
+                `Ids: sesión Auth=${authUser.id}, fila en conflicto=${stale.id}.`,
+            )}`,
+          );
+        }
+        await db.user.delete({ where: { id: stale.id } });
+      }
+    }
+
     await db.user.upsert({
       where: { id: authUser.id },
       update: {
