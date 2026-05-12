@@ -211,3 +211,94 @@ body {
   display: inline-block;
   animation: dash-hand-wave 2.2s ease-in-out infinite;
 }
+
+/* Dashboard: barra inferior móvil + FAB escritorio colapsado */
+.dash-bottom-bar {
+  position: fixed;
+  z-index: 40;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 16, 32, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.dash-bottom-bar__item {
+  border: 1px solid transparent;
+  background: transparent;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.dash-bottom-bar__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e4e4e7;
+}
+
+.dash-bottom-bar__item--active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #fafafa;
+  box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.22);
+}
+
+.dash-drawer-backdrop {
+  cursor: pointer;
+}
+
+.dash-bottom-sheet {
+  animation: dash-sheet-up 0.28s ease-out;
+}
+
+@keyframes dash-sheet-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-bottom-sheet {
+    animation: none;
+  }
+}
+
+.dash-desktop-fab-trigger {
+  position: fixed;
+  z-index: 35;
+  top: 6.5rem;
+  left: 1rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.75);
+  color: #e4e4e7;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.dash-desktop-fab-trigger:hover {
+  background: rgba(30, 41, 59, 0.9);
+  transform: translateY(-1px);
+}
