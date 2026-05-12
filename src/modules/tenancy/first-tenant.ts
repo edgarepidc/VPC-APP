@@ -19,7 +19,7 @@ export async function createFirstOrganizationAsOwner(input: {
   slug: string;
 }): Promise<CreateResult> {
   const name = input.name.trim();
-  let slug = input.slug
+  const slug = input.slug
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9-]+/g, "-")

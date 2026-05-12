@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, setActiveTenantAsPlatformOwner } from "@/lib/auth/session";
+import { db } from "@/lib/db";
 import {
+  PLAN_LIMITS,
   createTenantFromPlatform,
   listAllTenants,
   TENANT_PLAN_KEYS,
@@ -17,7 +19,7 @@ const PLAN_LABEL: Record<(typeof TENANT_PLAN_KEYS)[number], string> = {
 };
 
 type PageProps = {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; newTenant?: string }>;
 };
 
 export default async function AdminTenantsPage({ searchParams }: PageProps) {
@@ -26,6 +28,15 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
   if (!session?.isSuperAdmin) redirect("/dashboard/projects");
 
   const tenants = await listAllTenants();
+
+  const newTenantId = params.newTenant?.trim() ?? "";
+  const newTenantRow =
+    newTenantId.length > 0
+      ? await db.tenant.findUnique({
+          where: { id: newTenantId },
+          select: { id: true, name: true, slug: true },
+        })
+      : null;
 
   async function createTenantAction(formData: FormData) {
     "use server";
@@ -39,9 +50,17 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
     if (!result.ok) {
       redirect(`/admin/tenants?error=${encodeURIComponent(result.message)}`);
     }
-    redirect(
-      `/admin/tenants?ok=${encodeURIComponent("Organización creada. Desde la cartera puedes entrar al workspace.")}`,
-    );
+    redirect(`/admin/tenants?newTenant=${encodeURIComponent(result.tenantId)}`);
+  }
+
+  async function enterNewWorkspaceAction(formData: FormData) {
+    "use server";
+    const s = await getSessionUser();
+    if (!s?.isSuperAdmin) redirect("/admin/tenants?error=Sin+permiso");
+    const tenantId = String(formData.get("tenantId") ?? "");
+    const ok = await setActiveTenantAsPlatformOwner(tenantId);
+    if (!ok) redirect("/admin/tenants?error=Organizacion+no+encontrada");
+    redirect("/dashboard/projects");
   }
 
   return (
@@ -60,10 +79,41 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
           {params.error}
         </p>
       )}
-      {params.ok && (
+      {params.ok && !newTenantRow && (
         <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
           {params.ok}
         </p>
+      )}
+
+      {newTenantRow && (
+        <section className="rounded-lg border border-emerald-300 bg-emerald-50 p-5 text-sm text-emerald-950 shadow-sm">
+          <p className="font-semibold text-emerald-950">Organización creada</p>
+          <p className="mt-2">
+            <span className="font-medium">{newTenantRow.name}</span>{" "}
+            <span className="text-emerald-800">({newTenantRow.slug})</span>
+          </p>
+          <p className="mt-2 text-emerald-900/90">
+            Puedes entrar ya al workspace como consultora, o ir a la cartera para
+            seguir creando clientes.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <form action={enterNewWorkspaceAction}>
+              <input type="hidden" name="tenantId" value={newTenantRow.id} />
+              <button
+                type="submit"
+                className="rounded-md bg-emerald-800 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-900"
+              >
+                Entrar al workspace ahora
+              </button>
+            </form>
+            <Link
+              href="/admin"
+              className="inline-flex items-center rounded-md border border-emerald-700 bg-white px-4 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
+            >
+              Ir a la cartera
+            </Link>
+          </div>
+        </section>
       )}
 
       <section className="pmo-card p-6">
@@ -115,7 +165,13 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
               ))}
             </select>
             <p className="mt-1 text-xs text-slate-500">
-              Etiqueta comercial por ahora; luego puedes enlazar límites por plan.
+              Límites actuales por plan (proyectos / puestos miembro+invitaciones):{" "}
+              {TENANT_PLAN_KEYS.map((k) => (
+                <span key={k} className="mr-2 inline-block">
+                  {PLAN_LABEL[k]}: {PLAN_LIMITS[k].maxProjects} /{" "}
+                  {PLAN_LIMITS[k].maxMemberSeats}
+                </span>
+              ))}
             </p>
           </div>
           <div className="sm:col-span-2">

@@ -22,7 +22,7 @@
 ## Smoke Test Funcional
 
 - [ ] Auth: `signup/login/logout` funciona en el subdominio.
-- [ ] Consultora: `/admin` lista tenants, busqueda por nombre/slug, **Entrar al workspace** y banner **Modo consultora** en dashboard si no hay membresía.
+- [ ] Consultora: `/admin` lista tenants, busqueda, **Entrar al workspace**, banner **Modo consultora**; `/admin/tenants` post-creación **Entrar al workspace ahora**.
 - [ ] Tenant: seleccion de tenant y persistencia de tenant activo.
 - [ ] RBAC: owner/admin/manager/member ven solo acciones permitidas.
 - [ ] Projects: listar y crear (si rol tiene permisos).
@@ -38,6 +38,11 @@
 - [ ] Usuario de tenant A no puede acceder ni listar recursos de tenant B.
 - [ ] Endpoints API protegidos por sesion y tenant activo.
 - [ ] Politicas RLS activas en tablas core.
+
+## Plan SaaS (límites)
+
+- [ ] Los números por plan viven en `src/modules/platform/plans.ts` (`PLAN_LIMITS`). Tras cambiarlos, redeploy.
+- [ ] Crear proyecto y agregar miembro respetan el plan del tenant (`Tenant.plan`); la API `POST /api/projects` responde 403 si se supera el límite.
 
 ## Post-deploy
 

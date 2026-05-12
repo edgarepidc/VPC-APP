@@ -2,6 +2,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { requireTenantId } from "@/lib/tenancy";
 import { getProjectStatusBadge } from "@/lib/ui";
+import { getTenantUsageSnapshot } from "@/modules/platform";
 import { listProjectsByTenant } from "@/modules/projects/service";
 
 export default async function ProjectsPage() {
@@ -9,7 +10,10 @@ export default async function ProjectsPage() {
   if (!session) return null;
 
   const tenantId = await requireTenantId();
-  const items = await listProjectsByTenant(tenantId);
+  const [items, usage] = await Promise.all([
+    listProjectsByTenant(tenantId),
+    getTenantUsageSnapshot(tenantId),
+  ]);
 
   return (
     <main className="pmo-card p-6">
@@ -17,6 +21,15 @@ export default async function ProjectsPage() {
       <p className="mt-1 text-sm text-zinc-600">
         Scope actual por tenant: <span className="font-medium">{tenantId}</span>
       </p>
+      {usage && (
+        <p className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+          Plan <span className="font-semibold uppercase">{usage.plan}</span>:{" "}
+          <span className="tabular-nums">
+            {usage.projectCount}/{usage.limits.maxProjects}
+          </span>{" "}
+          proyectos usados.
+        </p>
+      )}
       <p className="mt-1 text-xs text-zinc-500">
         Permiso projects.write:{" "}
         {hasPermission(session.role, "projects.write") ? "si" : "no"}

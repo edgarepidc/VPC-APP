@@ -1,5 +1,6 @@
 import type { RoleKey } from "@/lib/types";
 import { db } from "@/lib/db";
+import { canAddMemberSeat, PlanLimitError } from "@/modules/platform/limits";
 
 export async function listMembersByTenant(tenantId: string) {
   return db.membership.findMany({
@@ -50,6 +51,16 @@ export async function assignRoleByEmail(input: {
 
   if (!role) {
     throw new Error("Rol no disponible para este tenant.");
+  }
+
+  const existingMembership = await db.membership.findFirst({
+    where: { tenantId: input.tenantId, userId: user.id },
+  });
+  if (!existingMembership) {
+    const seat = await canAddMemberSeat(input.tenantId);
+    if (!seat.ok) {
+      throw new PlanLimitError(seat.message);
+    }
   }
 
   await db.membership.upsert({

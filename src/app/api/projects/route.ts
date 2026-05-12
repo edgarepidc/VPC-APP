@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
+import { PlanLimitError } from "@/modules/platform/limits";
 import { createProject, listProjectsByTenant } from "@/modules/projects/service";
 
 export async function GET() {
@@ -56,6 +57,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ data: project }, { status: 201 });
   } catch (error) {
+    if (error instanceof PlanLimitError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
 }

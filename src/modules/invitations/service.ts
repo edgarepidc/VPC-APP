@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { RoleKey } from "@/lib/types";
+import { canAddMemberSeat, PlanLimitError } from "@/modules/platform/limits";
 
 export async function upsertPendingInvitation(input: {
   tenantId: string;
@@ -22,6 +23,11 @@ export async function upsertPendingInvitation(input: {
       where: { id: existing.id },
       data: { roleKey: input.roleKey, invitedBy: input.invitedBy },
     });
+  }
+
+  const seat = await canAddMemberSeat(input.tenantId);
+  if (!seat.ok) {
+    throw new PlanLimitError(seat.message);
   }
 
   return db.invitation.create({

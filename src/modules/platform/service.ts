@@ -42,7 +42,7 @@ export async function createTenantFromPlatform(input: {
 }): Promise<CreateTenantPlatformResult> {
   const plan = normalizeTenantPlan(input.plan);
   const name = input.name.trim();
-  let slug = input.slug
+  const slug = input.slug
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9-]+/g, "-")

@@ -7,6 +7,7 @@ import { canManageMembers } from "@/lib/rbac";
 import type { RoleKey } from "@/lib/types";
 import { requireTenantId } from "@/lib/tenancy";
 import { upsertPendingInvitation } from "@/modules/invitations/service";
+import { PlanLimitError, getTenantUsageSnapshot } from "@/modules/platform";
 import {
   assignRoleByEmail,
   listMembersByTenant,
@@ -24,7 +25,10 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   if (!session.activeTenantId) redirect("/select-tenant");
 
   const tenantId = await requireTenantId();
-  const members = await listMembersByTenant(tenantId);
+  const [members, usage] = await Promise.all([
+    listMembersByTenant(tenantId),
+    getTenantUsageSnapshot(tenantId),
+  ]);
   const canManage = canManageMembers(session.role);
   const appUrl = getAppUrl();
 
@@ -50,6 +54,11 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       });
       redirect("/dashboard/members?ok=Miembro+actualizado+directamente");
     } catch (error) {
+      if (error instanceof PlanLimitError) {
+        redirect(
+          `/dashboard/members?error=${encodeURIComponent(error.message)}`,
+        );
+      }
       if ((error as Error).message !== "Usuario no encontrado. Debe registrarse primero.") {
         redirect(
           `/dashboard/members?error=${encodeURIComponent((error as Error).message)}`,
@@ -80,6 +89,11 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
 
         redirect("/dashboard/members?ok=Invitacion+enviada+por+correo");
       } catch (inviteFlowError) {
+        if (inviteFlowError instanceof PlanLimitError) {
+          redirect(
+            `/dashboard/members?error=${encodeURIComponent(inviteFlowError.message)}`,
+          );
+        }
         redirect(
           `/dashboard/members?error=${encodeURIComponent(
             (inviteFlowError as Error).message,
@@ -96,6 +110,19 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
         <p className="mt-1 text-sm text-slate-200">
           Gestiona acceso por email para la organizacion activa.
         </p>
+        {usage && (
+          <p className="mt-3 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-xs text-slate-100">
+            Plan <span className="font-semibold uppercase">{usage.plan}</span>:{" "}
+            <span className="tabular-nums">
+              {usage.seatsUsed}/{usage.limits.maxMemberSeats}
+            </span>{" "}
+            puestos (miembros + invitaciones pendientes). Proyectos:{" "}
+            <span className="tabular-nums">
+              {usage.projectCount}/{usage.limits.maxProjects}
+            </span>
+            .
+          </p>
+        )}
         {params.error && (
           <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
             {params.error}

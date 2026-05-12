@@ -7,4 +7,15 @@ export {
   listAllTenants,
   type CreateTenantPlatformResult,
 } from "./service";
-export { TENANT_PLAN_KEYS, type TenantPlanKey } from "./plans";
+export {
+  PlanLimitError,
+  getTenantUsageSnapshot,
+  type TenantUsageSnapshot,
+} from "./limits";
+export {
+  PLAN_LIMITS,
+  TENANT_PLAN_KEYS,
+  getPlanLimits,
+  type PlanLimits,
+  type TenantPlanKey,
+} from "./plans";
