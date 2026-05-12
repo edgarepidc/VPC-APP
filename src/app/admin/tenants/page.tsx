@@ -1,12 +1,20 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
 import {
   createTenantFromPlatform,
   listAllTenants,
-} from "@/modules/platform/service";
+  TENANT_PLAN_KEYS,
+} from "@/modules/platform";
 
 export const dynamic = "force-dynamic";
+
+const PLAN_LABEL: Record<(typeof TENANT_PLAN_KEYS)[number], string> = {
+  starter: "Starter",
+  pro: "Pro",
+  enterprise: "Enterprise",
+};
 
 type PageProps = {
   searchParams: Promise<{ error?: string; ok?: string }>;
@@ -26,15 +34,27 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
 
     const name = String(formData.get("name") ?? "");
     const slug = String(formData.get("slug") ?? "");
-    const result = await createTenantFromPlatform({ name, slug });
+    const plan = String(formData.get("plan") ?? "starter");
+    const result = await createTenantFromPlatform({ name, slug, plan });
     if (!result.ok) {
       redirect(`/admin/tenants?error=${encodeURIComponent(result.message)}`);
     }
-    redirect("/admin/tenants?ok=Tenant+creado");
+    redirect(
+      `/admin/tenants?ok=${encodeURIComponent("Organización creada. Desde la cartera puedes entrar al workspace.")}`,
+    );
   }
 
   return (
     <div className="space-y-8">
+      <p className="text-sm text-slate-600">
+        Este módulo es el <strong>alta de cliente</strong> en la plataforma: cada
+        fila es un tenant aislado. Para operar dentro del cliente usa{" "}
+        <Link href="/admin" className="font-medium text-amber-900 underline">
+          Cartera de clientes
+        </Link>
+        .
+      </p>
+
       {params.error && (
         <p className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
           {params.error}
@@ -48,14 +68,17 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
 
       <section className="pmo-card p-6">
         <h2 className="text-base font-semibold text-slate-900">
-          Crear organizacion
+          Nueva organización (tenant)
         </h2>
         <p className="mt-1 text-sm text-slate-600">
-          Crea un tenant sin miembros. El primer usuario puede unirse por
-          invitacion (Miembros) o creando su propia cuenta si ya tienes flujo de
-          invitaciones.
+          Se crean roles base (owner, admin, etc.) vacíos. Los usuarios entran
+          por invitación desde <strong>Miembros</strong> dentro del workspace,
+          o tú puedes entrar desde la cartera como consultora.
         </p>
-        <form action={createTenantAction} className="mt-4 grid gap-3 sm:grid-cols-2">
+        <form
+          action={createTenantAction}
+          className="mt-4 grid gap-3 sm:grid-cols-2"
+        >
           <div>
             <label className="text-xs font-medium text-slate-600">Nombre</label>
             <input
@@ -74,13 +97,33 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               placeholder="mobility-ado"
             />
+            <p className="mt-1 text-xs text-slate-500">
+              URL interna; minúsculas y guiones. Único en toda la plataforma.
+            </p>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-xs font-medium text-slate-600">Plan</label>
+            <select
+              name="plan"
+              defaultValue="starter"
+              className="mt-1 w-full max-w-xs rounded-md border border-slate-300 px-3 py-2 text-sm sm:w-auto"
+            >
+              {TENANT_PLAN_KEYS.map((key) => (
+                <option key={key} value={key}>
+                  {PLAN_LABEL[key]}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-slate-500">
+              Etiqueta comercial por ahora; luego puedes enlazar límites por plan.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <button
               type="submit"
               className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
             >
-              Crear tenant
+              Crear organización
             </button>
           </div>
         </form>
@@ -88,7 +131,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
 
       <section className="pmo-card overflow-hidden">
         <h2 className="border-b border-slate-200 px-4 py-3 text-base font-semibold text-slate-900">
-          Tenants ({tenants.length})
+          Organizaciones ({tenants.length})
         </h2>
         <div className="overflow-x-auto">
           <table className="pmo-table pmo-row-hover w-full text-sm">

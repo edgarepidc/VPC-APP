@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { normalizeTenantPlan } from "@/modules/platform/plans";
 import {
   createStandardRolesForTenantWithClient,
   ensureGlobalPermissions,
@@ -36,7 +37,10 @@ export type CreateTenantPlatformResult =
 export async function createTenantFromPlatform(input: {
   name: string;
   slug: string;
+  /** starter | pro | enterprise; invalido cae en starter */
+  plan?: string;
 }): Promise<CreateTenantPlatformResult> {
+  const plan = normalizeTenantPlan(input.plan);
   const name = input.name.trim();
   let slug = input.slug
     .trim()
@@ -68,7 +72,7 @@ export async function createTenantFromPlatform(input: {
   try {
     const tenantId = await db.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
-        data: { name, slug, plan: "starter" },
+        data: { name, slug, plan },
       });
       await createStandardRolesForTenantWithClient(
         tx,

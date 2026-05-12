@@ -6,7 +6,7 @@ import {
   setActiveTenantAsPlatformOwner,
 } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { listAllTenants } from "@/modules/platform/service";
+import { listAllTenants } from "@/modules/platform";
 
 export const dynamic = "force-dynamic";
 
