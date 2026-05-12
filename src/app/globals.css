@@ -121,3 +121,93 @@ body {
   border-color: #1e3a8a;
   box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.14);
 }
+
+/* ─── Dashboard shell (oscuro + vidrio; contenido claro en isla) ─── */
+.dash-shell {
+  position: relative;
+  min-height: 100%;
+  isolation: isolate;
+  background: radial-gradient(
+      1200px 600px at 100% -10%,
+      rgba(94, 234, 212, 0.12),
+      transparent 55%
+    ),
+    radial-gradient(900px 500px at -5% 100%, rgba(167, 139, 250, 0.14), transparent 50%),
+    linear-gradient(165deg, #050810 0%, #0a1020 42%, #060912 100%);
+  color: #e4e4e7;
+}
+
+.dash-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    420px 280px at 18% 22%,
+    rgba(56, 189, 248, 0.06),
+    transparent 70%
+  );
+}
+
+.dash-glass {
+  position: relative;
+  z-index: 1;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.45);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.dash-content-shell {
+  position: relative;
+  z-index: 1;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--background);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  color: var(--foreground);
+}
+
+.dash-glass .dash-nav-link {
+  border: 1px solid transparent;
+}
+
+.dash-glass .dash-nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dash-glass .dash-nav-link--active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.25);
+}
+
+.dash-greeting {
+  font-family: var(--font-dash-serif), ui-serif, Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+@keyframes dash-hand-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-6deg);
+  }
+  60% {
+    transform: rotate(10deg);
+  }
+}
+
+.dash-hand-wave {
+  display: inline-block;
+  animation: dash-hand-wave 2.2s ease-in-out infinite;
+}

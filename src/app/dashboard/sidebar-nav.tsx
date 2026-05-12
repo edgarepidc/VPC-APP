@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/dashboard/pmo", label: "PMO Dashboard" },
-  { href: "/dashboard/projects", label: "Proyectos" },
-  { href: "/dashboard/tasks", label: "Tareas" },
-  { href: "/dashboard/deliverables", label: "Entregables" },
-  { href: "/dashboard/risks", label: "Riesgos" },
-  { href: "/dashboard/stakeholders", label: "Stakeholders" },
-  { href: "/dashboard/members", label: "Miembros" },
+  { href: "/dashboard/pmo", label: "PMO Dashboard", emoji: "📊" },
+  { href: "/dashboard/projects", label: "Proyectos", emoji: "📁" },
+  { href: "/dashboard/tasks", label: "Tareas", emoji: "✅" },
+  { href: "/dashboard/deliverables", label: "Entregables", emoji: "📦" },
+  { href: "/dashboard/risks", label: "Riesgos", emoji: "⚠️" },
+  { href: "/dashboard/stakeholders", label: "Stakeholders", emoji: "🎯" },
+  { href: "/dashboard/members", label: "Miembros", emoji: "👥" },
 ];
 
 type SidebarNavProps = {
@@ -21,7 +21,10 @@ export function SidebarNav({ showPlatformAdmin }: SidebarNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="mt-6 space-y-2 text-sm">
+    <nav className="mt-6 space-y-1.5 text-sm">
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+        Acceso rápido
+      </p>
       {navItems.map((item) => {
         const active = pathname === item.href;
         return (
@@ -29,30 +32,37 @@ export function SidebarNav({ showPlatformAdmin }: SidebarNavProps) {
             key={item.href}
             href={item.href}
             className={[
-              "block rounded px-2 py-1 transition-colors",
-              active
-                ? "bg-slate-900 text-white hover:bg-slate-900"
-                : "text-slate-700 hover:bg-slate-100",
+              "dash-nav-link flex items-center gap-2.5 rounded-xl px-3 py-2.5 font-medium transition-colors",
+              active ? "dash-nav-link--active text-white" : "text-zinc-300",
             ].join(" ")}
             aria-current={active ? "page" : undefined}
           >
-            {item.label}
+            <span className="text-lg leading-none opacity-95" aria-hidden>
+              {item.emoji}
+            </span>
+            <span>{item.label}</span>
           </Link>
         );
       })}
 
       <Link
-        className="block rounded px-2 py-1 text-slate-700 hover:bg-slate-100"
+        className="dash-nav-link mt-3 flex items-center gap-2.5 rounded-xl px-3 py-2.5 font-medium text-zinc-300 transition-colors"
         href="/select-tenant"
       >
+        <span className="text-lg" aria-hidden>
+          🔄
+        </span>
         Cambiar tenant
       </Link>
 
       {showPlatformAdmin && (
         <Link
-          className="mt-2 block rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-amber-950 hover:bg-amber-100"
+          className="mt-2 flex items-center gap-2.5 rounded-xl border border-amber-400/35 bg-amber-500/15 px-3 py-2.5 text-sm font-medium text-amber-50 transition hover:bg-amber-500/25"
           href="/admin"
         >
+          <span className="text-lg" aria-hidden>
+            🛡️
+          </span>
           Vista consultora
         </Link>
       )}
