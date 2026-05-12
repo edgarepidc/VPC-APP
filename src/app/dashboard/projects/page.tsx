@@ -13,9 +13,11 @@ import {
   createProject,
   deleteProject,
   listProjectsByTenant,
+  updateProject,
 } from "@/modules/projects/service";
 
 import { DeleteProjectForm } from "./delete-project-form";
+import { EditProjectForm } from "./edit-project-form";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +69,41 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
       redirect(
         `/dashboard/projects?error=${encodeURIComponent(
           e instanceof Error ? e.message : "Error+al+crear",
+        )}`,
+      );
+    }
+  }
+
+  async function updateProjectAction(formData: FormData) {
+    "use server";
+    const s = await getSessionUser();
+    if (!s?.activeTenantId) redirect("/login");
+    if (!hasPermission(s.role, "projects.write")) {
+      redirect("/dashboard/projects?error=No+tienes+permiso+para+editar");
+    }
+    const projectId = String(formData.get("projectId") ?? "").trim();
+    const name = String(formData.get("name") ?? "").trim();
+    const description = String(formData.get("description") ?? "").trim();
+    const status = String(formData.get("status") ?? "active");
+    if (!projectId) {
+      redirect("/dashboard/projects?error=Proyecto+invalido");
+    }
+    if (!name) {
+      redirect("/dashboard/projects?error=El+nombre+es+obligatorio");
+    }
+    try {
+      await updateProject({
+        tenantId: s.activeTenantId,
+        projectId,
+        name,
+        description,
+        status,
+      });
+      redirect("/dashboard/projects?ok=Proyecto+actualizado");
+    } catch (e) {
+      redirect(
+        `/dashboard/projects?error=${encodeURIComponent(
+          e instanceof Error ? e.message : "Error+al+guardar",
         )}`,
       );
     }
@@ -176,8 +213,8 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
 
         {!canWrite && (
           <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Tu rol solo permite ver proyectos. Para crear o eliminar necesitas
-            rol de manager o superior.
+            Tu rol solo permite ver proyectos. Para crear, editar o eliminar
+            necesitas rol de manager o superior.
           </p>
         )}
       </section>
@@ -212,7 +249,14 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
                     </td>
                     {canWrite ? (
                       <td className="text-right align-top">
-                        <div className="flex justify-end">
+                        <div className="flex flex-col items-end gap-2">
+                          <EditProjectForm
+                            updateAction={updateProjectAction}
+                            projectId={project.id}
+                            initialName={project.name}
+                            initialDescription={project.description}
+                            initialStatus={project.status}
+                          />
                           <DeleteProjectForm
                             deleteAction={deleteProjectAction}
                             projectId={project.id}
