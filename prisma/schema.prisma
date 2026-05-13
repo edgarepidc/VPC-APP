@@ -11,6 +11,8 @@ model Tenant {
   id          String       @id @default(uuid())
   name        String
   slug        String       @unique
+  /** Logo del workspace (URL pública, p. ej. Supabase Storage). */
+  logoUrl     String?
   plan        String       @default("starter")
   memberships Membership[]
   invitations Invitation[]

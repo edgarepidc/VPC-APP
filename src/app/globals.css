@@ -122,19 +122,19 @@ body {
   box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.14);
 }
 
-/* ─── Dashboard shell: fondo claro suave (contraste bajo con paneles) ─── */
+/* ─── Dashboard shell: paleta VPC (pergamino + acentos navy / bronce) ─── */
 .dash-shell {
   position: relative;
   min-height: 100%;
   isolation: isolate;
   background: radial-gradient(
-      1100px 520px at 92% -8%,
-      rgba(167, 243, 208, 0.45),
-      transparent 52%
+      900px 420px at 88% 0%,
+      rgba(201, 164, 108, 0.18),
+      transparent 50%
     ),
-    radial-gradient(780px 420px at -5% 102%, rgba(196, 181, 253, 0.38), transparent 52%),
-    linear-gradient(175deg, #f4f7fb 0%, #eef2f7 38%, #e8edf4 100%);
-  color: #334155;
+    radial-gradient(720px 380px at 0% 100%, rgba(15, 31, 92, 0.08), transparent 55%),
+    linear-gradient(175deg, #faf8f4 0%, #f5f0e8 40%, #eef1f6 100%);
+  color: #3d3419;
 }
 
 .dash-shell::before {
@@ -144,20 +144,20 @@ body {
   pointer-events: none;
   z-index: 0;
   background: radial-gradient(
-    380px 240px at 16% 20%,
-    rgba(125, 211, 252, 0.22),
-    transparent 72%
+    420px 260px at 12% 18%,
+    rgba(15, 31, 92, 0.06),
+    transparent 70%
   );
 }
 
-/* Panel lateral / hoja móvil: misma familia visual que la isla de contenido */
+/* Panel lateral / hoja móvil */
 .dash-nav-panel {
   position: relative;
   z-index: 1;
   border-radius: 1.25rem;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: var(--background);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(201, 164, 108, 0.28);
+  background: linear-gradient(165deg, #ffffff 0%, #faf8f4 100%);
+  box-shadow: 0 12px 40px rgba(15, 31, 92, 0.08);
   color: var(--foreground);
 }
 
@@ -165,9 +165,9 @@ body {
   position: relative;
   z-index: 1;
   border-radius: 1.25rem;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: var(--background);
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(201, 164, 108, 0.22);
+  background: linear-gradient(165deg, #ffffff 0%, #faf8f4 100%);
+  box-shadow: 0 16px 44px rgba(15, 31, 92, 0.09);
   color: var(--foreground);
 }
 
@@ -176,40 +176,20 @@ body {
 }
 
 .dash-nav-panel .dash-nav-link:hover {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.06);
+  background: rgba(201, 164, 108, 0.12);
+  border-color: rgba(201, 164, 108, 0.35);
 }
 
 .dash-nav-panel .dash-nav-link--active {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.22);
-  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.12);
+  background: linear-gradient(135deg, rgba(15, 31, 92, 0.1) 0%, rgba(21, 45, 79, 0.12) 100%);
+  border-color: rgba(201, 164, 108, 0.45);
+  box-shadow: 0 0 0 1px rgba(15, 31, 92, 0.08);
+  color: #0f1f5c;
 }
 
-.dash-greeting {
+.dash-identity-name {
   font-family: var(--font-dash-serif), ui-serif, Georgia, serif;
   letter-spacing: -0.02em;
-}
-
-@keyframes dash-hand-wave {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  20% {
-    transform: rotate(14deg);
-  }
-  40% {
-    transform: rotate(-6deg);
-  }
-  60% {
-    transform: rotate(10deg);
-  }
-}
-
-.dash-hand-wave {
-  display: inline-block;
-  animation: dash-hand-wave 2.2s ease-in-out infinite;
 }
 
 .dash-drawer-backdrop {
@@ -243,10 +223,10 @@ body {
   gap: 0.5rem;
   padding: 0.55rem 1rem;
   border-radius: 9999px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: var(--background);
-  color: #18181b;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(201, 164, 108, 0.35);
+  background: linear-gradient(180deg, #ffffff 0%, #faf8f4 100%);
+  color: #0f1f5c;
+  box-shadow: 0 8px 24px rgba(15, 31, 92, 0.12);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   cursor: pointer;
@@ -256,6 +236,6 @@ body {
 }
 
 .dash-menu-fab:hover {
-  background: var(--background);
+  background: linear-gradient(180deg, #ffffff 0%, #f3ead8 100%);
   transform: translateY(-1px);
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
@@ -8,20 +9,26 @@ import { SidebarNav } from "./sidebar-nav";
 import { STORAGE_SIDEBAR_HIDDEN } from "./nav-config";
 
 type DashboardChromeProps = {
-  greetingWord: string;
-  firstName: string;
-  tenantLine: string;
-  email: string;
+  personDisplayName: string;
+  roleLabel: string;
+  tenantName: string;
+  tenantSlug: string;
+  dateLabel: string;
+  tenantLogoUrl: string | null;
+  tenantInitials: string;
   showPlatformAdmin: boolean;
   mainBanner?: React.ReactNode;
   children: React.ReactNode;
 };
 
 export function DashboardChrome({
-  greetingWord,
-  firstName,
-  tenantLine,
-  email,
+  personDisplayName,
+  roleLabel,
+  tenantName,
+  tenantSlug,
+  dateLabel,
+  tenantLogoUrl,
+  tenantInitials,
   showPlatformAdmin,
   mainBanner,
   children,
@@ -95,19 +102,39 @@ export function DashboardChrome({
 
   const panelBody = (opts: { onNav?: () => void; showCollapseHint?: boolean }) => (
     <>
-      <p className="dash-greeting text-lg font-medium leading-snug text-zinc-800">
-        {greetingWord},
-      </p>
-      <p className="mt-1 text-xl font-semibold leading-tight">
-        <span className="bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-          {firstName}
-        </span>{" "}
-        <span aria-hidden className="dash-hand-wave inline-block">
-          👋
-        </span>
-      </p>
-      <p className="mt-2 text-xs leading-relaxed text-zinc-500">{tenantLine}</p>
-      <p className="mt-3 truncate text-[11px] text-zinc-400">{email}</p>
+      <div className="flex gap-3 border-b border-[#e8dfd0] pb-4">
+        <div className="relative shrink-0 overflow-hidden rounded-xl border border-[#c9a46c]/45 bg-[linear-gradient(165deg,#ffffff_0%,#faf8f4_100%)] shadow-sm ring-1 ring-[#0f1f5c]/[0.05]">
+          {tenantLogoUrl ? (
+            <Image
+              src={tenantLogoUrl}
+              alt=""
+              width={56}
+              height={56}
+              className="h-14 w-14 object-contain"
+              unoptimized
+            />
+          ) : (
+            <div
+              className="flex h-14 w-14 items-center justify-center text-sm font-bold tracking-tight text-[#c9a46c]"
+              style={{ background: "linear-gradient(145deg,#0f1f5c 0%,#152d4f 100%)" }}
+            >
+              {tenantInitials}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="dash-identity-name text-lg font-semibold leading-tight text-[#0f1f5c]">
+            {personDisplayName}
+          </p>
+          <p className="mt-1 text-[13px] font-medium text-[#5c5346]">{roleLabel}</p>
+          <p className="mt-0.5 truncate text-[12px] text-[#6b5c48]">
+            {tenantName} · {tenantSlug}
+          </p>
+          <p className="mt-1 text-[11px] font-medium capitalize leading-snug text-[#8a8278]">
+            {dateLabel}
+          </p>
+        </div>
+      </div>
 
       <SidebarNav showPlatformAdmin={showPlatformAdmin} onLinkClick={opts.onNav} />
 
@@ -116,7 +143,7 @@ export function DashboardChrome({
           <button
             type="button"
             onClick={() => persistSidebarHidden(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#e3d6c4] bg-[#faf8f4] px-3 py-2.5 text-sm font-medium text-[#0f1f5c] transition hover:border-[#c9a46c]/60 hover:bg-[#f5efe3]"
           >
             <span aria-hidden>⤢</span>
             Ocultar menú
@@ -127,9 +154,9 @@ export function DashboardChrome({
       <form action={signOutAction} className="mt-4">
         <button
           type="submit"
-          className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
+          className="w-full rounded-xl border border-[#e3d6c4] bg-white px-3 py-2.5 text-sm font-medium text-[#0f1f5c] transition hover:border-[#c9a46c]/55 hover:bg-[#faf8f4]"
         >
-          🚪 Cerrar sesión
+          Cerrar sesión
         </button>
       </form>
     </>
@@ -161,7 +188,7 @@ export function DashboardChrome({
             aria-labelledby={sheetTitleId}
             className="dash-bottom-sheet dash-nav-panel absolute bottom-0 left-0 right-0 max-h-[min(85dvh,640px)] overflow-y-auto rounded-t-2xl border-b-0 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl"
           >
-            <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-zinc-300" aria-hidden />
+            <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-[#d4c4b0]" aria-hidden />
             <p id={sheetTitleId} className="sr-only">
               Menú y accesos
             </p>
@@ -170,11 +197,10 @@ export function DashboardChrome({
         </div>
       )}
 
-      {/** Un solo FAB: visibilidad solo con clases (evita doble botón si outer OR falla). */}
       <button
         type="button"
         className={[
-          "dash-menu-fab inline-flex items-center gap-2 rounded-full border border-black/[0.08] px-4 py-2 text-sm font-medium shadow-md backdrop-blur-sm",
+          "dash-menu-fab inline-flex items-center gap-2 rounded-full border border-[#c9a46c]/35 px-4 py-2 text-sm font-semibold text-[#0f1f5c] shadow-md backdrop-blur-sm",
           "left-4 top-[max(1rem,env(safe-area-inset-top))] md:top-[6.5rem]",
           mobileMenuOpen ? "max-md:hidden" : "max-md:inline-flex",
           desktopSidebarHidden ? "md:inline-flex" : "md:hidden",
