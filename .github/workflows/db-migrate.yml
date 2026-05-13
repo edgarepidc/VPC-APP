@@ -20,18 +20,27 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
 
       - name: Install
         run: npm ci
 
-      - name: Prisma migrate deploy
+      - name: Comprobar DATABASE_URL (sin exponer el valor)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           if [ -z "$DATABASE_URL" ]; then
-            echo "::error::Falta el secreto DATABASE_URL en GitHub Actions (Settings → Secrets)."
+            echo "::error::Falta el secreto DATABASE_URL. Repo → Settings → Secrets and variables → Actions → New repository secret (nombre exacto: DATABASE_URL). Usa la misma URI de Postgres que en Vercel Production."
             exit 1
           fi
-          npx prisma migrate deploy
+          echo "::notice::DATABASE_URL está definida."
+          if ! printf '%s' "$DATABASE_URL" | grep -qiE '^postgres(ql)?://'; then
+            echo "::error::DATABASE_URL debe empezar por postgresql:// o postgres://"
+            exit 1
+          fi
+
+      - name: Prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
