@@ -16,6 +16,12 @@ export default async function SelectTenantPage({
   const params = await searchParams;
   const session = await getSessionUser();
   if (!session) redirect("/login");
+
+  /** Consultora / super admin: tablero de tenants en /admin (no elegir aquí). */
+  if (session.isSuperAdmin) {
+    redirect("/admin");
+  }
+
   const tenants = await listTenantsForUser(session.userId);
 
   /** Usuario normal con una sola membresía: entra al dashboard sin elegir tenant. */
