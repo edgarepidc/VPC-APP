@@ -65,54 +65,13 @@ export function LoginForms({
     }
   }
 
-  async function handleSignUp(formData: FormData) {
-    setError("");
-    setMessage("");
-    if (!supabase) return;
-    setPending(true);
-    try {
-      const email = String(formData.get("signup_email") ?? "").trim();
-      const password = String(formData.get("signup_password") ?? "");
-      const name = String(formData.get("signup_name") ?? "").trim();
-      const { data, error: err } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { name } },
-      });
-      if (err) {
-        setError(err.message);
-        return;
-      }
-      if (!data.session) {
-        setMessage(
-          "Cuenta creada. Si tu proyecto exige confirmar el correo, revisa tu bandeja y abre el enlace antes de entrar.",
-        );
-        return;
-      }
-      await new Promise((r) => setTimeout(r, 0));
-      const dest = await fetch("/api/auth/post-login-redirect", {
-        credentials: "include",
-        cache: "no-store",
-      });
-      if (!dest.ok) {
-        window.location.assign("/login");
-        return;
-      }
-      const payload = (await dest.json()) as { path?: string };
-      window.location.assign(payload.path ?? "/select-tenant");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al crear la cuenta.");
-    } finally {
-      setPending(false);
-    }
-  }
-
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 py-16">
       <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-semibold text-zinc-900">Ingreso</h1>
         <p className="mt-2 text-sm text-zinc-600">
-          Accede con Supabase Auth para usar la plataforma multitenant.
+          Acceso por invitación: inicia sesión con la cuenta que te dio tu
+          administrador. No hay registro público en esta pantalla.
         </p>
 
         {!envOk && (
@@ -187,47 +146,14 @@ export function LoginForms({
           </button>
         </form>
 
-        <form
-          className="mt-4 space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void handleSignUp(new FormData(e.currentTarget));
-          }}
-        >
-          <input
-            name="signup_name"
-            type="text"
-            disabled={pending}
-            autoComplete="name"
-            placeholder="Nombre"
-            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="signup_email"
-            type="email"
-            required
-            disabled={pending}
-            autoComplete="email"
-            placeholder="email@empresa.com"
-            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="signup_password"
-            type="password"
-            required
-            disabled={pending}
-            autoComplete="new-password"
-            placeholder="Contrasena nueva"
-            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
-          />
-          <button
-            type="submit"
-            disabled={pending || !envOk}
-            className="w-full rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-100 disabled:opacity-60"
+        <p className="mt-3 text-center">
+          <Link
+            className="text-sm font-medium text-zinc-700 underline hover:text-zinc-900"
+            href="/login/olvido"
           >
-            {pending ? "Procesando..." : "Crear cuenta"}
-          </button>
-        </form>
+            Olvidaste tu contrasena?
+          </Link>
+        </p>
 
         <Link
           className="mt-4 inline-block text-sm text-zinc-600 underline"

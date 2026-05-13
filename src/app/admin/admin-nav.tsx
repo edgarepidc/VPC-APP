@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/admin", label: "Cartera de clientes" },
   { href: "/admin/tenants", label: "Organizaciones (tenants)" },
+  { href: "/admin/invite", label: "Invitar usuario" },
 ] as const;
 
 export function AdminNav() {

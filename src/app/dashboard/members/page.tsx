@@ -6,13 +6,12 @@ import { ROLE_LABELS } from "@/lib/role-labels";
 import { canManageMembers } from "@/lib/rbac";
 import type { RoleKey } from "@/lib/types";
 import { requireTenantId } from "@/lib/tenancy";
-import { upsertPendingInvitation } from "@/modules/invitations/service";
+import { inviteAuthUserToTenant } from "@/modules/invitations/service";
 import { PlanLimitError, getTenantUsageSnapshot } from "@/modules/platform";
 import {
   assignRoleByEmail,
   listMembersByTenant,
 } from "@/modules/memberships/service";
-import { createAdminClient } from "@/utils/supabase/admin";
 
 type MembersPageProps = {
   searchParams: Promise<{ error?: string; ok?: string }>;
@@ -66,28 +65,19 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       }
 
       try {
-        await upsertPendingInvitation({
+        const result = await inviteAuthUserToTenant({
           tenantId: currentSession.activeTenantId,
           email,
           roleKey,
           invitedBy: currentSession.userId,
-        });
-
-        const admin = createAdminClient();
-        const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-          data: { invitedTenantId: currentSession.activeTenantId, roleKey },
           redirectTo: `${appUrl.value}/login`,
         });
-
-        if (inviteError) {
-          redirect(
-            `/dashboard/members?error=${encodeURIComponent(
-              `Invitacion guardada pero fallo envio de email: ${inviteError.message}`,
-            )}`,
-          );
+        if (result.status === "emailed") {
+          redirect("/dashboard/members?ok=Invitacion+enviada+por+correo");
         }
-
-        redirect("/dashboard/members?ok=Invitacion+enviada+por+correo");
+        redirect(
+          `/dashboard/members?ok=${encodeURIComponent(result.message)}`,
+        );
       } catch (inviteFlowError) {
         if (inviteFlowError instanceof PlanLimitError) {
           redirect(

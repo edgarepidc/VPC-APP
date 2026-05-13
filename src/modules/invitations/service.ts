@@ -1,6 +1,54 @@
 import { db } from "@/lib/db";
 import type { RoleKey } from "@/lib/types";
 import { canAddMemberSeat, PlanLimitError } from "@/modules/platform/limits";
+import { createAdminClient } from "@/utils/supabase/admin";
+
+export type InviteAuthResult =
+  | { status: "emailed" }
+  | { status: "invitation_only"; message: string };
+
+export async function inviteAuthUserToTenant(input: {
+  tenantId: string;
+  email: string;
+  roleKey: RoleKey;
+  invitedBy: string;
+  /** URL absoluta (ej. `${getAppUrl().value}/login`) para enlaces del correo de Supabase. */
+  redirectTo: string;
+}): Promise<InviteAuthResult> {
+  const email = input.email.trim().toLowerCase();
+
+  await upsertPendingInvitation({
+    tenantId: input.tenantId,
+    email,
+    roleKey: input.roleKey,
+    invitedBy: input.invitedBy,
+  });
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { invitedTenantId: input.tenantId, roleKey: input.roleKey },
+    redirectTo: input.redirectTo,
+  });
+
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (
+      msg.includes("already") ||
+      msg.includes("registered") ||
+      msg.includes("exists") ||
+      error.status === 422
+    ) {
+      return {
+        status: "invitation_only",
+        message:
+          "Invitación al tenant guardada. Ese correo ya tiene cuenta: al iniciar sesión se unirá a la organización.",
+      };
+    }
+    throw new Error(error.message);
+  }
+
+  return { status: "emailed" };
+}
 
 export async function upsertPendingInvitation(input: {
   tenantId: string;
