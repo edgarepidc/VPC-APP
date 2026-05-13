@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { signOutAction } from "./sign-out";
 import { SidebarNav } from "./sidebar-nav";
-import { MOBILE_BOTTOM_PRIMARY, STORAGE_SIDEBAR_HIDDEN } from "./nav-config";
+import { STORAGE_SIDEBAR_HIDDEN } from "./nav-config";
 
 type DashboardChromeProps = {
   greetingWord: string;
@@ -29,6 +28,7 @@ export function DashboardChrome({
 }: DashboardChromeProps) {
   const pathname = usePathname();
   const sheetTitleId = useId();
+  const pathOnMountRef = useRef<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopSidebarHidden, setDesktopSidebarHidden] = useState(false);
 
@@ -50,6 +50,18 @@ export function DashboardChrome({
   }, []);
 
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
+
+  /** Tras el primer render: cada cambio de ruta oculta el lateral (pantalla completa al entrar a una sección). */
+  useEffect(() => {
+    if (pathOnMountRef.current === null) {
+      pathOnMountRef.current = pathname;
+      return;
+    }
+    if (pathOnMountRef.current !== pathname) {
+      pathOnMountRef.current = pathname;
+      persistSidebarHidden(true);
+    }
+  }, [pathname, persistSidebarHidden]);
 
   useEffect(() => {
     closeMobileMenu();
@@ -99,7 +111,7 @@ export function DashboardChrome({
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
           >
             <span aria-hidden>⤢</span>
-            Pantalla completa
+            Ocultar menú
           </button>
         </div>
       )}
@@ -117,7 +129,6 @@ export function DashboardChrome({
 
   return (
     <div className="relative z-[1] flex flex-1 flex-col gap-6 md:flex-row">
-      {/* Tablet y escritorio: panel lateral (teléfono: solo hoja “Más”) */}
       <aside
         className={[
           "dash-nav-panel hidden w-full shrink-0 p-5 md:block md:w-72 md:max-w-[18rem]",
@@ -128,7 +139,6 @@ export function DashboardChrome({
         {panelBody({ showCollapseHint: true })}
       </aside>
 
-      {/* Teléfono: hoja “Más” */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden" role="presentation">
           <button
@@ -152,11 +162,22 @@ export function DashboardChrome({
         </div>
       )}
 
-      {/* Escritorio colapsado: volver a mostrar lateral */}
+      {!mobileMenuOpen && (
+        <button
+          type="button"
+          className="dash-menu-fab left-4 top-[max(1rem,env(safe-area-inset-top))] md:hidden"
+          onClick={() => setMobileMenuOpen(true)}
+          aria-label="Abrir menú"
+        >
+          <span aria-hidden>☰</span>
+          <span className="text-sm font-medium">Menú</span>
+        </button>
+      )}
+
       {desktopSidebarHidden && (
         <button
           type="button"
-          className="dash-desktop-fab-trigger hidden md:flex"
+          className="dash-menu-fab left-4 top-[6.5rem] hidden md:flex"
           onClick={() => persistSidebarHidden(false)}
           aria-label="Mostrar menú lateral"
         >
@@ -165,43 +186,10 @@ export function DashboardChrome({
         </button>
       )}
 
-      <section className="dash-content-shell min-h-[min(100vh,920px)] flex-1 overflow-hidden px-4 pt-4 max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 md:pb-6">
+      <section className="dash-content-shell min-h-[min(100vh,920px)] flex-1 overflow-hidden px-4 pt-4 max-md:pt-16 sm:px-6 md:pt-6">
         {mainBanner}
         {children}
       </section>
-
-      {/* Barra inferior solo en teléfono (&lt; md); tablet/escritorio usan el lateral */}
-      <nav className="dash-bottom-bar md:hidden" aria-label="Accesos rápidos">
-        {MOBILE_BOTTOM_PRIMARY.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={[
-                "dash-bottom-bar__item flex flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] font-medium min-h-[44px] min-w-0 flex-1",
-                active ? "dash-bottom-bar__item--active text-zinc-900" : "text-zinc-500",
-              ].join(" ")}
-              aria-current={active ? "page" : undefined}
-            >
-              <span className="text-xl leading-none" aria-hidden>
-                {item.emoji}
-              </span>
-              <span className="truncate">{item.label}</span>
-            </Link>
-          );
-        })}
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen(true)}
-          className="dash-bottom-bar__item flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] font-medium text-zinc-500"
-        >
-          <span className="text-xl leading-none" aria-hidden>
-            ⋯
-          </span>
-          <span>Más</span>
-        </button>
-      </nav>
     </div>
   );
 }
