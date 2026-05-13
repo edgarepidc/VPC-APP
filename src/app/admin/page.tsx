@@ -227,30 +227,29 @@ export default async function AdminHomePage({ searchParams }: Props) {
         </div>
       </section>
 
-      <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-[13px] leading-relaxed text-amber-950">
-        <p className="font-semibold">Configuracion en Vercel (solo una vez)</p>
-        <p className="mt-2">
-          Para que tu usuario sea reconocido como dueño de la consultora sin tocar
-          la base de datos, agrega esta variable en{" "}
-          <strong>Production</strong>:
+      <section className="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-50 to-white p-5 text-[13px] leading-relaxed text-slate-800 shadow-sm ring-1 ring-slate-900/[0.04]">
+        <p className="font-semibold text-slate-900">
+          Configuración en Vercel (una vez por entorno)
         </p>
-        <ul className="mt-2 list-inside list-disc space-y-1">
+        <p className="mt-2 text-slate-600">
+          Para reconocer al dueño de la consultora sin tocar la base de datos,
+          define en <strong className="text-slate-800">Production</strong>:
+        </p>
+        <ul className="mt-3 list-inside list-disc space-y-1.5 text-slate-700">
           <li>
-            <code className="rounded bg-amber-100 px-1">PLATFORM_OWNER_EMAIL</code>{" "}
-            = tu correo exacto de login (ej.{" "}
-            <code className="rounded bg-amber-100 px-1">
-              diazcruzee@gmail.com
-            </code>
-            )
+            <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[12px] text-slate-900">
+              PLATFORM_OWNER_EMAIL
+            </code>{" "}
+            = tu correo exacto de login (el mismo que usas en /login).
           </li>
         </ul>
-        <p className="mt-2 text-[12px] text-amber-900/90">
-          Opcional: lista de correos en{" "}
-          <code className="rounded bg-amber-100 px-1">
+        <p className="mt-3 text-[12px] text-slate-600">
+          Opcional: varios super admins con{" "}
+          <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[12px] text-slate-900">
             PLATFORM_SUPERADMIN_EMAILS
           </code>{" "}
-          separados por coma. Después de guardar, haz{" "}
-          <strong>Redeploy</strong>.
+          (correos separados por coma). Tras guardar variables, ejecuta un{" "}
+          <strong className="text-slate-800">Redeploy</strong> en Vercel.
         </p>
       </section>
     </div>

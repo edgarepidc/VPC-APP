@@ -25,8 +25,8 @@ export function AdminNav() {
             href={href}
             className={
               active
-                ? "rounded-md bg-amber-100 px-3 py-1.5 text-sm font-medium text-amber-950 ring-1 ring-amber-300/60"
-                : "rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                ? "rounded-lg bg-[#0f1f5c]/10 px-3 py-1.5 text-sm font-semibold text-[#0f1f5c] ring-1 ring-[#0f1f5c]/20"
+                : "rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
             }
           >
             {label}

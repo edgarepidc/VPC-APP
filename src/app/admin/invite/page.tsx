@@ -130,7 +130,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
               <p className="mt-2 text-sm text-slate-600">
                 Crea un tenant en{" "}
                 <Link
-                  className="font-medium text-amber-900 underline decoration-amber-900/40 underline-offset-2 hover:decoration-amber-900"
+                  className="font-medium text-[#0f1f5c] underline decoration-[#0f1f5c]/35 underline-offset-2 hover:decoration-[#0f1f5c]"
                   href="/admin/tenants"
                 >
                   Organizaciones
@@ -156,7 +156,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                   <select
                     name="tenantId"
                     required
-                    className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-400/80 focus:bg-white focus:ring-2 focus:ring-amber-400/25"
+                    className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#1b3a6b]/55 focus:bg-white focus:ring-2 focus:ring-[#0f1f5c]/18"
                     defaultValue=""
                   >
                     <option value="" disabled>
@@ -176,7 +176,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                     type="email"
                     required
                     placeholder="usuario@empresa.com"
-                    className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-amber-400/80 focus:bg-white focus:ring-2 focus:ring-amber-400/25"
+                    className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-[#1b3a6b]/55 focus:bg-white focus:ring-2 focus:ring-[#0f1f5c]/18"
                   />
                 </label>
                 <label className="grid gap-1.5 text-sm">
@@ -184,7 +184,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                   <select
                     name="role"
                     defaultValue="member"
-                    className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-400/80 focus:bg-white focus:ring-2 focus:ring-amber-400/25"
+                    className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#1b3a6b]/55 focus:bg-white focus:ring-2 focus:ring-[#0f1f5c]/18"
                   >
                     {(Object.keys(ROLE_LABELS) as RoleKey[]).map((key) => (
                       <option key={key} value={key}>
@@ -257,7 +257,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                               Aceptada
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-900 ring-1 ring-amber-600/20">
+                            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-400/25">
                               Pendiente
                             </span>
                           )}

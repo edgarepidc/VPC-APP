@@ -71,7 +71,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
       <p className="text-sm text-slate-600">
         Este módulo es el <strong>alta de cliente</strong> en la plataforma: cada
         fila es un tenant aislado. Para operar dentro del cliente usa{" "}
-        <Link href="/admin" className="font-medium text-amber-900 underline">
+        <Link href="/admin" className="font-medium text-[#0f1f5c] underline decoration-[#0f1f5c]/35 underline-offset-2 hover:decoration-[#0f1f5c]">
           Cartera de clientes
         </Link>
         .
