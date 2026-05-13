@@ -5,7 +5,10 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getAppUrl } from "@/lib/env";
 import { ROLE_LABELS } from "@/lib/role-labels";
 import type { RoleKey } from "@/lib/types";
-import { inviteAuthUserToTenant } from "@/modules/invitations/service";
+import {
+  inviteAuthUserToTenant,
+  type InviteAuthResult,
+} from "@/modules/invitations/service";
 import { PlanLimitError, listAllTenants } from "@/modules/platform";
 
 export const dynamic = "force-dynamic";
@@ -36,24 +39,25 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
       redirect("/admin/invite?error=Datos+invalidos.");
     }
 
+    let result: InviteAuthResult;
     try {
-      const result = await inviteAuthUserToTenant({
+      result = await inviteAuthUserToTenant({
         tenantId,
         email,
         roleKey,
         invitedBy: s.userId,
         redirectTo: `${getAppUrl().value}/login`,
       });
-      if (result.status === "emailed") {
-        redirect("/admin/invite?ok=Invitacion+enviada+por+correo.");
-      }
-      redirect(`/admin/invite?ok=${encodeURIComponent(result.message)}`);
     } catch (e) {
       if (e instanceof PlanLimitError) {
         redirect(`/admin/invite?error=${encodeURIComponent(e.message)}`);
       }
       redirect(`/admin/invite?error=${encodeURIComponent((e as Error).message)}`);
     }
+    if (result.status === "emailed") {
+      redirect("/admin/invite?ok=Invitacion+enviada+por+correo.");
+    }
+    redirect(`/admin/invite?ok=${encodeURIComponent(result.message)}`);
   }
 
   return (

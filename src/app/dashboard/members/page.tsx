@@ -6,7 +6,10 @@ import { ROLE_LABELS } from "@/lib/role-labels";
 import { canManageMembers } from "@/lib/rbac";
 import type { RoleKey } from "@/lib/types";
 import { requireTenantId } from "@/lib/tenancy";
-import { inviteAuthUserToTenant } from "@/modules/invitations/service";
+import {
+  inviteAuthUserToTenant,
+  type InviteAuthResult,
+} from "@/modules/invitations/service";
 import { PlanLimitError, getTenantUsageSnapshot } from "@/modules/platform";
 import {
   assignRoleByEmail,
@@ -51,7 +54,6 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
         email,
         roleKey,
       });
-      redirect("/dashboard/members?ok=Miembro+actualizado+directamente");
     } catch (error) {
       if (error instanceof PlanLimitError) {
         redirect(
@@ -64,20 +66,15 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
         );
       }
 
+      let result: InviteAuthResult;
       try {
-        const result = await inviteAuthUserToTenant({
+        result = await inviteAuthUserToTenant({
           tenantId: currentSession.activeTenantId,
           email,
           roleKey,
           invitedBy: currentSession.userId,
           redirectTo: `${appUrl.value}/login`,
         });
-        if (result.status === "emailed") {
-          redirect("/dashboard/members?ok=Invitacion+enviada+por+correo");
-        }
-        redirect(
-          `/dashboard/members?ok=${encodeURIComponent(result.message)}`,
-        );
       } catch (inviteFlowError) {
         if (inviteFlowError instanceof PlanLimitError) {
           redirect(
@@ -90,7 +87,15 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
           )}`,
         );
       }
+      if (result.status === "emailed") {
+        redirect("/dashboard/members?ok=Invitacion+enviada+por+correo");
+      }
+      redirect(
+        `/dashboard/members?ok=${encodeURIComponent(result.message)}`,
+      );
     }
+
+    redirect("/dashboard/members?ok=Miembro+actualizado+directamente");
   }
 
   return (
