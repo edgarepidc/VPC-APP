@@ -143,3 +143,24 @@ export async function acceptPendingInvitationsForUser(input: {
     });
   }
 }
+
+/** Vista plataforma: últimas invitaciones en todos los tenants. */
+export async function listRecentInvitationsForPlatform(options?: {
+  take?: number;
+}) {
+  const take = Math.min(Math.max(options?.take ?? 40, 1), 100);
+  return db.invitation.findMany({
+    orderBy: { createdAt: "desc" },
+    take,
+    select: {
+      id: true,
+      email: true,
+      roleKey: true,
+      status: true,
+      createdAt: true,
+      acceptedAt: true,
+      tenant: { select: { name: true, slug: true } },
+      sender: { select: { name: true, email: true } },
+    },
+  });
+}
