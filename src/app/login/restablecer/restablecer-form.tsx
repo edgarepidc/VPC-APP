@@ -17,7 +17,9 @@ export function RestablecerForm({
   supabaseUrl,
   supabaseKey,
 }: RestablecerFormProps) {
-  const [phase, setPhase] = useState<Phase>("loading");
+  const [phase, setPhase] = useState<Phase>(() =>
+    supabaseUrl && supabaseKey ? "loading" : "no-session",
+  );
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -30,10 +32,7 @@ export function RestablecerForm({
   }, [supabaseUrl, supabaseKey]);
 
   useEffect(() => {
-    if (!supabase) {
-      setPhase("no-session");
-      return;
-    }
+    if (!supabase) return;
 
     const client = supabase;
     let cancelled = false;

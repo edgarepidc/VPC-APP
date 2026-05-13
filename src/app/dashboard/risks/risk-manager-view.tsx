@@ -189,7 +189,7 @@ export function RiskManagerView({
     const eff = tV > 0 ? Math.round((1 - tR / tV) * 100) : 0;
     const L = "─".repeat(68);
     const D = "═".repeat(68);
-    let body = `${D}
+    const body = `${D}
                   RISK MEMO — EXPOSICIÓN FINANCIERA
                       PARA COMITÉ DE DIRECCIÓN
 ${D}

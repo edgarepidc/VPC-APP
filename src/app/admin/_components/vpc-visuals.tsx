@@ -1,14 +1,12 @@
 import type { ReactNode } from "react";
 
 const SEGMENT_COLS = [
-  "bg-[#5a7fc4]",
+  "bg-[#0f1f5c]",
   "bg-[#c9a46c]",
-  "bg-[#4a9d8f]",
-  "bg-[#9b7ed9]",
-  "bg-[#6b8cae]",
-  "bg-[#c97b84]",
-  "bg-[#7a9e6f]",
-  "bg-[#8b7d6b]",
+  "bg-[#2a4a7a]",
+  "bg-[#d4b896]",
+  "bg-[#1a3052]",
+  "bg-[#a67c52]",
 ] as const;
 
 export function KpiCard({
@@ -22,42 +20,42 @@ export function KpiCard({
   value: ReactNode;
   hint?: string;
   icon: ReactNode;
-  accent?: "navy" | "emerald" | "sky";
+  accent?: "navy" | "tan" | "steel";
 }) {
   const border =
-    accent === "emerald"
-      ? "border-emerald-200/80"
-      : accent === "sky"
-        ? "border-sky-200/80"
-        : "border-slate-200/90";
+    accent === "tan"
+      ? "border-[#c9a46c]/45"
+      : accent === "steel"
+        ? "border-[#2a4a7a]/35"
+        : "border-[#e3d6c4]";
   const glow =
-    accent === "emerald"
-      ? "from-emerald-500/12 via-white to-white"
-      : accent === "sky"
-        ? "from-sky-500/12 via-white to-white"
-        : "from-[#0f1f5c]/10 via-white to-white";
+    accent === "tan"
+      ? "from-[#c9a46c]/18 via-white to-white"
+      : accent === "steel"
+        ? "from-[#2a4a7a]/14 via-white to-white"
+        : "from-[#0f1f5c]/10 via-[#faf6ef] to-white";
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-xl border ${border} bg-white p-4 shadow-sm ring-1 ring-slate-900/[0.03] transition duration-200 hover:-translate-y-0.5 hover:shadow-md`}
+      className={`group relative overflow-hidden rounded-xl border ${border} bg-[linear-gradient(145deg,#ffffff_0%,#faf8f4_100%)] p-4 shadow-sm ring-1 ring-[#0f1f5c]/[0.05] transition duration-200 hover:-translate-y-0.5 hover:shadow-md`}
     >
       <div
         className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${glow} opacity-0 transition group-hover:opacity-100`}
         aria-hidden
       />
       <div className="relative flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-900/[0.06] text-[#0f1f5c] ring-1 ring-slate-900/8">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0f1f5c]/12 via-[#faf6ef] to-[#c9a46c]/25 text-[#0f1f5c] ring-1 ring-[#c9a46c]/35">
           {icon}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b5c48]">
             {label}
           </p>
-          <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-slate-900">
+          <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-[#0f1f5c]">
             {value}
           </p>
           {hint ? (
-            <p className="mt-1 text-[12px] leading-snug text-slate-500">{hint}</p>
+            <p className="mt-1 text-[12px] leading-snug text-[#5c6573]">{hint}</p>
           ) : null}
         </div>
       </div>
@@ -78,17 +76,17 @@ export function PlanDistributionPanel({
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-5 text-center text-sm text-slate-500">
+      <div className="rounded-xl border border-dashed border-[#d4c4b0] bg-[#faf8f4]/90 p-5 text-center text-sm text-[#6b5c48]">
         Sin datos de planes en esta vista.
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-900/[0.04]">
+    <div className="rounded-xl border border-[#e3d6c4] bg-[linear-gradient(160deg,#ffffff_0%,#faf8f4_100%)] p-5 shadow-sm ring-1 ring-[#0f1f5c]/[0.04]">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">
+        <h3 className="text-sm font-semibold text-[#0f1f5c]">{title}</h3>
+        <span className="rounded-full border border-[#c9a46c]/35 bg-[#0f1f5c]/[0.06] px-2.5 py-0.5 text-[11px] font-semibold text-[#0f1f5c]">
           {total} org.
         </span>
       </div>
@@ -96,15 +94,15 @@ export function PlanDistributionPanel({
         {entries.map(([plan, n], i) => (
           <div key={plan}>
             <div className="mb-1 flex justify-between text-[12px]">
-              <span className="font-medium capitalize text-slate-700">{plan}</span>
-              <span className="tabular-nums text-slate-500">
+              <span className="font-medium capitalize text-[#0f1f5c]">{plan}</span>
+              <span className="tabular-nums text-[#5c6573]">
                 {n}{" "}
-                <span className="text-slate-400">
+                <span className="text-[#9a8b78]">
                   ({Math.round((n / total) * 100)}%)
                 </span>
               </span>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-2.5 overflow-hidden rounded-full bg-[#ece4d6]">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${SEGMENT_COLS[i % SEGMENT_COLS.length]}`}
                 style={{ width: `${(n / max) * 100}%` }}
@@ -113,13 +111,13 @@ export function PlanDistributionPanel({
           </div>
         ))}
       </div>
-      <details className="group mt-4 border-t border-slate-100 pt-3">
+      <details className="group mt-4 border-t border-[#e8dfd0] pt-3">
         <summary className="cursor-pointer list-none text-[12px] font-medium text-[#0f1f5c] outline-none marker:content-none [&::-webkit-details-marker]:hidden">
-          <span className="underline decoration-[#0f1f5c]/30 underline-offset-2 group-open:decoration-[#0f1f5c]">
+          <span className="underline decoration-[#c9a46c]/50 underline-offset-2 group-open:decoration-[#c9a46c]">
             Cómo leer este gráfico
           </span>
         </summary>
-        <p className="mt-2 text-[12px] leading-relaxed text-slate-600">
+        <p className="mt-2 text-[12px] leading-relaxed text-[#5c6573]">
           Cada barra compara el volumen de organizaciones por plan frente al plan
           con más clientes en esta vista. Útil para ver concentración Starter / Pro
           / Enterprise de un vistazo.
@@ -143,21 +141,21 @@ export function TenantProjectShareBar({
 
   if (sorted.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-5 text-center text-sm text-slate-500">
+      <div className="rounded-xl border border-dashed border-[#d4c4b0] bg-[#faf8f4]/90 p-5 text-center text-sm text-[#6b5c48]">
         Aún no hay proyectos registrados en las organizaciones de esta vista.
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-900/[0.04]">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      <p className="mt-1 text-[12px] text-slate-500">
+    <div className="rounded-xl border border-[#e3d6c4] bg-[linear-gradient(160deg,#ffffff_0%,#faf8f4_100%)] p-5 shadow-sm ring-1 ring-[#0f1f5c]/[0.04]">
+      <h3 className="text-sm font-semibold text-[#0f1f5c]">{title}</h3>
+      <p className="mt-1 text-[12px] text-[#5c6573]">
         Franjas proporcionales a proyectos; hasta 10 organizaciones con más
         carga en esta lista.
       </p>
       <div
-        className="mt-4 flex h-4 overflow-hidden rounded-full ring-1 ring-slate-900/10"
+        className="mt-4 flex h-4 overflow-hidden rounded-full ring-1 ring-[#c9a46c]/25"
         role="img"
         aria-label="Distribución de proyectos entre organizaciones"
       >
@@ -170,16 +168,16 @@ export function TenantProjectShareBar({
           />
         ))}
       </div>
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-slate-600">
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-[#5c6573]">
         {sorted.slice(0, 6).map((t, i) => (
           <li key={t.id} className="flex items-center gap-1.5">
             <span
               className={`h-2 w-2 shrink-0 rounded-sm ${SEGMENT_COLS[i % SEGMENT_COLS.length]}`}
             />
-            <span className="max-w-[140px] truncate font-medium text-slate-700">
+            <span className="max-w-[140px] truncate font-medium text-[#0f1f5c]">
               {t.name}
             </span>
-            <span className="tabular-nums text-slate-400">({t.projects})</span>
+            <span className="tabular-nums text-[#8a7d6f]">({t.projects})</span>
           </li>
         ))}
       </ul>
@@ -198,9 +196,9 @@ export function InvitationStatusDonut({
   const acceptedDeg = sum === 0 ? 0 : (accepted / sum) * 360;
 
   return (
-    <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-900/[0.04]">
-      <h3 className="text-sm font-semibold text-slate-900">Estado de invitaciones</h3>
-      <p className="mt-1 text-[12px] text-slate-500">
+    <div className="rounded-xl border border-[#e3d6c4] bg-[linear-gradient(160deg,#ffffff_0%,#faf8f4_100%)] p-5 shadow-sm ring-1 ring-[#0f1f5c]/[0.04]">
+      <h3 className="text-sm font-semibold text-[#0f1f5c]">Estado de invitaciones</h3>
+      <p className="mt-1 text-[12px] text-[#5c6573]">
         Totales en base de datos (no solo la tabla de 50 filas).
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-6">
@@ -209,45 +207,45 @@ export function InvitationStatusDonut({
           style={{
             background:
               sum === 0
-                ? "conic-gradient(rgb(226 232 240) 0deg 360deg)"
-                : `conic-gradient(rgb(16 185 129) 0deg ${acceptedDeg}deg, rgb(226 232 240) ${acceptedDeg}deg 360deg)`,
+                ? "conic-gradient(#e8dfd0 0deg 360deg)"
+                : `conic-gradient(#c9a46c 0deg ${acceptedDeg}deg, #e8dfd0 ${acceptedDeg}deg 360deg)`,
           }}
           role="img"
           aria-label={`Aceptadas ${accepted}, pendientes ${pending}`}
         >
-          <div className="absolute inset-[18%] flex flex-col items-center justify-center rounded-full bg-white text-center shadow-sm">
-            <span className="text-lg font-bold tabular-nums text-slate-900">{sum}</span>
-            <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+          <div className="absolute inset-[18%] flex flex-col items-center justify-center rounded-full bg-white text-center shadow-sm ring-1 ring-[#c9a46c]/20">
+            <span className="text-lg font-bold tabular-nums text-[#0f1f5c]">{sum}</span>
+            <span className="text-[9px] font-semibold uppercase tracking-wide text-[#8a7d6f]">
               Total
             </span>
           </div>
         </div>
         <dl className="grid flex-1 gap-3 text-sm sm:grid-cols-2">
-          <div className="rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2">
-            <dt className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800">
+          <div className="rounded-lg border border-[#c9a46c]/45 bg-[#faf5eb] px-3 py-2">
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#6b4f2a]">
               Aceptadas
             </dt>
-            <dd className="text-xl font-semibold tabular-nums text-emerald-950">
+            <dd className="text-xl font-semibold tabular-nums text-[#0f1f5c]">
               {accepted}
             </dd>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-            <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+          <div className="rounded-lg border border-[#cfd8e6] bg-[#f4f6f9] px-3 py-2">
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#4a5560]">
               Pendientes
             </dt>
-            <dd className="text-xl font-semibold tabular-nums text-slate-900">
+            <dd className="text-xl font-semibold tabular-nums text-[#0f1f5c]">
               {pending}
             </dd>
           </div>
         </dl>
       </div>
-      <details className="group mt-4 border-t border-slate-100 pt-3">
+      <details className="group mt-4 border-t border-[#e8dfd0] pt-3">
         <summary className="cursor-pointer list-none text-[12px] font-medium text-[#0f1f5c] outline-none marker:content-none [&::-webkit-details-marker]:hidden">
-          <span className="underline decoration-[#0f1f5c]/30 underline-offset-2">
+          <span className="underline decoration-[#c9a46c]/50 underline-offset-2">
             Detalle operativo
           </span>
         </summary>
-        <ul className="mt-2 list-inside list-disc space-y-1 text-[12px] text-slate-600">
+        <ul className="mt-2 list-inside list-disc space-y-1 text-[12px] text-[#5c6573]">
           <li>
             Las <strong>aceptadas</strong> ya generaron membresía al iniciar sesión
             el invitado.

@@ -1,10 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import {
-  getSessionUser,
-  setActiveTenantAsPlatformOwner,
-} from "@/lib/auth/session";
+import { getSessionUser, setActiveTenantAsPlatformOwner } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { listAllTenants } from "@/modules/platform";
 
@@ -81,12 +78,17 @@ export default async function AdminHomePage({ searchParams }: Props) {
         </p>
       )}
       {params.ok && (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+        <p className="rounded-md border border-[#c9a46c]/40 bg-[linear-gradient(135deg,#faf8f4_0%,#f3ead8_100%)] p-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-[#0f1f5c]/[0.05]">
           {params.ok}
         </p>
       )}
 
-      <section className="rounded-xl border border-[#e8e6e1] bg-gradient-to-br from-[#0f1f5c] to-[#1b2a6b] p-6 text-white shadow-md">
+      <section className="relative overflow-hidden rounded-xl border border-[#c9a46c]/40 bg-gradient-to-br from-[#0f1f5c] via-[#152d4f] to-[#261c16] p-6 text-white shadow-[0_16px_48px_-18px_rgba(15,31,92,0.5)] ring-1 ring-white/10">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_88%_8%,rgba(201,164,108,0.2),transparent_52%)]"
+          aria-hidden
+        />
+        <div className="relative">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
           Value Project Consulting
         </p>
@@ -121,6 +123,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
             </p>
           </div>
         </div>
+        </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -143,14 +146,14 @@ export default async function AdminHomePage({ searchParams }: Props) {
               : "Todos los proyectos bajo estos tenants."
           }
           icon={<IconProjects />}
-          accent="sky"
+          accent="steel"
         />
         <KpiCard
           label="Miembros en organización (vista)"
           value={totalMembershipsInView}
           hint={`Promedio de ${avgProjects} proyectos por organización en esta lista.`}
           icon={<IconPeople />}
-          accent="emerald"
+          accent="tan"
         />
       </section>
 
@@ -159,19 +162,19 @@ export default async function AdminHomePage({ searchParams }: Props) {
         <TenantProjectShareBar tenants={tenantProjectRows} />
       </div>
 
-      <section className="rounded-xl border border-[#e8e6e1] bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-[#e3d6c4] bg-[linear-gradient(165deg,#ffffff_0%,#faf8f4_100%)] p-6 shadow-sm ring-1 ring-[#0f1f5c]/[0.04]">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-[#1a1916]">
+            <h3 className="text-base font-semibold text-[#0f1f5c]">
               Cartera de organizaciones
             </h3>
-            <p className="mt-1 text-[13px] text-[#6b6860]">
+            <p className="mt-1 text-[13px] text-[#5c5346]">
               Entra al workspace del cliente para ver y editar sus proyectos.
             </p>
           </div>
           <Link
             href="/admin/tenants"
-            className="rounded-md border border-[#e8e6e1] bg-[#f7f6f3] px-3 py-2 text-[13px] font-medium text-[#1a1916] hover:bg-[#f0ede8]"
+            className="rounded-lg border border-[#c9a46c]/45 bg-gradient-to-b from-white to-[#faf6ef] px-3 py-2 text-[13px] font-semibold text-[#0f1f5c] shadow-sm ring-1 ring-[#0f1f5c]/6 transition hover:border-[#c9a46c]/70 hover:shadow-md"
           >
             Crear organizacion nueva
           </Link>
@@ -191,18 +194,18 @@ export default async function AdminHomePage({ searchParams }: Props) {
             type="search"
             placeholder="Nombre o slug..."
             defaultValue={rawQ}
-            className="min-w-[200px] flex-1 rounded-md border border-[#e8e6e1] bg-white px-3 py-2 text-[13px] text-[#1a1916] placeholder:text-[#a09d98] focus:border-[#1a1916] focus:outline-none focus:ring-1 focus:ring-[#1a1916]"
+            className="min-w-[200px] flex-1 rounded-lg border border-[#e3d6c4] bg-white px-3 py-2 text-[13px] text-[#1a1916] placeholder:text-[#a09d98] focus:border-[#0f1f5c]/40 focus:outline-none focus:ring-2 focus:ring-[#0f1f5c]/15"
           />
           <button
             type="submit"
-            className="rounded-md bg-[#1a1916] px-4 py-2 text-[13px] font-medium text-white hover:bg-[#2d2c29]"
+            className="rounded-lg bg-gradient-to-b from-[#152d4f] to-[#0f1f5c] px-4 py-2 text-[13px] font-semibold text-white shadow-sm ring-1 ring-[#c9a46c]/35 transition hover:from-[#1a3a63] hover:to-[#12224d] active:scale-[0.99]"
           >
             Buscar
           </button>
           {isFiltered && (
             <Link
               href="/admin"
-              className="text-[13px] font-medium text-[#2563eb] underline"
+              className="text-[13px] font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
             >
               Limpiar filtro
             </Link>
@@ -212,7 +215,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-[13px]">
             <thead>
-              <tr className="border-b border-[#e8e6e1] text-left">
+              <tr className="border-b border-[#e8dfd0] text-left">
                 <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
                   Organizacion
                 </th>
@@ -237,9 +240,9 @@ export default async function AdminHomePage({ searchParams }: Props) {
               {tenants.map((t) => (
                 <tr
                   key={t.id}
-                  className="border-b border-[#f0ede8] transition hover:bg-[#f7f6f3]"
+                  className="border-b border-[#f0ebe0] transition hover:bg-[#faf6ef]"
                 >
-                  <td className="py-3 pr-3 font-medium text-[#1a1916]">
+                  <td className="py-3 pr-3 font-medium text-[#0f1f5c]">
                     {t.name}
                   </td>
                   <td className="py-3 pr-3 font-mono text-[12px] text-[#57534e]">
@@ -258,7 +261,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
                         <input type="hidden" name="tenantId" value={t.id} />
                         <button
                           type="submit"
-                          className="rounded-md bg-[#1a1916] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#2d2c29]"
+                          className="rounded-lg bg-gradient-to-b from-[#152d4f] to-[#0f1f5c] px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm ring-1 ring-[#c9a46c]/30 transition hover:from-[#1a3a63] hover:to-[#12224d] active:scale-[0.99]"
                         >
                           Entrar al workspace
                         </button>
@@ -280,63 +283,16 @@ export default async function AdminHomePage({ searchParams }: Props) {
           {tenants.length === 0 && (
             <p className="py-10 text-center text-[13px] text-[#a09d98]">
               Aún no hay organizaciones.{" "}
-              <Link href="/admin/tenants" className="font-medium text-[#2563eb] underline">
+              <Link
+                href="/admin/tenants"
+                className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+              >
                 Crear la primera
               </Link>
               .
             </p>
           )}
         </div>
-      </section>
-
-      <section className="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-50 to-white p-5 text-[13px] leading-relaxed text-slate-800 shadow-sm ring-1 ring-slate-900/[0.04]">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <p className="font-semibold text-slate-900">
-            Configuración en Vercel (una vez por entorno)
-          </p>
-          <span className="rounded-full bg-slate-900/[0.06] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
-            Ops
-          </span>
-        </div>
-        <p className="mt-2 text-slate-600">
-          Para reconocer al dueño de la consultora sin tocar la base de datos,
-          define en <strong className="text-slate-800">Production</strong>:
-        </p>
-        <ul className="mt-3 list-inside list-disc space-y-1.5 text-slate-700">
-          <li>
-            <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[12px] text-slate-900">
-              PLATFORM_OWNER_EMAIL
-            </code>{" "}
-            = tu correo exacto de login (el mismo que usas en /login).
-          </li>
-        </ul>
-        <p className="mt-3 text-[12px] text-slate-600">
-          Opcional: varios super admins con{" "}
-          <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[12px] text-slate-900">
-            PLATFORM_SUPERADMIN_EMAILS
-          </code>{" "}
-          (correos separados por coma). Tras guardar variables, ejecuta un{" "}
-          <strong className="text-slate-800">Redeploy</strong> en Vercel.
-        </p>
-        <details className="group mt-4 border-t border-slate-200 pt-3">
-          <summary className="cursor-pointer list-none text-[12px] font-medium text-[#0f1f5c] outline-none marker:content-none [&::-webkit-details-marker]:hidden">
-            <span className="underline decoration-[#0f1f5c]/30 underline-offset-2">
-              Checklist rápido
-            </span>
-          </summary>
-          <ol className="mt-2 list-inside list-decimal space-y-1 text-[12px] text-slate-600">
-            <li>Variables en el entorno <strong>Production</strong> de Vercel.</li>
-            <li>
-              <code className="rounded bg-white px-1">NEXT_PUBLIC_APP_URL</code> con
-              HTTPS del dominio productivo.
-            </li>
-            <li>
-              <code className="rounded bg-white px-1">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
-              solo servidor (nunca <code className="rounded bg-white px-1">NEXT_PUBLIC_</code>
-              ).
-            </li>
-          </ol>
-        </details>
       </section>
     </div>
   );

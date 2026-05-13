@@ -18,6 +18,23 @@ export type GetSessionUserOptions = {
   redirectOnDbFailure?: boolean;
 };
 
+function parsePlatformSuperadminEmailsFromEnv(): string[] {
+  return (
+    process.env.PLATFORM_SUPERADMIN_EMAILS?.split(/[,;]/)
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean) ?? []
+  );
+}
+
+/**
+ * True when PLATFORM_OWNER_EMAIL or PLATFORM_SUPERADMIN_EMAILS is set in the
+ * runtime environment (same notion as getSessionUser uses for env-based access).
+ */
+export function isPlatformSuperadminEnvConfigured(): boolean {
+  if (process.env.PLATFORM_OWNER_EMAIL?.trim()) return true;
+  return parsePlatformSuperadminEmailsFromEnv().length > 0;
+}
+
 function envDatabaseHints(): string {
   const raw = process.env.DATABASE_URL?.trim() ?? "";
   if (!raw) {
@@ -49,6 +66,21 @@ function prismaFailureMessage(err: unknown): string {
       "Falta una columna en Postgres (P2022" +
       (col ? `: ${col}` : "") +
       '). Lo habitual es la migración user_superadmin: en Supabase → SQL Editor ejecuta: ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isSuperAdmin" BOOLEAN NOT NULL DEFAULT false; O en tu PC: npx prisma migrate deploy con DATABASE_URL de producción.'
+    );
+  }
+
+  const causeMsg =
+    err instanceof Error && err.cause instanceof Error ? err.cause.message : "";
+  const errMsg =
+    err instanceof Error ? `${err.message} ${causeMsg}` : String(err);
+  if (/EMAXCONNSESSION|max clients reached.*session mode/i.test(errMsg)) {
+    const tail = envDatabaseHints();
+    const healthHint =
+      " /api/health/db solo hace SELECT 1; el login además escribe en User (upsert).";
+    return (
+      "Se alcanzó el máximo de conexiones del Session pooler de Supabase (≈15 sesiones compartidas en todo el proyecto). Solución recomendada: en Supabase → Connect → copia la cadena «Transaction pooler» (host *.pooler.supabase.com, puerto 6543) y sustituye DATABASE_URL en Vercel; redeploy. La app añade pgbouncer=true y, en host pooler, connection_limit=1 para aliviar el uso por instancia." +
+      tail +
+      healthHint
     );
   }
 
@@ -212,10 +244,7 @@ export async function getSessionUser(
     /* columna aun no migrada */
   }
 
-  const envSuperList =
-    process.env.PLATFORM_SUPERADMIN_EMAILS?.split(/[,;]/)
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean) ?? [];
+  const envSuperList = parsePlatformSuperadminEmailsFromEnv();
   const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
   const isSuperAdmin =
     isSuperAdminDb ||
@@ -248,6 +277,7 @@ export async function getSessionUser(
     role,
     activeTenantId,
     isSuperAdmin,
+    isSuperAdminFromDb: isSuperAdminDb,
     isPlatformVisit,
   };
 }

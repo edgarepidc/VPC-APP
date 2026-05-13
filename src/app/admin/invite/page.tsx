@@ -103,12 +103,17 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
         </p>
       )}
       {params.ok && (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950 shadow-sm">
+        <p className="rounded-xl border border-[#c9a46c]/40 bg-[linear-gradient(135deg,#faf8f4_0%,#f3ead8_100%)] px-4 py-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-[#0f1f5c]/[0.05]">
           {params.ok}
         </p>
       )}
 
-      <section className="overflow-hidden rounded-xl border border-[#e8e6e1] bg-gradient-to-br from-[#0f1f5c] to-[#1b2a6b] p-6 text-white shadow-md">
+      <section className="relative overflow-hidden rounded-xl border border-[#c9a46c]/40 bg-gradient-to-br from-[#0f1f5c] via-[#152d4f] to-[#261c16] p-6 text-white shadow-[0_16px_48px_-18px_rgba(15,31,92,0.5)] ring-1 ring-white/10">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_88%_8%,rgba(201,164,108,0.2),transparent_52%)]"
+          aria-hidden
+        />
+        <div className="relative">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
           Value Project Consulting
         </p>
@@ -125,7 +130,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
             <dt className="text-[11px] font-medium uppercase tracking-wide text-white/50">
               Redirección en correo
             </dt>
-            <dd className="mt-1 break-all font-mono text-[13px] text-emerald-100/95">
+            <dd className="mt-1 break-all font-mono text-[13px] text-[#f0e0c4]">
               {appUrl.value}/login
             </dd>
           </div>
@@ -142,6 +147,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
             <dd className="mt-1 text-2xl font-semibold tabular-nums">{pendingTotal}</dd>
           </div>
         </dl>
+        </div>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-5">
@@ -154,14 +160,14 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
             value={acceptedWeek}
             hint="Invitaciones completadas recientemente."
             icon={<IconMail />}
-            accent="emerald"
+            accent="tan"
           />
           <KpiCard
             label="Tasa de cierre"
             value={`${acceptancePct}%`}
             hint="Aceptadas sobre el total histórico en base de datos."
             icon={<IconMail />}
-            accent="sky"
+            accent="steel"
           />
         </div>
       </div>
@@ -299,7 +305,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                         </td>
                         <td className="px-4 py-3">
                           {isAccepted ? (
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800 ring-1 ring-emerald-600/15">
+                            <span className="inline-flex items-center rounded-full border border-[#c9a46c]/40 bg-[#faf6ef] px-2.5 py-0.5 text-xs font-medium text-[#5c4a2a] ring-1 ring-[#0f1f5c]/10">
                               Aceptada
                             </span>
                           ) : (

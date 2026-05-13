@@ -11,7 +11,7 @@ import {
 export const dynamic = "force-dynamic";
 
 /** Cambia si despliegas una versión nueva del diagnóstico; sirve para comprobar caché/deploy. */
-const HEALTH_DB_SCHEMA = 2;
+const HEALTH_DB_SCHEMA = 3;
 
 function redactDbErrorMessage(message: string): string {
   return message
@@ -78,7 +78,7 @@ export async function GET() {
         urlDiagnostics: safeDiag,
         detail,
         hints,
-        note: "La app añade sslmode=require y pgbouncer=true si el puerto es 6543.",
+        note: "La app añade sslmode=require, pgbouncer=true en :6543 y connection_limit=1 en *.pooler.supabase.com si no viene en la URL.",
       },
       { status: 503 },
     );

@@ -226,7 +226,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
     return list;
   }, [rows, q, st, phase, sort]);
 
-  const { totalPeso, donePeso, inProgPeso, pct, pctInProg, maxPeso } = useMemo(
+  const { totalPeso, donePeso, pct, pctInProg, maxPeso } = useMemo(
     () => calcWeighted(rows),
     [rows],
   );

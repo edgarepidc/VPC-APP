@@ -33,11 +33,16 @@ export function DashboardChrome({
   const [desktopSidebarHidden, setDesktopSidebarHidden] = useState(false);
 
   useEffect(() => {
-    try {
-      setDesktopSidebarHidden(window.localStorage.getItem(STORAGE_SIDEBAR_HIDDEN) === "1");
-    } catch {
-      /* ignore */
-    }
+    const id = window.setTimeout(() => {
+      try {
+        setDesktopSidebarHidden(
+          window.localStorage.getItem(STORAGE_SIDEBAR_HIDDEN) === "1",
+        );
+      } catch {
+        /* ignore */
+      }
+    }, 0);
+    return () => clearTimeout(id);
   }, []);
 
   const persistSidebarHidden = useCallback((hidden: boolean) => {
@@ -64,7 +69,10 @@ export function DashboardChrome({
   }, [pathname, persistSidebarHidden]);
 
   useEffect(() => {
-    closeMobileMenu();
+    const id = window.setTimeout(() => {
+      closeMobileMenu();
+    }, 0);
+    return () => clearTimeout(id);
   }, [pathname, closeMobileMenu]);
 
   useEffect(() => {

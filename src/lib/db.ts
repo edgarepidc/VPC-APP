@@ -7,6 +7,12 @@ const globalForPrisma = globalThis as unknown as {
 /**
  * Supabase Postgres exige TLS. Sin sslmode=require Prisma suele fallar en Vercel.
  * Pooler transaccional (puerto 6543): Prisma necesita pgbouncer=true.
+ *
+ * En *.pooler.supabase.com el Session pooler (puerto 5432) comparte ~15 conexiones
+ * para todo el proyecto; Prisma por defecto abre más por proceso y Vercel ejecuta
+ * muchas funciones en paralelo → EMAXCONNSESSION. Forzamos connection_limit=1
+ * salvo que ya venga en la URL; lo ideal en producción es DATABASE_URL con
+ * Transaction pooler (puerto 6543).
  */
 export function normalizeDatabaseUrl(raw: string): string {
   let url = raw.trim();
@@ -15,6 +21,9 @@ export function normalizeDatabaseUrl(raw: string): string {
   }
   if (url.includes(":6543") && !/pgbouncer=/i.test(url)) {
     url += "&pgbouncer=true";
+  }
+  if (/\.pooler\.supabase\.com/i.test(url) && !/connection_limit=/i.test(url)) {
+    url += "&connection_limit=1";
   }
   return url;
 }
@@ -90,9 +99,14 @@ export function hintsForDatabaseUrl(d: DatabaseUrlDiagnostics): string[] {
       "En el pooler transaccional (puerto 6543) el usuario suele ser postgres.TU_PROJECT_REF, no solo postgres. Copia la cadena exacta del asistente de conexión de Supabase.",
     );
   }
+  if (d.poolerHost && d.port === "5432") {
+    hints.push(
+      "Puerto 5432 en el pooler = modo sesión (pocas conexiones simultáneas para todo el proyecto; con Vercel+Prisma suele agotarse). Preferible: en Supabase copia la URI «Transaction pooler» (puerto 6543) como DATABASE_URL.",
+    );
+  }
   if (!d.poolerHost && d.host?.includes("supabase") && d.port === "5432") {
     hints.push(
-      "Si sigue fallando, prueba explícitamente la opción Session pooler en Supabase (Database → Connection string).",
+      "Si sigue fallando, prueba el host *.pooler.supabase.com (Session o Transaction pooler) en lugar del host directo db.*.",
     );
   }
   return hints;

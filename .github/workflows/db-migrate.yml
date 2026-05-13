@@ -1,8 +1,7 @@
 # Aplica migraciones Prisma contra la base configurada en el secreto DATABASE_URL.
 # Configura en GitHub: Settings → Secrets and variables → Actions → DATABASE_URL
-# (cadena postgresql://... de Supabase, con ?sslmode=require recomendado).
 #
-# Se ejecuta: (1) al hacer push a main si cambia prisma/, (2) manualmente desde la pestaña Actions.
+# Se ejecuta: (1) al hacer push a main si cambia prisma/, (2) manualmente desde Actions.
 
 name: Database migrate
 

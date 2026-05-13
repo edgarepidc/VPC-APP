@@ -90,7 +90,12 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden rounded-xl border border-[#e8e6e1] bg-gradient-to-br from-[#0f1f5c] to-[#1b2a6b] p-6 text-white shadow-md">
+      <section className="relative overflow-hidden rounded-xl border border-[#c9a46c]/40 bg-gradient-to-br from-[#0f1f5c] via-[#152d4f] to-[#261c16] p-6 text-white shadow-[0_16px_48px_-18px_rgba(15,31,92,0.5)] ring-1 ring-white/10">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_88%_8%,rgba(201,164,108,0.2),transparent_52%)]"
+          aria-hidden
+        />
+        <div className="relative">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
           Value Project Consulting
         </p>
@@ -122,6 +127,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
             <dd className="text-2xl font-semibold tabular-nums">{totalMembers}</dd>
           </div>
         </dl>
+        </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -130,7 +136,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
           value={totalProjects}
           hint="Suma de todos los clientes."
           icon={<IconProjects />}
-          accent="sky"
+          accent="steel"
         />
         <KpiCard
           label="Organizaciones registradas"
@@ -166,19 +172,19 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
         </p>
       )}
       {params.ok && !newTenantRow && (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+        <p className="rounded-md border border-[#c9a46c]/40 bg-[linear-gradient(135deg,#faf8f4_0%,#f3ead8_100%)] p-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-[#0f1f5c]/[0.05]">
           {params.ok}
         </p>
       )}
 
       {newTenantRow && (
-        <section className="rounded-lg border border-emerald-300 bg-emerald-50 p-5 text-sm text-emerald-950 shadow-sm">
-          <p className="font-semibold text-emerald-950">Organización creada</p>
+        <section className="rounded-lg border border-[#c9a46c]/45 bg-[linear-gradient(145deg,#ffffff_0%,#faf6ef_55%,#f0e6d4_100%)] p-5 text-sm text-[#2a2412] shadow-md ring-1 ring-[#0f1f5c]/[0.06]">
+          <p className="font-semibold text-[#0f1f5c]">Organización creada</p>
           <p className="mt-2">
-            <span className="font-medium">{newTenantRow.name}</span>{" "}
-            <span className="text-emerald-800">({newTenantRow.slug})</span>
+            <span className="font-medium text-[#1a3052]">{newTenantRow.name}</span>{" "}
+            <span className="text-[#6b5c48]">({newTenantRow.slug})</span>
           </p>
-          <p className="mt-2 text-emerald-900/90">
+          <p className="mt-2 text-[#4a4234]">
             Puedes entrar ya al workspace como consultora, o ir a la cartera para
             seguir creando clientes.
           </p>
@@ -187,14 +193,14 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
               <input type="hidden" name="tenantId" value={newTenantRow.id} />
               <button
                 type="submit"
-                className="rounded-md bg-emerald-800 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-900"
+                className="rounded-md bg-[#0f1f5c] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#152d4f] active:scale-[0.99]"
               >
                 Entrar al workspace ahora
               </button>
             </form>
             <Link
               href="/admin"
-              className="inline-flex items-center rounded-md border border-emerald-700 bg-white px-4 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
+              className="inline-flex items-center rounded-md border border-[#c9a46c]/55 bg-white px-4 py-2 text-sm font-medium text-[#0f1f5c] shadow-sm transition hover:bg-[#faf8f4]"
             >
               Ir a la cartera
             </Link>
