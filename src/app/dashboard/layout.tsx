@@ -68,12 +68,12 @@ export default async function DashboardLayout({
         showPlatformAdmin={session.isSuperAdmin}
         mainBanner={
           session.isPlatformVisit ? (
-            <div className="mb-5 rounded-xl border border-amber-400/35 bg-amber-500/15 px-4 py-3 text-[13px] leading-relaxed text-amber-50">
-              <p className="font-semibold text-amber-100">Modo consultora (sin membresía en este cliente)</p>
-              <p className="mt-1 text-amber-100/90">
+            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-950">
+              <p className="font-semibold text-amber-900">Modo consultora (sin membresía en este cliente)</p>
+              <p className="mt-1 text-amber-900/90">
                 Estás operando este workspace como dueño de plataforma. Los cambios afectan datos del cliente;
                 úsalo con criterio interno. Para volver a la cartera:{" "}
-                <Link href="/admin" className="font-medium text-white underline decoration-amber-200/80">
+                <Link href="/admin" className="font-medium text-amber-950 underline decoration-amber-400">
                   Vista consultora
                 </Link>
                 .

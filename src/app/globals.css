@@ -150,40 +150,40 @@ body {
   );
 }
 
-.dash-glass {
+/* Panel lateral / hoja móvil: misma familia visual que la isla de contenido */
+.dash-nav-panel {
   position: relative;
   z-index: 1;
   border-radius: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(15, 23, 42, 0.45);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--background);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  color: var(--foreground);
 }
 
 .dash-content-shell {
   position: relative;
   z-index: 1;
   border-radius: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   background: var(--background);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.08);
   color: var(--foreground);
 }
 
-.dash-glass .dash-nav-link {
+.dash-nav-panel .dash-nav-link {
   border: 1px solid transparent;
 }
 
-.dash-glass .dash-nav-link:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.08);
+.dash-nav-panel .dash-nav-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.06);
 }
 
-.dash-glass .dash-nav-link--active {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.25);
+.dash-nav-panel .dash-nav-link--active {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.22);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.12);
 }
 
 .dash-greeting {
@@ -212,7 +212,7 @@ body {
   animation: dash-hand-wave 2.2s ease-in-out infinite;
 }
 
-/* Dashboard: barra inferior móvil + FAB escritorio colapsado */
+/* Barra inferior: solo teléfonos (< md); estilo claro como el contenido */
 .dash-bottom-bar {
   position: fixed;
   z-index: 40;
@@ -223,11 +223,11 @@ body {
   align-items: stretch;
   gap: 0.25rem;
   padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 16, 32, 0.82);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--background);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.08);
 }
 
 .dash-bottom-bar__item {
@@ -240,16 +240,16 @@ body {
 }
 
 .dash-bottom-bar__item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: #e4e4e7;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: #18181b;
 }
 
 .dash-bottom-bar__item--active {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #fafafa;
-  box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.22);
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #0f172a;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.15);
 }
 
 .dash-drawer-backdrop {
@@ -286,12 +286,12 @@ body {
   gap: 0.5rem;
   padding: 0.55rem 1rem;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(15, 23, 42, 0.75);
-  color: #e4e4e7;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--background);
+  color: #18181b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -299,6 +299,6 @@ body {
 }
 
 .dash-desktop-fab-trigger:hover {
-  background: rgba(30, 41, 59, 0.9);
+  background: var(--background);
   transform: translateY(-1px);
 }

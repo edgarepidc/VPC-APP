@@ -75,19 +75,19 @@ export function DashboardChrome({
 
   const panelBody = (opts: { onNav?: () => void; showCollapseHint?: boolean }) => (
     <>
-      <p className="dash-greeting text-lg font-medium leading-snug text-zinc-100">
+      <p className="dash-greeting text-lg font-medium leading-snug text-zinc-800">
         {greetingWord},
       </p>
       <p className="mt-1 text-xl font-semibold leading-tight">
-        <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
           {firstName}
         </span>{" "}
         <span aria-hidden className="dash-hand-wave inline-block">
           👋
         </span>
       </p>
-      <p className="mt-2 text-xs leading-relaxed text-zinc-400">{tenantLine}</p>
-      <p className="mt-3 truncate text-[11px] text-zinc-500">{email}</p>
+      <p className="mt-2 text-xs leading-relaxed text-zinc-500">{tenantLine}</p>
+      <p className="mt-3 truncate text-[11px] text-zinc-400">{email}</p>
 
       <SidebarNav showPlatformAdmin={showPlatformAdmin} onLinkClick={opts.onNav} />
 
@@ -96,7 +96,7 @@ export function DashboardChrome({
           <button
             type="button"
             onClick={() => persistSidebarHidden(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-white/10 hover:text-white"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
           >
             <span aria-hidden>⤢</span>
             Pantalla completa
@@ -107,7 +107,7 @@ export function DashboardChrome({
       <form action={signOutAction} className="mt-4">
         <button
           type="submit"
-          className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-white/10 hover:text-white"
+          className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
         >
           🚪 Cerrar sesión
         </button>
@@ -116,21 +116,21 @@ export function DashboardChrome({
   );
 
   return (
-    <div className="relative z-[1] flex flex-1 flex-col gap-6 lg:flex-row">
-      {/* Escritorio: panel lateral */}
+    <div className="relative z-[1] flex flex-1 flex-col gap-6 md:flex-row">
+      {/* Tablet y escritorio: panel lateral (teléfono: solo hoja “Más”) */}
       <aside
         className={[
-          "dash-glass hidden w-full shrink-0 p-5 sm:w-72 lg:max-w-[18rem]",
-          desktopSidebarHidden ? "lg:hidden" : "lg:block",
+          "dash-nav-panel hidden w-full shrink-0 p-5 md:block md:w-72 md:max-w-[18rem]",
+          desktopSidebarHidden ? "md:hidden" : "",
         ].join(" ")}
         aria-label="Navegación principal"
       >
         {panelBody({ showCollapseHint: true })}
       </aside>
 
-      {/* Móvil: hoja “Más” */}
+      {/* Teléfono: hoja “Más” */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="presentation">
+        <div className="fixed inset-0 z-50 md:hidden" role="presentation">
           <button
             type="button"
             className="dash-drawer-backdrop absolute inset-0 border-0 bg-black/55 p-0"
@@ -141,9 +141,9 @@ export function DashboardChrome({
             role="dialog"
             aria-modal="true"
             aria-labelledby={sheetTitleId}
-            className="dash-bottom-sheet dash-glass absolute bottom-0 left-0 right-0 max-h-[min(85dvh,640px)] overflow-y-auto rounded-t-2xl border-b-0 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl"
+            className="dash-bottom-sheet dash-nav-panel absolute bottom-0 left-0 right-0 max-h-[min(85dvh,640px)] overflow-y-auto rounded-t-2xl border-b-0 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl"
           >
-            <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-zinc-500/60" aria-hidden />
+            <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-zinc-300" aria-hidden />
             <p id={sheetTitleId} className="sr-only">
               Menú y accesos
             </p>
@@ -156,7 +156,7 @@ export function DashboardChrome({
       {desktopSidebarHidden && (
         <button
           type="button"
-          className="dash-desktop-fab-trigger hidden lg:flex"
+          className="dash-desktop-fab-trigger hidden md:flex"
           onClick={() => persistSidebarHidden(false)}
           aria-label="Mostrar menú lateral"
         >
@@ -165,16 +165,13 @@ export function DashboardChrome({
         </button>
       )}
 
-      <section className="dash-content-shell min-h-[min(100vh,920px)] flex-1 overflow-hidden px-4 pt-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 sm:pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-6">
+      <section className="dash-content-shell min-h-[min(100vh,920px)] flex-1 overflow-hidden px-4 pt-4 max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 md:pb-6">
         {mainBanner}
         {children}
       </section>
 
-      {/* Barra inferior (móvil / tablet &lt; lg) */}
-      <nav
-        className="dash-bottom-bar lg:hidden"
-        aria-label="Accesos rápidos"
-      >
+      {/* Barra inferior solo en teléfono (&lt; md); tablet/escritorio usan el lateral */}
+      <nav className="dash-bottom-bar md:hidden" aria-label="Accesos rápidos">
         {MOBILE_BOTTOM_PRIMARY.map((item) => {
           const active = pathname === item.href;
           return (
@@ -183,7 +180,7 @@ export function DashboardChrome({
               href={item.href}
               className={[
                 "dash-bottom-bar__item flex flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] font-medium min-h-[44px] min-w-0 flex-1",
-                active ? "dash-bottom-bar__item--active text-white" : "text-zinc-400",
+                active ? "dash-bottom-bar__item--active text-zinc-900" : "text-zinc-500",
               ].join(" ")}
               aria-current={active ? "page" : undefined}
             >
@@ -197,7 +194,7 @@ export function DashboardChrome({
         <button
           type="button"
           onClick={() => setMobileMenuOpen(true)}
-          className="dash-bottom-bar__item flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] font-medium text-zinc-400"
+          className="dash-bottom-bar__item flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] font-medium text-zinc-500"
         >
           <span className="text-xl leading-none" aria-hidden>
             ⋯

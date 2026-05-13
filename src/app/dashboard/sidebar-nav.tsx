@@ -27,7 +27,7 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
             onClick={onLinkClick}
             className={[
               "dash-nav-link flex items-center gap-2.5 rounded-xl px-3 py-2.5 font-medium transition-colors",
-              active ? "dash-nav-link--active text-white" : "text-zinc-300",
+              active ? "dash-nav-link--active text-zinc-900" : "text-zinc-600",
             ].join(" ")}
             aria-current={active ? "page" : undefined}
           >
@@ -40,7 +40,7 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
       })}
 
       <Link
-        className="dash-nav-link mt-3 flex items-center gap-2.5 rounded-xl px-3 py-2.5 font-medium text-zinc-300 transition-colors"
+        className="dash-nav-link mt-3 flex items-center gap-2.5 rounded-xl px-3 py-2.5 font-medium text-zinc-600 transition-colors"
         href="/select-tenant"
         onClick={onLinkClick}
       >
@@ -52,7 +52,7 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
 
       {showPlatformAdmin && (
         <Link
-          className="mt-2 flex items-center gap-2.5 rounded-xl border border-amber-400/35 bg-amber-500/15 px-3 py-2.5 text-sm font-medium text-amber-50 transition hover:bg-amber-500/25"
+          className="mt-2 flex items-center gap-2.5 rounded-xl border border-amber-300/80 bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-950 transition hover:bg-amber-100"
           href="/admin"
           onClick={onLinkClick}
         >
