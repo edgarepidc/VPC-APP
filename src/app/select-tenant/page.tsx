@@ -18,6 +18,12 @@ export default async function SelectTenantPage({
   if (!session) redirect("/login");
   const tenants = await listTenantsForUser(session.userId);
 
+  /** Usuario normal con una sola membresía: entra al dashboard sin elegir tenant. */
+  if (!session.isSuperAdmin && tenants.length === 1) {
+    await setActiveTenant(tenants[0].id);
+    redirect("/dashboard/projects");
+  }
+
   async function selectTenantAction(formData: FormData) {
     "use server";
     const tenantId = String(formData.get("tenantId") ?? "");
