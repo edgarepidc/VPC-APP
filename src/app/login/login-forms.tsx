@@ -4,6 +4,8 @@ import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { supabaseAuthCookieOptions } from "@/utils/supabase/cookie-options";
+
 type LoginFormsProps = {
   supabaseUrl: string | null;
   supabaseKey: string | null;
@@ -24,7 +26,9 @@ export function LoginForms({
   const envOk = !!(supabaseUrl && supabaseKey);
   const supabase = useMemo(() => {
     if (!supabaseUrl || !supabaseKey) return null;
-    return createBrowserClient(supabaseUrl, supabaseKey);
+    return createBrowserClient(supabaseUrl, supabaseKey, {
+      cookieOptions: supabaseAuthCookieOptions(),
+    });
   }, [supabaseUrl, supabaseKey]);
 
   async function handleSignIn(formData: FormData) {
@@ -43,7 +47,16 @@ export function LoginForms({
         setError(err.message);
         return;
       }
-      window.location.assign("/select-tenant");
+      const dest = await fetch("/api/auth/post-login-redirect", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!dest.ok) {
+        window.location.assign("/login");
+        return;
+      }
+      const data = (await dest.json()) as { path?: string };
+      window.location.assign(data.path ?? "/select-tenant");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al iniciar sesion.");
     } finally {
@@ -75,7 +88,16 @@ export function LoginForms({
         );
         return;
       }
-      window.location.assign("/select-tenant");
+      const dest = await fetch("/api/auth/post-login-redirect", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!dest.ok) {
+        window.location.assign("/login");
+        return;
+      }
+      const payload = (await dest.json()) as { path?: string };
+      window.location.assign(payload.path ?? "/select-tenant");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al crear la cuenta.");
     } finally {
