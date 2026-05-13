@@ -238,10 +238,8 @@ body {
 }
 
 .dash-menu-fab {
-  display: flex;
   position: fixed;
   z-index: 45;
-  align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 1rem;
   border-radius: 9999px;

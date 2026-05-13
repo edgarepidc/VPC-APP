@@ -11,6 +11,13 @@ export async function listRisksByTenant(tenantId: string) {
   });
 }
 
+export async function deleteRisk(tenantId: string, riskId: string) {
+  const result = await db.risk.deleteMany({
+    where: { id: riskId, tenantId },
+  });
+  return result.count;
+}
+
 export async function createRisk(input: {
   tenantId: string;
   projectId: string;

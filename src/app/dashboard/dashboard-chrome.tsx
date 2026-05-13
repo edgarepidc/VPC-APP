@@ -162,29 +162,27 @@ export function DashboardChrome({
         </div>
       )}
 
-      {!mobileMenuOpen && (
-        <button
-          type="button"
-          className="dash-menu-fab left-4 top-[max(1rem,env(safe-area-inset-top))] md:hidden"
-          onClick={() => setMobileMenuOpen(true)}
-          aria-label="Abrir menú"
-        >
-          <span aria-hidden>☰</span>
-          <span className="text-sm font-medium">Menú</span>
-        </button>
-      )}
-
-      {desktopSidebarHidden && (
-        <button
-          type="button"
-          className="dash-menu-fab left-4 top-[6.5rem] hidden md:flex"
-          onClick={() => persistSidebarHidden(false)}
-          aria-label="Mostrar menú lateral"
-        >
-          <span aria-hidden>☰</span>
-          <span className="text-sm font-medium">Menú</span>
-        </button>
-      )}
+      {/** Un solo FAB: visibilidad solo con clases (evita doble botón si outer OR falla). */}
+      <button
+        type="button"
+        className={[
+          "dash-menu-fab inline-flex items-center gap-2 rounded-full border border-black/[0.08] px-4 py-2 text-sm font-medium shadow-md backdrop-blur-sm",
+          "left-4 top-[max(1rem,env(safe-area-inset-top))] md:top-[6.5rem]",
+          mobileMenuOpen ? "max-md:hidden" : "max-md:inline-flex",
+          desktopSidebarHidden ? "md:inline-flex" : "md:hidden",
+        ].join(" ")}
+        onClick={() => {
+          if (typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches) {
+            persistSidebarHidden(false);
+          } else {
+            setMobileMenuOpen(true);
+          }
+        }}
+        aria-label="Abrir menú de navegación"
+      >
+        <span aria-hidden>☰</span>
+        <span>Menú</span>
+      </button>
 
       <section className="dash-content-shell min-h-[min(100vh,920px)] flex-1 overflow-hidden px-4 pt-4 max-md:pt-16 sm:px-6 md:pt-6">
         {mainBanner}
