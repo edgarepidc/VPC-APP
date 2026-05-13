@@ -25,7 +25,7 @@ export default async function AdminLayout({
                 className="pointer-events-none absolute -inset-1 rounded-[1.4rem] bg-gradient-to-br from-[#c9a46c]/55 via-[#0f1f5c]/20 to-[#0f1f5c]/45 opacity-90 blur-[2px]"
                 aria-hidden
               />
-              <div className="relative overflow-hidden rounded-2xl border border-[#c9a46c]/50 bg-black p-3 shadow-[0_14px_44px_-14px_rgba(15,31,92,0.55)] ring-1 ring-[#c9a46c]/20">
+              <div className="relative overflow-hidden rounded-2xl border border-[#c9a46c]/45 bg-[linear-gradient(165deg,#ffffff_0%,#faf8f4_100%)] p-3 shadow-[0_14px_44px_-14px_rgba(15,31,92,0.35)] ring-1 ring-white/80">
                 <Image
                   src="/branding/vpc-logo.png"
                   alt="Value Project Consulting"
