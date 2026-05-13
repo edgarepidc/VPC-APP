@@ -16,28 +16,28 @@ export default async function AdminLayout({
   if (!session.isSuperAdmin) redirect("/dashboard/projects");
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-6 py-8">
       <header className="space-y-5 border-b border-slate-200 pb-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 flex-wrap items-start gap-4">
             <Image
               src="/branding/vpc-logo.png"
-              alt="VPC — consultora"
+              alt="Value Project Consulting"
               width={56}
               height={56}
               className="h-14 w-14 shrink-0 object-contain"
               priority
             />
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#1b3a6b]">
-                Consultora VPC
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1b3a6b]">
+                Value Project Consulting
               </p>
-              <h1 className="text-lg font-semibold text-slate-900">
+              <h1 className="text-lg font-semibold tracking-tight text-slate-900">
                 Administración global
               </h1>
               <p className="mt-1 max-w-xl text-sm leading-relaxed text-slate-600">
-                Crea y gestiona la organización (tenant) de cada cliente. Los
-                usuarios se suman por invitación dentro del workspace del cliente.
+                Operación de cartera multitenant: organizaciones cliente, altas y
+                accesos coordinados desde un solo panel.
               </p>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { getAppUrl } from "@/lib/env";
+import { db } from "@/lib/db";
 import { ROLE_LABELS } from "@/lib/role-labels";
 import type { RoleKey } from "@/lib/types";
 import {
@@ -11,6 +12,12 @@ import {
   type InviteAuthResult,
 } from "@/modules/invitations/service";
 import { PlanLimitError, listAllTenants } from "@/modules/platform";
+
+import {
+  IconMail,
+  InvitationStatusDonut,
+  KpiCard,
+} from "../_components/vpc-visuals";
 
 export const dynamic = "force-dynamic";
 
@@ -30,9 +37,28 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
   const session = await getSessionUser();
   if (!session?.isSuperAdmin) redirect("/dashboard/projects");
 
-  const tenants = await listAllTenants();
-  const recentInvites = await listRecentInvitationsForPlatform({ take: 50 });
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  const [tenants, recentInvites, pendingTotal, acceptedTotal, acceptedWeek] =
+    await Promise.all([
+      listAllTenants(),
+      listRecentInvitationsForPlatform({ take: 50 }),
+      db.invitation.count({ where: { status: "pending" } }),
+      db.invitation.count({ where: { status: "accepted" } }),
+      db.invitation.count({
+        where: {
+          status: "accepted",
+          acceptedAt: { gte: weekAgo },
+        },
+      }),
+    ]);
+
   const appUrl = getAppUrl();
+
+  const inviteSum = pendingTotal + acceptedTotal;
+  const acceptancePct =
+    inviteSum === 0 ? 0 : Math.round((acceptedTotal / inviteSum) * 100);
 
   async function platformInviteAction(formData: FormData) {
     "use server";
@@ -69,8 +95,6 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
     redirect(`/admin/invite?ok=${encodeURIComponent(result.message)}`);
   }
 
-  const pendingCount = recentInvites.filter((i) => i.status === "pending").length;
-
   return (
     <div className="space-y-8">
       {params.error && (
@@ -86,7 +110,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
 
       <section className="overflow-hidden rounded-xl border border-[#e8e6e1] bg-gradient-to-br from-[#0f1f5c] to-[#1b2a6b] p-6 text-white shadow-md">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-          Plataforma — consultora
+          Value Project Consulting
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
           Invitar a organizaciones
@@ -113,12 +137,34 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
           </div>
           <div>
             <dt className="text-[11px] font-medium uppercase tracking-wide text-white/50">
-              Invitaciones pendientes (vista)
+              Pendientes (global)
             </dt>
-            <dd className="mt-1 text-2xl font-semibold tabular-nums">{pendingCount}</dd>
+            <dd className="mt-1 text-2xl font-semibold tabular-nums">{pendingTotal}</dd>
           </div>
         </dl>
       </section>
+
+      <div className="grid gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <InvitationStatusDonut pending={pendingTotal} accepted={acceptedTotal} />
+        </div>
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <KpiCard
+            label="Aceptadas (7 días)"
+            value={acceptedWeek}
+            hint="Invitaciones completadas recientemente."
+            icon={<IconMail />}
+            accent="emerald"
+          />
+          <KpiCard
+            label="Tasa de cierre"
+            value={`${acceptancePct}%`}
+            hint="Aceptadas sobre el total histórico en base de datos."
+            icon={<IconMail />}
+            accent="sky"
+          />
+        </div>
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-5">
         <div className="space-y-6 lg:col-span-2">

@@ -8,6 +8,14 @@ import {
 import { db } from "@/lib/db";
 import { listAllTenants } from "@/modules/platform";
 
+import {
+  IconOrg,
+  IconPeople,
+  IconProjects,
+  KpiCard,
+  PlanDistributionPanel,
+  TenantProjectShareBar,
+} from "./_components/vpc-visuals";
 import { DeleteTenantForm } from "./delete-tenant-form";
 import { deleteTenantPlatformAction } from "./tenant-delete-actions";
 
@@ -32,6 +40,24 @@ export default async function AdminHomePage({ searchParams }: Props) {
     0,
   );
   const isFiltered = rawQ.length > 0;
+
+  const planCounts: Record<string, number> = {};
+  let totalMembershipsInView = 0;
+  for (const t of tenants) {
+    planCounts[t.plan] = (planCounts[t.plan] ?? 0) + 1;
+    totalMembershipsInView += t._count.memberships;
+  }
+  const avgProjects =
+    tenants.length > 0
+      ? (totalProjectsInView / tenants.length).toFixed(1)
+      : "0";
+
+  const tenantProjectRows = tenants.map((t) => ({
+    id: t.id,
+    name: t.name,
+    slug: t.slug,
+    projects: t._count.projects,
+  }));
 
   async function enterWorkspace(formData: FormData) {
     "use server";
@@ -62,7 +88,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
 
       <section className="rounded-xl border border-[#e8e6e1] bg-gradient-to-br from-[#0f1f5c] to-[#1b2a6b] p-6 text-white shadow-md">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-          Consultora — vista plataforma
+          Value Project Consulting
         </p>
         <h2 className="mt-1 text-xl font-semibold tracking-tight">
           Organizaciones cliente y proyectos
@@ -96,6 +122,42 @@ export default async function AdminHomePage({ searchParams }: Props) {
           </div>
         </div>
       </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <KpiCard
+          label={isFiltered ? "Organizaciones (filtro)" : "Organizaciones en vista"}
+          value={tenants.length}
+          hint={
+            isFiltered
+              ? `De ${totalOrgCount} en cartera total.`
+              : "Clientes activos en cartera."
+          }
+          icon={<IconOrg />}
+        />
+        <KpiCard
+          label="Proyectos acumulados"
+          value={totalProjectsInView}
+          hint={
+            isFiltered
+              ? "Suma de la lista filtrada."
+              : "Todos los proyectos bajo estos tenants."
+          }
+          icon={<IconProjects />}
+          accent="sky"
+        />
+        <KpiCard
+          label="Miembros en organización (vista)"
+          value={totalMembershipsInView}
+          hint={`Promedio de ${avgProjects} proyectos por organización en esta lista.`}
+          icon={<IconPeople />}
+          accent="emerald"
+        />
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <PlanDistributionPanel counts={planCounts} />
+        <TenantProjectShareBar tenants={tenantProjectRows} />
+      </div>
 
       <section className="rounded-xl border border-[#e8e6e1] bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-3">
@@ -228,9 +290,14 @@ export default async function AdminHomePage({ searchParams }: Props) {
       </section>
 
       <section className="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-50 to-white p-5 text-[13px] leading-relaxed text-slate-800 shadow-sm ring-1 ring-slate-900/[0.04]">
-        <p className="font-semibold text-slate-900">
-          Configuración en Vercel (una vez por entorno)
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <p className="font-semibold text-slate-900">
+            Configuración en Vercel (una vez por entorno)
+          </p>
+          <span className="rounded-full bg-slate-900/[0.06] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+            Ops
+          </span>
+        </div>
         <p className="mt-2 text-slate-600">
           Para reconocer al dueño de la consultora sin tocar la base de datos,
           define en <strong className="text-slate-800">Production</strong>:
@@ -251,6 +318,25 @@ export default async function AdminHomePage({ searchParams }: Props) {
           (correos separados por coma). Tras guardar variables, ejecuta un{" "}
           <strong className="text-slate-800">Redeploy</strong> en Vercel.
         </p>
+        <details className="group mt-4 border-t border-slate-200 pt-3">
+          <summary className="cursor-pointer list-none text-[12px] font-medium text-[#0f1f5c] outline-none marker:content-none [&::-webkit-details-marker]:hidden">
+            <span className="underline decoration-[#0f1f5c]/30 underline-offset-2">
+              Checklist rápido
+            </span>
+          </summary>
+          <ol className="mt-2 list-inside list-decimal space-y-1 text-[12px] text-slate-600">
+            <li>Variables en el entorno <strong>Production</strong> de Vercel.</li>
+            <li>
+              <code className="rounded bg-white px-1">NEXT_PUBLIC_APP_URL</code> con
+              HTTPS del dominio productivo.
+            </li>
+            <li>
+              <code className="rounded bg-white px-1">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
+              solo servidor (nunca <code className="rounded bg-white px-1">NEXT_PUBLIC_</code>
+              ).
+            </li>
+          </ol>
+        </details>
       </section>
     </div>
   );

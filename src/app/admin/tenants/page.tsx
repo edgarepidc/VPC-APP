@@ -10,6 +10,13 @@ import {
   TENANT_PLAN_KEYS,
 } from "@/modules/platform";
 
+import {
+  IconOrg,
+  IconProjects,
+  KpiCard,
+  PlanDistributionPanel,
+  TenantProjectShareBar,
+} from "../_components/vpc-visuals";
 import { DeleteTenantForm } from "../delete-tenant-form";
 import { deleteTenantPlatformAction } from "../tenant-delete-actions";
 
@@ -31,6 +38,21 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
   if (!session?.isSuperAdmin) redirect("/dashboard/projects");
 
   const tenants = await listAllTenants();
+
+  const planCounts: Record<string, number> = {};
+  let totalProjects = 0;
+  let totalMembers = 0;
+  for (const t of tenants) {
+    planCounts[t.plan] = (planCounts[t.plan] ?? 0) + 1;
+    totalProjects += t._count.projects;
+    totalMembers += t._count.memberships;
+  }
+  const tenantProjectRows = tenants.map((t) => ({
+    id: t.id,
+    name: t.name,
+    slug: t.slug,
+    projects: t._count.projects,
+  }));
 
   const newTenantId = params.newTenant?.trim() ?? "";
   const newTenantRow =
@@ -68,10 +90,71 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-8">
+      <section className="overflow-hidden rounded-xl border border-[#e8e6e1] bg-gradient-to-br from-[#0f1f5c] to-[#1b2a6b] p-6 text-white shadow-md">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
+          Value Project Consulting
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+          Alta de organizaciones
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/78">
+          Crea tenants aislados con roles base. Luego invita equipos desde{" "}
+          <strong className="text-white">Invitar usuario</strong> o entra al
+          workspace desde la cartera.
+        </p>
+        <dl className="mt-6 grid gap-6 sm:grid-cols-3">
+          <div>
+            <dt className="text-[11px] font-medium uppercase tracking-wide text-white/50">
+              Organizaciones
+            </dt>
+            <dd className="text-2xl font-semibold tabular-nums">{tenants.length}</dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-medium uppercase tracking-wide text-white/50">
+              Proyectos totales
+            </dt>
+            <dd className="text-2xl font-semibold tabular-nums">{totalProjects}</dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-medium uppercase tracking-wide text-white/50">
+              Miembros
+            </dt>
+            <dd className="text-2xl font-semibold tabular-nums">{totalMembers}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <KpiCard
+          label="Proyectos en plataforma"
+          value={totalProjects}
+          hint="Suma de todos los clientes."
+          icon={<IconProjects />}
+          accent="sky"
+        />
+        <KpiCard
+          label="Organizaciones registradas"
+          value={tenants.length}
+          hint="Cada fila en la tabla inferior es un tenant."
+          icon={<IconOrg />}
+        />
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <PlanDistributionPanel counts={planCounts} title="Planes por organización" />
+        <TenantProjectShareBar
+          tenants={tenantProjectRows}
+          title="Carga de proyectos (top 10)"
+        />
+      </div>
+
       <p className="text-sm text-slate-600">
-        Este módulo es el <strong>alta de cliente</strong> en la plataforma: cada
-        fila es un tenant aislado. Para operar dentro del cliente usa{" "}
-        <Link href="/admin" className="font-medium text-[#0f1f5c] underline decoration-[#0f1f5c]/35 underline-offset-2 hover:decoration-[#0f1f5c]">
+        Este módulo es el <strong className="text-slate-800">alta de cliente</strong>{" "}
+        en la plataforma. Para operar dentro del cliente usa{" "}
+        <Link
+          href="/admin"
+          className="font-medium text-[#0f1f5c] underline decoration-[#0f1f5c]/35 underline-offset-2 hover:decoration-[#0f1f5c]"
+        >
           Cartera de clientes
         </Link>
         .
