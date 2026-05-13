@@ -47,6 +47,7 @@ export function LoginForms({
         setError(err.message);
         return;
       }
+      await new Promise((r) => setTimeout(r, 0));
       const dest = await fetch("/api/auth/post-login-redirect", {
         credentials: "include",
         cache: "no-store",
@@ -88,6 +89,7 @@ export function LoginForms({
         );
         return;
       }
+      await new Promise((r) => setTimeout(r, 0));
       const dest = await fetch("/api/auth/post-login-redirect", {
         credentials: "include",
         cache: "no-store",
