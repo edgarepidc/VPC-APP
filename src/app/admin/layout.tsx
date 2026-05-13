@@ -25,17 +25,13 @@ export default async function AdminLayout({
                 className="pointer-events-none absolute -inset-1 rounded-[1.4rem] bg-gradient-to-br from-[#c9a46c]/55 via-[#0f1f5c]/20 to-[#0f1f5c]/45 opacity-90 blur-[2px]"
                 aria-hidden
               />
-              <div className="relative overflow-hidden rounded-2xl border border-[#c9a46c]/50 bg-gradient-to-br from-[#0f1f5c] via-[#142d4d] to-[#1a1612] p-3.5 shadow-[0_14px_44px_-14px_rgba(15,31,92,0.55)] ring-1 ring-white/20">
-                <div
-                  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(201,164,108,0.22),transparent_55%)]"
-                  aria-hidden
-                />
+              <div className="relative overflow-hidden rounded-2xl border border-[#c9a46c]/50 bg-black p-3 shadow-[0_14px_44px_-14px_rgba(15,31,92,0.55)] ring-1 ring-[#c9a46c]/20">
                 <Image
-                  src="/branding/vpc-mark.svg"
+                  src="/branding/vpc-logo.png"
                   alt="Value Project Consulting"
-                  width={112}
-                  height={112}
-                  className="relative z-[1] h-[4.75rem] w-[4.75rem] object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)] sm:h-[5.75rem] sm:w-[5.75rem]"
+                  width={331}
+                  height={331}
+                  className="relative z-[1] h-[5.25rem] w-[5.25rem] object-contain sm:h-[6.5rem] sm:w-[6.5rem]"
                   priority
                 />
               </div>
