@@ -25,11 +25,33 @@ body {
 }
 
 .pmo-hero {
+  position: relative;
+  overflow: hidden;
   border-radius: 12px;
-  border: 1px solid var(--pmo-border);
-  background: linear-gradient(135deg, var(--pmo-navy) 0%, var(--pmo-navy-2) 100%);
+  border: 1px solid rgba(201, 164, 108, 0.4);
+  background: linear-gradient(135deg, #0f1f5c 0%, #152d4f 52%, #261c16 100%);
   color: #fff;
-  box-shadow: 0 8px 24px rgba(15, 31, 92, 0.2);
+  box-shadow:
+    0 16px 48px -18px rgba(15, 31, 92, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.pmo-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 85% 55% at 88% 8%,
+    rgba(201, 164, 108, 0.22) 0%,
+    transparent 52%
+  );
+}
+
+.pmo-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 .pmo-card {
