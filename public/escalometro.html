@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Super-Escalómetro de Proyectos</title>
+<style>
+  /* ──────────────────────────────────────────────
+     DESIGN TOKENS — ajusta aquí para re-brandear
+  ────────────────────────────────────────────── */
+  :root {
+    --bg:        #f7f6f3;
+    --surface:   #ffffff;
+    --border:    #e8e6e1;
+    --border-md: #d4d0c8;
+    --text-1:    #1a1917;
+    --text-2:    #6b6860;
+    --text-3:    #9d9b96;
+    --accent:    #1d3557;
+    --accent-lt: #e8edf3;
+
+    /* estado VERDE */
+    --green:     #2d6a4f;
+    --green-bg:  #f0f7f4;
+    --green-bd:  #b7dece;
+
+    /* estado NARANJA */
+    --orange:    #b5530a;
+    --orange-bg: #fef6ee;
+    --orange-bd: #f8c99c;
+
+    /* estado ROJO */
+    --red:       #9b1c1c;
+    --red-bg:    #fef2f2;
+    --red-bd:    #fca5a5;
+
+    --radius:    10px;
+    --shadow:    0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05);
+    --transition: .2s ease;
+
+    --font-display: 'DM Sans', 'Helvetica Neue', sans-serif;
+    --font-body:    'DM Sans', 'Helvetica Neue', sans-serif;
+    --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  /* ── GOOGLE FONT ── */
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text-1);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── LAYOUT ── */
+  .shell {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .header-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    color: var(--text-1);
+    line-height: 1.2;
+  }
+  header p {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--text-2);
+    max-width: 480px;
+    line-height: 1.6;
+  }
+  .logo-mark {
+    width: 44px;
+    height: 44px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 22px; height: 22px; }
+
+  /* ── GRID DE TARJETAS ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  /* ── TARJETA ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: box-shadow var(--transition), border-color var(--transition);
+  }
+  .card:focus-within {
+    border-color: var(--border-md);
+    box-shadow: var(--shadow);
+  }
+
+  .card-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    margin-bottom: 12px;
+  }
+  .card-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-icon svg { width: 12px; height: 12px; stroke: var(--text-2); }
+
+  /* ── SELECT ── */
+  .select-wrap { position: relative; }
+  select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 36px 10px 12px;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--text-1);
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+    outline: none;
+  }
+  select:hover  { border-color: var(--border-md); }
+  select:focus  { border-color: var(--accent); background: #fff; }
+  .select-wrap::after {
+    content: '';
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--text-3);
+    pointer-events: none;
+  }
+
+  /* ── BADGE DE NIVEL ── */
+  .level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    padding: 3px 8px;
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+  .level-badge.show { opacity: 1; }
+  .level-badge.low    { background: var(--green-bg);  color: var(--green); }
+  .level-badge.medium { background: var(--orange-bg); color: var(--orange); }
+  .level-badge.high   { background: var(--red-bg);    color: var(--red); }
+  .level-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* ── BOTÓN EVALUAR ── */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 13px 24px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity var(--transition), transform var(--transition);
+    letter-spacing: -.01em;
+  }
+  .btn-primary:hover  { opacity: .88; }
+  .btn-primary:active { transform: scale(.98); }
+  .btn-primary svg { width: 16px; height: 16px; }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+  }
+  .btn-secondary:hover {
+    background: var(--surface);
+    border-color: var(--border-md);
+    color: var(--text-1);
+  }
+  .btn-secondary svg { width: 15px; height: 15px; }
+
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ── PANEL DE RESULTADOS ── */
+  #result-panel {
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    margin-top: 28px;
+    display: none;
+    animation: fadeUp .3s ease both;
+  }
+  #result-panel.visible { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .result-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -.01em;
+  }
+  .result-level {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 5px;
+  }
+  .result-body { padding: 24px 28px; }
+  .result-body h3 {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+  .action-items { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .action-items li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-1);
+    line-height: 1.5;
+  }
+  .action-items li::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-3);
+    margin-top: 7px;
+    flex-shrink: 0;
+  }
+
+  /* colores del panel según nivel */
+  #result-panel.green  .result-header { background: var(--green-bg);  border-color: var(--green-bd); }
+  #result-panel.green  .result-dot    { background: var(--green); }
+  #result-panel.green  .result-title  { color: var(--green); }
+  #result-panel.green  .result-level  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+
+  #result-panel.orange .result-header { background: var(--orange-bg); border-color: var(--orange-bd); }
+  #result-panel.orange .result-dot    { background: var(--orange); }
+  #result-panel.orange .result-title  { color: var(--orange); }
+  #result-panel.orange .result-level  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-bd); }
+
+  #result-panel.red    .result-header { background: var(--red-bg);    border-color: var(--red-bd); }
+  #result-panel.red    .result-dot    { background: var(--red); }
+  #result-panel.red    .result-title  { color: var(--red); }
+  #result-panel.red    .result-level  { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-bd); }
+
+  /* ── EMAIL DRAFT ── */
+  #email-section {
+    margin-top: 20px;
+    display: none;
+    animation: fadeUp .25s ease both;
+  }
+  #email-section.visible { display: block; }
+
+  #email-section h3 {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+  #email-text {
+    width: 100%;
+    min-height: 240px;
+    resize: vertical;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--text-1);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 16px;
+    outline: none;
+    margin-bottom: 12px;
+  }
+  #email-text:focus { border-color: var(--border-md); }
+
+  .copy-feedback {
+    font-size: 12px;
+    color: var(--green);
+    font-weight: 500;
+    margin-left: 8px;
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+  .copy-feedback.show { opacity: 1; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 60px;
+    font-size: 11.5px;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  footer a { color: var(--text-3); text-decoration: none; }
+  footer a:hover { color: var(--text-2); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .shell { padding: 32px 16px 60px; }
+    .grid  { grid-template-columns: 1fr; }
+    .result-header { flex-wrap: wrap; }
+    .result-level  { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- HEADER -->
+  <header>
+    <div>
+      <p class="header-eyebrow">Gobernanza de Proyectos · PMO</p>
+      <h1>Super-Escalómetro</h1>
+      <p>Evalúa el nivel de riesgo de tu proyecto en 6 dimensiones y obtén una recomendación de acción inmediata.</p>
+    </div>
+    <div class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20V10M18 20V4M6 20v-4"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- GRID DE INDICADORES -->
+  <form id="form" novalidate>
+    <div class="grid" id="cards-grid">
+      <!-- Las tarjetas se generan dinámicamente vía JS -->
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn-primary" id="btn-evaluate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Evaluar Proyecto
+      </button>
+    </div>
+  </form>
+
+  <!-- PANEL DE RESULTADOS -->
+  <div id="result-panel" role="region" aria-live="polite" aria-label="Resultado de evaluación">
+    <div class="result-header">
+      <div class="result-dot"></div>
+      <span class="result-title" id="result-title">—</span>
+      <span class="result-level" id="result-level">—</span>
+    </div>
+    <div class="result-body">
+      <h3>Acciones recomendadas</h3>
+      <ul class="action-items" id="action-list"></ul>
+
+      <div class="divider"></div>
+
+      <div class="actions">
+        <button type="button" class="btn-primary" id="btn-email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <polyline points="22,4 12,13 2,4"/>
+          </svg>
+          Generar Resumen Ejecutivo
+        </button>
+      </div>
+
+      <!-- EMAIL DRAFT -->
+      <div id="email-section">
+        <div class="divider"></div>
+        <h3>Borrador de correo ejecutivo</h3>
+        <textarea id="email-text" spellcheck="false" aria-label="Borrador de correo"></textarea>
+        <div class="actions">
+          <button type="button" class="btn-secondary" id="btn-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copiar al Portapapeles
+          </button>
+          <span class="copy-feedback" id="copy-feedback" aria-live="polite">¡Copiado!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>Super-Escalómetro de Proyectos · v1.0</span>
+    <span>Herramienta de gobernanza para Project Managers</span>
+  </footer>
+
+</div>
+
+<script>
+  /* ══════════════════════════════════════════════════════
+     CONFIGURACIÓN — edita aquí los indicadores, opciones
+     y umbrales sin tocar el resto del código.
+  ══════════════════════════════════════════════════════ */
+
+  /**
+   * NIVELES INTERNOS
+   * low    → Verde  (0 puntos de riesgo)
+   * medium → Naranja (1 punto de riesgo)
+   * high   → Rojo   (dispara escalamiento inmediato)
+   */
+  const LEVEL = { low: 'low', medium: 'medium', high: 'high' };
+
+  /** Etiquetas visibles para el badge de cada tarjeta */
+  const BADGE_LABEL = { low: 'Bajo', medium: 'Medio', high: 'Crítico / Alto' };
+
+  /**
+   * INDICADORES
+   * id:      identificador único
+   * label:   título visible en la tarjeta
+   * icon:    SVG path para el icono (stroke)
+   * options: array de { label, value } — value = nivel interno
+   */
+  const INDICATORS = [
+    {
+      id: 'budget',
+      label: 'Desviación de Presupuesto',
+      icon: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+      options: [
+        { label: '0–5 % — Dentro del rango',          value: LEVEL.low    },
+        { label: '5–15 % — Variación moderada',        value: LEVEL.medium },
+        { label: '> 15 % — Desviación crítica',        value: LEVEL.high   },
+      ]
+    },
+    {
+      id: 'schedule',
+      label: 'Retraso en Cronograma',
+      icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+      options: [
+        { label: '0–3 días — En plazo',                value: LEVEL.low    },
+        { label: '4–7 días — Retraso manejable',       value: LEVEL.medium },
+        { label: '> 7 días — Retraso crítico',         value: LEVEL.high   },
+      ]
+    },
+    {
+      id: 'team',
+      label: 'Desempeño del Equipo',
+      icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      options: [
+        { label: 'Estable — Objetivos cumplidos',      value: LEVEL.low    },
+        { label: 'Inconsistente — Entregas variables', value: LEVEL.medium },
+        { label: '> 2 semanas de incumplimiento',      value: LEVEL.high   },
+      ]
+    },
+    {
+      id: 'scope',
+      label: 'Deriva de Alcance (Scope Creep)',
+      icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+      options: [
+        { label: 'Alineado — Sin cambios',             value: LEVEL.low    },
+        { label: 'Variación menor — Controlada',       value: LEVEL.medium },
+        { label: '> 10 % del esfuerzo — Estructural',  value: LEVEL.high   },
+      ]
+    },
+    {
+      id: 'stakeholders',
+      label: 'Alineación de Stakeholders',
+      icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+      options: [
+        { label: 'Satisfechos — Sin fricciones',       value: LEVEL.low    },
+        { label: 'Duda razonable — En conversación',   value: LEVEL.medium },
+        { label: 'Desalineados — Conflicto activo',    value: LEVEL.high   },
+      ]
+    },
+    {
+      id: 'impact',
+      label: 'Impacto en el Negocio',
+      icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+      options: [
+        { label: 'Bajo — Operativo / local',           value: LEVEL.low    },
+        { label: 'Medio — Área o proceso clave',       value: LEVEL.medium },
+        { label: 'Alto — Estratégico / regulatorio',   value: LEVEL.high   },
+      ]
+    },
+  ];
+
+  /* ══════════════════════════════════════════════════════
+     ALGORITMO DE DECISIÓN
+     Ajusta los umbrales aquí si cambian las reglas.
+  ══════════════════════════════════════════════════════ */
+
+  /**
+   * Recibe un mapa { id: level } y devuelve { tier, title, actions }
+   * Niveles de tier: 'green' | 'orange' | 'red'
+   */
+  function evaluate(values) {
+    const levels = Object.values(values);
+    const countHigh   = levels.filter(l => l === LEVEL.high).length;
+    const countMedium = levels.filter(l => l === LEVEL.medium).length;
+
+    // ── UMBRAL ROJO: cualquier indicador en nivel "high"
+    if (countHigh >= 1) {
+      return {
+        tier: 'red',
+        title: 'Escalamiento Inmediato Requerido',
+        levelLabel: 'NIVEL ROJO',
+        actions: buildRedActions(values),
+      };
+    }
+
+    // ── UMBRAL NARANJA: 2 o más indicadores en "medium"
+    if (countMedium >= 2) {
+      return {
+        tier: 'orange',
+        title: 'Revisión de PMO Recomendada',
+        levelLabel: 'NIVEL NARANJA',
+        actions: buildOrangeActions(values),
+      };
+    }
+
+    // ── VERDE: cualquier otro caso
+    return {
+      tier: 'green',
+      title: 'Proyecto en Monitoreo Normal',
+      levelLabel: 'NIVEL VERDE',
+      actions: [
+        'Mantener el ritmo de seguimiento semanal.',
+        'Documentar avances y lecciones aprendidas.',
+        'Validar el estado con el equipo en la próxima daily/standup.',
+      ],
+    };
+  }
+
+  /** Genera acciones específicas para nivel rojo según qué indicadores dispararon */
+  function buildRedActions(values) {
+    const actions = ['Notificar al Sponsor y PMO en las próximas 24 horas.'];
+    if (values.budget === LEVEL.high)      actions.push('Solicitar revisión presupuestal urgente con el CFO.');
+    if (values.schedule === LEVEL.high)    actions.push('Activar plan de recuperación de cronograma (fast-tracking / crashing).');
+    if (values.team === LEVEL.high)        actions.push('Escalar a RRHH: intervención de desempeño del equipo.');
+    if (values.scope === LEVEL.high)       actions.push('Emitir Change Request formal y congelar cambios adicionales.');
+    if (values.stakeholders === LEVEL.high)actions.push('Agendar sesión ejecutiva de alineación con stakeholders clave.');
+    if (values.impact === LEVEL.high)      actions.push('Evaluar impacto regulatorio/estratégico con la Alta Dirección.');
+    actions.push('Actualizar el registro de riesgos y crear plan de contingencia documentado.');
+    return actions;
+  }
+
+  /** Genera acciones específicas para nivel naranja */
+  function buildOrangeActions(values) {
+    const mediums = INDICATORS.filter(i => values[i.id] === LEVEL.medium).map(i => i.label);
+    const actions = [
+      `Áreas con variación moderada: ${mediums.join(', ')}.`,
+      'Programar revisión extraordinaria con el PMO esta semana.',
+      'Documentar causas raíz de las desviaciones identificadas.',
+      'Agendar sesión 1:1 con los responsables de cada área en amarillo.',
+      'Actualizar el semáforo de estado del proyecto en el dashboard.',
+    ];
+    return actions;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     GENERADOR DE CORREO EJECUTIVO
+  ══════════════════════════════════════════════════════ */
+
+  function generateEmail(values, result) {
+    const today = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+    const criticals = INDICATORS.filter(i => values[i.id] === LEVEL.high);
+    const mediums   = INDICATORS.filter(i => values[i.id] === LEVEL.medium);
+
+    const levelMap = { green: 'VERDE — Monitoreo Normal', orange: 'NARANJA — Revisión de PMO', red: 'ROJO — Escalamiento Inmediato' };
+
+    let body = `Asunto: [${levelMap[result.tier]}] Reporte de Estado — Proyecto [NOMBRE DEL PROYECTO]\n`;
+    body += `Fecha: ${today}\n`;
+    body += `De: [Tu Nombre] — Project Manager\n`;
+    body += `Para: [Sponsor / PMO / Stakeholders]\n`;
+    body += `\n${'─'.repeat(56)}\n\n`;
+    body += `Estimado/a [Nombre],\n\n`;
+    body += `Por medio del presente, comunico el estado actual del proyecto [NOMBRE DEL PROYECTO] con base en la evaluación de indicadores de gobernanza del día de hoy.\n\n`;
+    body += `NIVEL DE ESCALAMIENTO: ${levelMap[result.tier].toUpperCase()}\n\n`;
+
+    if (criticals.length > 0) {
+      body += `INDICADORES CRÍTICOS (requieren acción inmediata):\n`;
+      criticals.forEach(i => {
+        const selected = document.querySelector(`#select-${i.id}`);
+        const label = selected ? selected.options[selected.selectedIndex].text : '';
+        body += `  • ${i.label}: ${label}\n`;
+      });
+      body += `\n`;
+    }
+
+    if (mediums.length > 0) {
+      body += `INDICADORES EN SEGUIMIENTO (nivel medio):\n`;
+      mediums.forEach(i => {
+        const selected = document.querySelector(`#select-${i.id}`);
+        const label = selected ? selected.options[selected.selectedIndex].text : '';
+        body += `  • ${i.label}: ${label}\n`;
+      });
+      body += `\n`;
+    }
+
+    body += `ACCIONES RECOMENDADAS:\n`;
+    result.actions.forEach((a, idx) => { body += `  ${idx + 1}. ${a}\n`; });
+
+    body += `\nSolicito su confirmación de disponibilidad para una sesión de revisión a la brevedad posible.\n\n`;
+    body += `Quedo a disposición para cualquier consulta.\n\n`;
+    body += `Atentamente,\n[Tu Nombre]\nProject Manager — [Área / Empresa]\n[Teléfono / Email]`;
+
+    return body;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     RENDERIZADO DE TARJETAS
+  ══════════════════════════════════════════════════════ */
+
+  function renderCards() {
+    const grid = document.getElementById('cards-grid');
+    grid.innerHTML = '';
+
+    INDICATORS.forEach(ind => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <label class="card-label" for="select-${ind.id}">
+          <span class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              ${ind.icon}
+            </svg>
+          </span>
+          ${ind.label}
+        </label>
+        <div class="select-wrap">
+          <select id="select-${ind.id}" name="${ind.id}" aria-label="${ind.label}">
+            <option value="" disabled selected>Seleccionar nivel…</option>
+            ${ind.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+          </select>
+        </div>
+        <span class="level-badge" id="badge-${ind.id}" aria-live="polite"></span>
+      `;
+
+      /* Actualiza el badge cuando cambia el select */
+      const select = card.querySelector('select');
+      select.addEventListener('change', () => updateBadge(ind.id, select.value));
+
+      grid.appendChild(card);
+    });
+  }
+
+  /** Actualiza el badge visual de una tarjeta */
+  function updateBadge(id, level) {
+    const badge = document.getElementById(`badge-${id}`);
+    badge.className = `level-badge show ${level}`;
+    badge.textContent = BADGE_LABEL[level] || '';
+  }
+
+  /* ══════════════════════════════════════════════════════
+     CONTROLADORES DE EVENTOS
+  ══════════════════════════════════════════════════════ */
+
+  document.getElementById('btn-evaluate').addEventListener('click', () => {
+    /* Recoge valores de todos los selects */
+    const values = {};
+    let allFilled = true;
+
+    INDICATORS.forEach(ind => {
+      const el = document.getElementById(`select-${ind.id}`);
+      if (!el.value) { allFilled = false; }
+      values[ind.id] = el.value;
+    });
+
+    if (!allFilled) {
+      alert('Por favor, selecciona un nivel para cada indicador antes de evaluar.');
+      return;
+    }
+
+    const result = evaluate(values);
+    renderResult(result, values);
+  });
+
+  /** Renderiza el panel de resultados */
+  function renderResult(result, values) {
+    const panel     = document.getElementById('result-panel');
+    const titleEl   = document.getElementById('result-title');
+    const levelEl   = document.getElementById('result-level');
+    const actionList= document.getElementById('action-list');
+    const emailSec  = document.getElementById('email-section');
+
+    /* Reset clases de color */
+    panel.className = '';
+    panel.classList.add('visible', result.tier);
+
+    titleEl.textContent = result.title;
+    levelEl.textContent = result.levelLabel;
+
+    actionList.innerHTML = result.actions.map(a => `<li>${a}</li>`).join('');
+
+    /* Oculta el email al re-evaluar */
+    emailSec.classList.remove('visible');
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    /* Guarda contexto para el email */
+    panel._values = values;
+    panel._result = result;
+  }
+
+  document.getElementById('btn-email').addEventListener('click', () => {
+    const panel   = document.getElementById('result-panel');
+    const emailSec= document.getElementById('email-section');
+    const textarea= document.getElementById('email-text');
+
+    const email = generateEmail(panel._values, panel._result);
+    textarea.value = email;
+    emailSec.classList.add('visible');
+    emailSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('btn-copy').addEventListener('click', () => {
+    const textarea = document.getElementById('email-text');
+    const feedback = document.getElementById('copy-feedback');
+
+    navigator.clipboard.writeText(textarea.value).then(() => {
+      feedback.classList.add('show');
+      setTimeout(() => feedback.classList.remove('show'), 2200);
+    }).catch(() => {
+      /* Fallback para navegadores sin clipboard API */
+      textarea.select();
+      document.execCommand('copy');
+      feedback.classList.add('show');
+      setTimeout(() => feedback.classList.remove('show'), 2200);
+    });
+  });
+
+  /* ══════════════════════════════════════════════════════
+     INIT
+  ══════════════════════════════════════════════════════ */
+  renderCards();
+</script>
+</body>
+</html>
