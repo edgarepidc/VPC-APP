@@ -7,6 +7,60 @@ export type InviteAuthResult =
   | { status: "emailed" }
   | { status: "invitation_only"; message: string };
 
+/**
+ * Si borraste el usuario en Supabase Auth pero quedó la fila en public."User"
+ * (mismo email, id antiguo), un trigger de Auth o el UNIQUE en email puede hacer
+ * fallar inviteUserByEmail con "Database error saving new user". Eliminamos esa
+ * fila huérfana cuando ya no existe auth.users con ese id.
+ */
+async function removeOrphanAppUserRowIfAuthUserIsGone(email: string): Promise<void> {
+  const normalized = email.trim().toLowerCase();
+  const row = await db.user.findUnique({
+    where: { email: normalized },
+    select: { id: true },
+  });
+  if (!row) return;
+
+  const admin = createAdminClient();
+  let res: Awaited<ReturnType<typeof admin.auth.admin.getUserById>>;
+  try {
+    res = await admin.auth.admin.getUserById(row.id);
+  } catch {
+    return;
+  }
+
+  if (res.data?.user) return;
+
+  const err = res.error;
+  const authUserMissing =
+    !err ||
+    err.status === 404 ||
+    /not\s*found|user\s*not\s*found|no\s*user\s*found/i.test(err.message ?? "");
+
+  if (!authUserMissing) {
+    console.warn(
+      "[invitations] getUserById no confirmó ausencia en Auth; no se elimina User:",
+      err?.message,
+    );
+    return;
+  }
+
+  await db.user.deleteMany({ where: { id: row.id } });
+}
+
+function formatInviteAuthError(message: string): string {
+  if (/database error saving new user/i.test(message)) {
+    return (
+      "Supabase no pudo crear el usuario en Auth (error interno de base de datos). " +
+      "Lo más habitual: quedó una fila en public.\"User\" con ese correo pero el id ya no existe en auth.users " +
+      "(p. ej. borraste la cuenta solo en Authentication). La app intenta limpiar eso automáticamente; " +
+      "si sigue fallando, en Supabase → SQL Editor: DELETE FROM public.\"User\" WHERE lower(email) = lower('…'); " +
+      "luego vuelve a enviar la invitación. Revisa también triggers personalizados sobre auth.users."
+    );
+  }
+  return message;
+}
+
 export async function inviteAuthUserToTenant(input: {
   tenantId: string;
   email: string;
@@ -16,6 +70,8 @@ export async function inviteAuthUserToTenant(input: {
   redirectTo: string;
 }): Promise<InviteAuthResult> {
   const email = input.email.trim().toLowerCase();
+
+  await removeOrphanAppUserRowIfAuthUserIsGone(email);
 
   await upsertPendingInvitation({
     tenantId: input.tenantId,
@@ -44,7 +100,7 @@ export async function inviteAuthUserToTenant(input: {
           "Invitación al tenant guardada. Ese correo ya tiene cuenta: al iniciar sesión se unirá a la organización.",
       };
     }
-    throw new Error(error.message);
+    throw new Error(formatInviteAuthError(error.message));
   }
 
   return { status: "emailed" };
