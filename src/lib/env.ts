@@ -1,7 +1,26 @@
 const localhostHosts = new Set(["localhost", "127.0.0.1", "::1"]);
 
+/**
+ * URL pública de la app (origen, sin path).
+ * - Preferir NEXT_PUBLIC_APP_URL en Vercel (p. ej. https://app.vpc.services).
+ * - Si falta en un deploy de Vercel, se usa VERCEL_URL (https://…vercel.app) para
+ *   que redirectTo de invitaciones no caiga en localhost.
+ */
+function resolveAppUrlRaw(): string {
+  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (explicit) return explicit;
+
+  const vercel = process.env.VERCEL_URL?.trim();
+  if (vercel) {
+    const host = vercel.replace(/^https?:\/\//i, "");
+    return `https://${host}`;
+  }
+
+  return "http://localhost:3000";
+}
+
 export function getAppUrl() {
-  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000";
+  const raw = resolveAppUrlRaw();
 
   try {
     const url = new URL(raw);
