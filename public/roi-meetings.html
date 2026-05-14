@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROI de Reuniones — Calculadora de Inversión</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f9f9f8;
+    --surface: #ffffff;
+    --surface-2: #f4f4f2;
+    --border: rgba(0,0,0,0.08);
+    --border-md: rgba(0,0,0,0.13);
+    --text-primary: #1a1a19;
+    --text-secondary: #6b6b68;
+    --text-muted: #a0a09d;
+    --blue: #1a6fd4;
+    --blue-light: #e8f1fc;
+    --green: #1d7a4a;
+    --green-light: #e6f4ec;
+    --amber: #b36200;
+    --amber-light: #fef3e2;
+    --red: #c0392b;
+    --red-light: #fdecea;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  body.fullscreen-mode {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f1117;
+  }
+
+  body.fullscreen-mode .app-wrapper {
+    max-width: 100vw;
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem 4rem;
+    background: #0f1117;
+  }
+
+  body.fullscreen-mode .header-tag,
+  body.fullscreen-mode .header-sub { color: #8888a0; }
+  body.fullscreen-mode .header-title { color: #fff; }
+  body.fullscreen-mode .card { background: #1a1b25; border-color: rgba(255,255,255,0.07); }
+  body.fullscreen-mode .section-label,
+  body.fullscreen-mode label { color: #8888a0; }
+  body.fullscreen-mode input, body.fullscreen-mode select { background: #12131c; border-color: rgba(255,255,255,0.1); color: #fff; }
+  body.fullscreen-mode .taximeter-wrap { background: #12131c; border-color: rgba(255,255,255,0.07); }
+  body.fullscreen-mode .taximeter-amount { color: #fff; }
+  body.fullscreen-mode .stat-card { background: #12131c; border-color: rgba(255,255,255,0.07); }
+  body.fullscreen-mode .stat-label { color: #8888a0; }
+  body.fullscreen-mode .stat-value { color: #fff; }
+  body.fullscreen-mode .divider { border-color: rgba(255,255,255,0.07); }
+  body.fullscreen-mode .diagnosis-panel { border-color: rgba(255,255,255,0.07); }
+
+  .app-wrapper {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .header {
+    margin-bottom: 2rem;
+  }
+
+  .header-tag {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .header-title {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .header-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 1rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-md);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { background: var(--surface-2); }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: var(--text-primary);
+    color: #fff;
+    border-color: var(--text-primary);
+  }
+  .btn-primary:hover { background: #333; }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow);
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .field-group {
+    margin-bottom: 1rem;
+  }
+
+  .field-group:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+  }
+
+  .role-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .role-row:last-child { margin-bottom: 0; }
+
+  .role-name {
+    font-size: 13px;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .role-rate {
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 70px;
+    text-align: right;
+  }
+
+  .role-input {
+    width: 70px;
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-md);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-size: 14px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .role-input:focus { border-color: var(--blue); }
+
+  .time-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .time-input {
+    flex: 1;
+    padding: 7px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-md);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .time-input:focus { border-color: var(--blue); }
+
+  .time-sep {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-md);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6b68' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+
+  select:focus { border-color: var(--blue); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.25rem 0;
+  }
+
+  .taximeter-wrap {
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .taximeter-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .taximeter-amount {
+    font-size: 48px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s;
+  }
+
+  .taximeter-amount.high { color: var(--red); }
+  .taximeter-amount.medium { color: var(--amber); }
+  .taximeter-amount.good { color: var(--green); }
+
+  .taximeter-currency {
+    font-size: 20px;
+    font-weight: 400;
+    vertical-align: super;
+    margin-right: 2px;
+    opacity: 0.6;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .stat-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cost-bar-wrap {
+    margin-bottom: 1rem;
+  }
+
+  .cost-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+
+  .cost-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .cost-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--blue);
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1), background 0.3s;
+    width: 0%;
+  }
+
+  .diagnosis-panel {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+    min-height: 60px;
+  }
+
+  .diagnosis-panel.info { background: var(--blue-light); border-color: rgba(26,111,212,0.2); }
+  .diagnosis-panel.success { background: var(--green-light); border-color: rgba(29,122,74,0.2); }
+  .diagnosis-panel.warning { background: var(--amber-light); border-color: rgba(179,98,0,0.2); }
+  .diagnosis-panel.danger { background: var(--red-light); border-color: rgba(192,57,43,0.2); }
+
+  .diagnosis-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .diagnosis-panel.info .diagnosis-title { color: var(--blue); }
+  .diagnosis-panel.success .diagnosis-title { color: var(--green); }
+  .diagnosis-panel.warning .diagnosis-title { color: var(--amber); }
+  .diagnosis-panel.danger .diagnosis-title { color: var(--red); }
+
+  .diagnosis-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+
+  .roles-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .breakdown-name { color: var(--text-secondary); }
+  .breakdown-cost { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+  .breakdown-row.total {
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .breakdown-row.total .breakdown-name { color: var(--text-primary); }
+
+  .tip-box {
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    border: 1px solid var(--border);
+  }
+
+  .copy-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--text-primary);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 99px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .copy-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .taximeter-amount { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-wrapper" id="appWrapper">
+
+  <header class="header">
+    <div class="header-tag">Gestión de Proyectos · MXN</div>
+    <h1 class="header-title">Calculadora de ROI de Reuniones</h1>
+    <p class="header-sub">¿Cuánto está costando esta sesión en tiempo real?</p>
+    <div class="header-actions">
+      <button class="btn" onclick="copyReport()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" stroke-width="1.3"/></svg>
+        Copiar reporte
+      </button>
+      <button class="btn" onclick="toggleFullscreen()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M5 2H2v3M14 2h-3v3M5 14H2v-3M14 14h-3v-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Modo presentación
+      </button>
+    </div>
+  </header>
+
+  <div class="main-grid">
+
+    <div class="card">
+      <div class="section-label">Participantes por rol</div>
+      <div class="role-row">
+        <div class="role-name">Junior PM</div>
+        <div class="role-rate">$500/hr</div>
+        <input class="role-input" type="number" id="r_junior" min="0" max="50" value="0" oninput="calculate()">
+      </div>
+      <div class="role-row">
+        <div class="role-name">Senior PM</div>
+        <div class="role-rate">$1,200/hr</div>
+        <input class="role-input" type="number" id="r_senior" min="0" max="50" value="0" oninput="calculate()">
+      </div>
+      <div class="role-row">
+        <div class="role-name">Director / Stakeholder</div>
+        <div class="role-rate">$2,500/hr</div>
+        <input class="role-input" type="number" id="r_director" min="0" max="50" value="0" oninput="calculate()">
+      </div>
+      <div class="role-row">
+        <div class="role-name">Líder Técnico / Especialista</div>
+        <div class="role-rate">$900/hr</div>
+        <input class="role-input" type="number" id="r_tech" min="0" max="50" value="0" oninput="calculate()">
+      </div>
+
+      <hr class="divider">
+
+      <div class="section-label">Duración</div>
+      <div class="time-row">
+        <input class="time-input" type="number" id="t_hours" min="0" max="8" value="0" placeholder="HH" oninput="calculate()">
+        <span class="time-sep">h</span>
+        <input class="time-input" type="number" id="t_mins" min="0" max="59" value="30" placeholder="MM" oninput="calculate()">
+        <span class="time-sep">min</span>
+      </div>
+
+      <hr class="divider">
+
+      <div class="section-label">Objetivo de la reunión</div>
+      <select id="objective" onchange="calculate()">
+        <option value="informativa">Informativa</option>
+        <option value="decision">Toma de Decisiones</option>
+        <option value="tecnica">Planeación Técnica</option>
+        <option value="crisis">Crisis / Resolución</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Inversión en tiempo real</div>
+
+      <div class="taximeter-wrap">
+        <div class="taximeter-label">Costo total de la sesión</div>
+        <div class="taximeter-amount" id="totalDisplay">
+          <span class="taximeter-currency">$</span><span id="totalValue">0</span>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Por minuto</div>
+          <div class="stat-value" id="perMinute">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Participantes</div>
+          <div class="stat-value" id="totalPeople">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Duración</div>
+          <div class="stat-value" id="durationDisplay">30 min</div>
+        </div>
+      </div>
+
+      <div class="cost-bar-wrap">
+        <div class="cost-bar-label">
+          <span>Nivel de inversión</span>
+          <span id="costLevel">—</span>
+        </div>
+        <div class="cost-bar-track">
+          <div class="cost-bar-fill" id="costBar"></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="section-label">Desglose por rol</div>
+      <div class="roles-breakdown" id="breakdown">
+        <div class="breakdown-row">
+          <span class="breakdown-name">Sin participantes</span>
+          <span class="breakdown-cost">—</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="diagnosis-panel info" id="diagnosisPanel">
+    <div class="diagnosis-title" id="diagnosisTitle">Análisis de valor</div>
+    <div class="diagnosis-text" id="diagnosisText">Configura los participantes y duración para ver el análisis de eficiencia.</div>
+  </div>
+
+  <div class="tip-box" id="tipBox">
+    Tip: Las reuniones de más de 6 personas con objetivo informativo tienen un retorno bajo. Considera documentación asíncrona para comunicados unidireccionales.
+  </div>
+
+</div>
+
+<div class="copy-toast" id="copyToast">Reporte copiado al portapapeles</div>
+
+<script>
+  const RATES = {
+    junior: 500,
+    senior: 1200,
+    director: 2500,
+    tech: 900
+  };
+
+  const ROLE_LABELS = {
+    junior: 'Junior PM',
+    senior: 'Senior PM',
+    director: 'Director / Stakeholder',
+    tech: 'Líder Técnico / Especialista'
+  };
+
+  function getInputs() {
+    return {
+      junior: Math.max(0, parseInt(document.getElementById('r_junior').value) || 0),
+      senior: Math.max(0, parseInt(document.getElementById('r_senior').value) || 0),
+      director: Math.max(0, parseInt(document.getElementById('r_director').value) || 0),
+      tech: Math.max(0, parseInt(document.getElementById('r_tech').value) || 0),
+      hours: Math.max(0, parseInt(document.getElementById('t_hours').value) || 0),
+      mins: Math.max(0, Math.min(59, parseInt(document.getElementById('t_mins').value) || 0)),
+      objective: document.getElementById('objective').value
+    };
+  }
+
+  function fmt(n) {
+    return n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  function calculate() {
+    const inp = getInputs();
+    const totalMinutes = (inp.hours * 60) + inp.mins;
+    const totalHours = totalMinutes / 60;
+    const totalPeople = inp.junior + inp.senior + inp.director + inp.tech;
+
+    const roleCosts = {
+      junior: inp.junior * RATES.junior * totalHours,
+      senior: inp.senior * RATES.senior * totalHours,
+      director: inp.director * RATES.director * totalHours,
+      tech: inp.tech * RATES.tech * totalHours
+    };
+
+    const totalCost = roleCosts.junior + roleCosts.senior + roleCosts.director + roleCosts.tech;
+    const costPerMinute = totalMinutes > 0 ? totalCost / totalMinutes : 0;
+
+    updateTaximeter(totalCost);
+    updateStats(totalPeople, totalMinutes, costPerMinute);
+    updateBar(totalCost);
+    updateBreakdown(roleCosts, totalCost, inp);
+    updateDiagnosis(inp.objective, totalCost, totalPeople, totalMinutes, costPerMinute);
+  }
+
+  function updateTaximeter(totalCost) {
+    const el = document.getElementById('totalDisplay');
+    document.getElementById('totalValue').textContent = fmt(totalCost);
+    el.className = 'taximeter-amount';
+    if (totalCost >= 15000) el.classList.add('high');
+    else if (totalCost >= 5000) el.classList.add('medium');
+    else if (totalCost > 0) el.classList.add('good');
+  }
+
+  function updateStats(people, minutes, perMin) {
+    document.getElementById('totalPeople').textContent = people;
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    document.getElementById('durationDisplay').textContent =
+      h > 0 ? `${h}h ${m}min` : `${m} min`;
+    document.getElementById('perMinute').textContent = `$${fmt(Math.round(perMin))}`;
+  }
+
+  function updateBar(totalCost) {
+    const max = 30000;
+    const pct = Math.min(100, (totalCost / max) * 100);
+    const bar = document.getElementById('costBar');
+    bar.style.width = pct + '%';
+
+    let level, color;
+    if (totalCost === 0) { level = '—'; color = 'var(--border)'; }
+    else if (totalCost < 3000) { level = 'Bajo'; color = 'var(--green)'; }
+    else if (totalCost < 8000) { level = 'Moderado'; color = 'var(--blue)'; }
+    else if (totalCost < 15000) { level = 'Alto'; color = 'var(--amber)'; }
+    else { level = 'Crítico'; color = 'var(--red)'; }
+
+    document.getElementById('costLevel').textContent = level;
+    bar.style.background = color;
+  }
+
+  function updateBreakdown(costs, total, inp) {
+    const container = document.getElementById('breakdown');
+    const roles = ['junior', 'senior', 'director', 'tech'];
+    const active = roles.filter(r => inp[r] > 0);
+
+    if (active.length === 0) {
+      container.innerHTML = `<div class="breakdown-row"><span class="breakdown-name">Sin participantes configurados</span><span class="breakdown-cost">—</span></div>`;
+      return;
+    }
+
+    let html = '';
+    active.forEach(r => {
+      html += `<div class="breakdown-row">
+        <span class="breakdown-name">${inp[r]}× ${ROLE_LABELS[r]}</span>
+        <span class="breakdown-cost">$${fmt(costs[r])}</span>
+      </div>`;
+    });
+    html += `<div class="breakdown-row total">
+      <span class="breakdown-name">Total</span>
+      <span class="breakdown-cost">$${fmt(total)} MXN</span>
+    </div>`;
+    container.innerHTML = html;
+  }
+
+  function updateDiagnosis(objective, cost, people, minutes, perMin) {
+    const panel = document.getElementById('diagnosisPanel');
+    const title = document.getElementById('diagnosisTitle');
+    const text = document.getElementById('diagnosisText');
+    const tip = document.getElementById('tipBox');
+
+    if (cost === 0 || people === 0 || minutes === 0) {
+      panel.className = 'diagnosis-panel info';
+      title.textContent = 'Análisis de valor';
+      text.textContent = 'Configura los participantes y duración para ver el análisis de eficiencia.';
+      tip.style.display = 'block';
+      return;
+    }
+
+    tip.style.display = 'none';
+
+    if (objective === 'informativa') {
+      if (cost > 3000) {
+        panel.className = 'diagnosis-panel warning';
+        title.textContent = 'Alerta de eficiencia';
+        text.textContent = `Este mensaje pudo ser un correo electrónico. Estás invirtiendo $${fmt(cost)} MXN en una sesión unidireccional con ${people} ${people === 1 ? 'persona' : 'personas'}. Considera un resumen escrito o video asíncrono para maximizar el retorno.`;
+      } else {
+        panel.className = 'diagnosis-panel info';
+        title.textContent = 'Sesión informativa';
+        text.textContent = `Inversión razonable para una sesión informativa. Asegúrate de que todos los participantes necesiten estar presentes y considera enviar un resumen post-reunión para reforzar los puntos clave.`;
+      }
+    } else if (objective === 'decision') {
+      if (cost > 8000) {
+        panel.className = 'diagnosis-panel success';
+        title.textContent = 'Inversión estratégica justificada';
+        text.textContent = `El costo de $${fmt(cost)} MXN está justificado si se logra un acuerdo vinculante en esta sesión. Asegúrate de documentar las decisiones tomadas y los próximos pasos con responsables y fechas claras.`;
+      } else {
+        panel.className = 'diagnosis-panel success';
+        title.textContent = 'Inversión estratégica';
+        text.textContent = `Sesión de decisión con costo controlado. Define un facilitador y estructura la agenda con máximo 3 decisiones clave para maximizar el retorno de esta inversión.`;
+      }
+    } else if (objective === 'tecnica') {
+      if (cost > 10000) {
+        panel.className = 'diagnosis-panel warning';
+        title.textContent = 'Revisión de alcance recomendada';
+        text.textContent = `Una sesión de planeación técnica por $${fmt(cost)} MXN con ${people} participantes puede optimizarse. Considera dividir en: una sesión de definición (equipo técnico core) y otra de validación con stakeholders.`;
+      } else {
+        panel.className = 'diagnosis-panel info';
+        title.textContent = 'Planeación técnica';
+        text.textContent = `Sesión técnica con buena relación costo-valor. Asegura que el output sea un documento de diseño o un conjunto de tickets priorizados para que la inversión genere entregables concretos.`;
+      }
+    } else if (objective === 'crisis') {
+      panel.className = 'diagnosis-panel danger';
+      title.textContent = 'Control de daños activo';
+      text.textContent = `Cada minuto de crisis cuesta $${fmt(Math.round(perMin))} MXN. Prioriza la solución técnica inmediata para detener el gasto operativo. Limita la sesión a quienes tienen poder de decisión o acción directa sobre el incidente.`;
+    }
+  }
+
+  function copyReport() {
+    const inp = getInputs();
+    const totalMinutes = (inp.hours * 60) + inp.mins;
+    const totalHours = totalMinutes / 60;
+    const totalPeople = inp.junior + inp.senior + inp.director + inp.tech;
+    const totalCost = (inp.junior * RATES.junior + inp.senior * RATES.senior + inp.director * RATES.director + inp.tech * RATES.tech) * totalHours;
+    const costPerMin = totalMinutes > 0 ? totalCost / totalMinutes : 0;
+
+    const objLabels = {
+      informativa: 'Informativa',
+      decision: 'Toma de Decisiones',
+      tecnica: 'Planeación Técnica',
+      crisis: 'Crisis / Resolución'
+    };
+
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const durStr = h > 0 ? `${h}h ${m}min` : `${m} minutos`;
+
+    const report = `📋 Resumen de Inversión de Sesión
+━━━━━━━━━━━━━━━━━━━━━━━━
+Objetivo: ${objLabels[inp.objective]}
+Participantes: ${totalPeople} persona${totalPeople !== 1 ? 's' : ''}
+Duración: ${durStr}
+Inversión Total: $${fmt(totalCost)} MXN
+Costo por minuto: $${fmt(Math.round(costPerMin))} MXN/min
+━━━━━━━━━━━━━━━━━━━━━━━━
+Generado con Calculadora ROI de Reuniones`;
+
+    navigator.clipboard.writeText(report).then(() => {
+      const toast = document.getElementById('copyToast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    });
+  }
+
+  let isFullscreen = false;
+  function toggleFullscreen() {
+    isFullscreen = !isFullscreen;
+    document.body.classList.toggle('fullscreen-mode', isFullscreen);
+    const btn = document.querySelector('button[onclick="toggleFullscreen()"]');
+    btn.textContent = isFullscreen ? '✕ Salir de presentación' : '';
+    if (!isFullscreen) {
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M5 2H2v3M14 2h-3v3M5 14H2v-3M14 14h-3v-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> Modo presentación`;
+    }
+    if (isFullscreen && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else if (!isFullscreen && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  calculate();
+</script>
+</body>
+</html>
