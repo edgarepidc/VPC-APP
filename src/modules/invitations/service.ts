@@ -97,6 +97,14 @@ function formatInviteAuthError(message: string): string {
       "luego vuelve a enviar la invitación. Revisa también triggers personalizados sobre auth.users."
     );
   }
+  if (/rate limit|too many emails|email rate limit/i.test(lower)) {
+    return (
+      "Supabase bloqueó el envío por límite de correos (rate limit): en el plan gratuito el correo " +
+      "integrado permite muy pocos envíos por hora. Espera ~1 hora, reduce pruebas repetidas, " +
+      "o configura SMTP propio en Project Settings → Auth → SMTP (más cupo y mejor entregabilidad). " +
+      "La invitación en tu base puede quedar pendiente aunque el correo no salga; revisa Auth logs en Supabase."
+    );
+  }
   return message;
 }
 
