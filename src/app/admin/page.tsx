@@ -281,6 +281,12 @@ export default async function AdminHomePage({ searchParams }: Props) {
                           Entrar al workspace
                         </button>
                       </form>
+                      <Link
+                        href={`/admin/invite?tenantId=${encodeURIComponent(t.id)}`}
+                        className="text-center text-[12px] font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                      >
+                        Invitar
+                      </Link>
                       <DeleteTenantForm
                         deleteAction={deleteTenantPlatformAction}
                         tenantId={t.id}

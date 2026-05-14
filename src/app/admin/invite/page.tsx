@@ -24,7 +24,7 @@ import {
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; tenantId?: string }>;
 };
 
 function formatShortDate(d: Date) {
@@ -62,6 +62,11 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
   const acceptancePct =
     inviteSum === 0 ? 0 : Math.round((acceptedTotal / inviteSum) * 100);
 
+  const rawParamTenant = params.tenantId?.trim() ?? "";
+  const inviteTarget =
+    (rawParamTenant ? tenants.find((t) => t.id === rawParamTenant) : undefined) ??
+    (tenants.length === 1 ? tenants[0] : undefined);
+
   async function platformInviteAction(formData: FormData) {
     "use server";
     const s = await getSessionUser();
@@ -73,7 +78,10 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
     const roleKey = String(formData.get("role")) as RoleKey;
     const validRoles: RoleKey[] = ["owner", "admin", "manager", "member"];
     if (!tenantId || !email || !validRoles.includes(roleKey)) {
-      redirect("/admin/invite?error=Datos+invalidos.");
+      const q = tenantId
+        ? `?tenantId=${encodeURIComponent(tenantId)}&error=Datos+invalidos.`
+        : "?error=Datos+invalidos.";
+      redirect(`/admin/invite${q}`);
     }
 
     let result: InviteAuthResult;
@@ -87,14 +95,22 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
       });
     } catch (e) {
       if (e instanceof PlanLimitError) {
-        redirect(`/admin/invite?error=${encodeURIComponent(e.message)}`);
+        redirect(
+          `/admin/invite?tenantId=${encodeURIComponent(tenantId)}&error=${encodeURIComponent(e.message)}`,
+        );
       }
-      redirect(`/admin/invite?error=${encodeURIComponent((e as Error).message)}`);
+      redirect(
+        `/admin/invite?tenantId=${encodeURIComponent(tenantId)}&error=${encodeURIComponent((e as Error).message)}`,
+      );
     }
     if (result.status === "emailed") {
-      redirect("/admin/invite?ok=Invitacion+enviada+por+correo.");
+      redirect(
+        `/admin/invite?tenantId=${encodeURIComponent(tenantId)}&ok=Invitacion+enviada+por+correo.`,
+      );
     }
-    redirect(`/admin/invite?ok=${encodeURIComponent(result.message)}`);
+    redirect(
+      `/admin/invite?tenantId=${encodeURIComponent(tenantId)}&ok=${encodeURIComponent(result.message)}`,
+    );
   }
 
   return (
@@ -121,6 +137,9 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
           Envía acceso por correo a un tenant concreto. La invitación queda
           registrada y el usuario entra por{" "}
           <span className="font-medium text-white">/login</span> cuando acepta.
+          Con más de un cliente en cartera, abre el formulario desde{" "}
+          <span className="font-medium text-white">Cartera → Invitar</span> en la fila del
+          cliente.
         </p>
         <dl className="mt-6 grid gap-6 sm:grid-cols-3">
           <div>
@@ -186,6 +205,35 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                 para poder invitar miembros.
               </p>
             </VpcAdminInsetShell>
+          ) : !inviteTarget ? (
+            <VpcAdminInsetShell innerClassName="p-6">
+              <h2 className="text-base font-semibold text-[#0f1f5c]">
+                Elegir organización
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-[#5c5346]">
+                Para enviar una invitación, abre primero la{" "}
+                <Link
+                  href="/admin"
+                  className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                >
+                  Cartera de clientes
+                </Link>{" "}
+                y pulsa <strong className="text-[#0f1f5c]">Invitar</strong> en la fila del cliente.
+                También puedes usar{" "}
+                <Link
+                  href="/admin/tenants"
+                  className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                >
+                  Organizaciones
+                </Link>
+                .
+              </p>
+              <p className="mt-3 text-[13px] leading-relaxed text-[#6b5c48]">
+                Tienes <strong className="text-[#0f1f5c]">{tenants.length}</strong> organizaciones:
+                en la cartera, cada fila incluye el enlace <strong>Invitar</strong> para abrir este
+                formulario ya con ese cliente.
+              </p>
+            </VpcAdminInsetShell>
           ) : (
             <VpcAdminInsetShell innerClassName="p-6">
               <h2 className="text-base font-semibold text-[#0f1f5c]">
@@ -195,28 +243,16 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                 Si el correo ya tiene cuenta en Auth, la invitación queda pendiente
                 y al iniciar sesión se unirá al tenant con el rol indicado.
               </p>
+              <p className="mt-3 rounded-lg border border-[#e8dfd0] bg-[#faf8f4] px-3 py-2 text-[13px] text-[#4a4234]">
+                <span className="font-medium text-[#6b5c48]">Cliente:</span>{" "}
+                <span className="font-semibold text-[#0f1f5c]">{inviteTarget.name}</span>{" "}
+                <span className="text-[#a09d98]">({inviteTarget.slug})</span>
+              </p>
               <form
                 action={platformInviteAction}
                 className="mt-6 grid gap-4"
               >
-                <label className="grid gap-1.5 text-sm">
-                  <span className="font-medium text-[#0f1f5c]">Organización</span>
-                  <select
-                    name="tenantId"
-                    required
-                    className="rounded-lg border border-[#e3d6c4] bg-white px-3 py-2.5 text-sm text-[#1a1916] outline-none transition focus:border-[#0f1f5c]/40 focus:ring-2 focus:ring-[#0f1f5c]/15"
-                    defaultValue=""
-                  >
-                    <option value="" disabled>
-                      Selecciona una organización…
-                    </option>
-                    {tenants.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name} ({t.slug})
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <input type="hidden" name="tenantId" value={inviteTarget.id} />
                 <label className="grid gap-1.5 text-sm">
                   <span className="font-medium text-[#0f1f5c]">Correo</span>
                   <input
@@ -252,7 +288,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
           )}
         </div>
 
-        <VpcAdminInsetShell className="lg:col-span-3" innerClassName="overflow-hidden p-0">
+        <section className="flex flex-col overflow-hidden rounded-xl border border-[#e3d6c4] bg-[linear-gradient(168deg,#ffffff_0%,#faf8f4_100%)] shadow-sm ring-1 ring-[#0f1f5c]/[0.04] lg:col-span-3">
           <div className="border-b border-[#e8dfd0] bg-[linear-gradient(180deg,#faf8f4,#ffffff)] px-5 py-4">
             <h2 className="text-base font-semibold text-[#0f1f5c]">
               Invitaciones recientes
@@ -261,7 +297,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
               Últimas 50 en todos los clientes (pendientes y aceptadas).
             </p>
           </div>
-          <div className="overflow-x-auto">
+          <div className="min-h-0 flex-1 overflow-x-auto bg-[linear-gradient(168deg,#ffffff_0%,#faf8f4_100%)]">
             {recentInvites.length === 0 ? (
               <p className="px-5 py-10 text-center text-sm text-[#8a7d6f]">
                 Aún no hay invitaciones registradas en la base de datos.
@@ -325,7 +361,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
               </table>
             )}
           </div>
-        </VpcAdminInsetShell>
+        </section>
       </div>
     </div>
   );

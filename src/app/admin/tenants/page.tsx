@@ -447,7 +447,13 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                   <td className="px-4 py-3 text-right tabular-nums">{t._count.projects}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{t._count.memberships}</td>
                   <td className="px-4 py-3 text-right align-top">
-                    <div className="flex justify-end">
+                    <div className="flex flex-col items-end gap-2">
+                      <Link
+                        href={`/admin/invite?tenantId=${encodeURIComponent(t.id)}`}
+                        className="text-[12px] font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                      >
+                        Invitar
+                      </Link>
                       <DeleteTenantForm
                         deleteAction={deleteTenantPlatformAction}
                         tenantId={t.id}
