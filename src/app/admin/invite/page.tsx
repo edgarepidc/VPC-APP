@@ -126,6 +126,16 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
         </p>
       )}
 
+      {appUrl.isSupabaseProjectHost && (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 shadow-sm">
+          <strong className="font-semibold">Configuración incorrecta:</strong>{" "}
+          <code className="rounded bg-rose-100/80 px-1">NEXT_PUBLIC_APP_URL</code> apunta a{" "}
+          <code className="rounded bg-rose-100/80 px-1">*.supabase.co</code>. Debe ser la URL
+          pública de esta aplicación (p. ej. tu dominio en Vercel); si no, Supabase Auth devuelve
+          errores como «requested path is invalid» al invitar.
+        </p>
+      )}
+
       <VpcAdminGradientShell className="p-6">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
           Value Project Consulting

@@ -175,6 +175,12 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
             Configura `NEXT_PUBLIC_APP_URL` con HTTPS y subdominio real antes de produccion.
           </p>
         )}
+        {appUrl.isSupabaseProjectHost && (
+          <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
+            `NEXT_PUBLIC_APP_URL` no puede ser `*.supabase.co`. Debe ser la URL publica de esta app
+            (Vercel); si no, las invitaciones por correo fallan con errores de Auth.
+          </p>
+        )}
         {!canManage ? (
           <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
             Solo Admin del tenant o Administrador pueden invitar y asignar PM /

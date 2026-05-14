@@ -48,7 +48,46 @@ async function removeOrphanAppUserRowIfAuthUserIsGone(email: string): Promise<vo
   await db.user.deleteMany({ where: { id: row.id } });
 }
 
+/**
+ * GoTrue valida redirectTo contra la lista de URLs permitidas y rechaza hosts incoherentes.
+ */
+function assertValidInviteRedirectTo(redirectTo: string): void {
+  let u: URL;
+  try {
+    u = new URL(redirectTo);
+  } catch {
+    throw new Error(
+      "URL de retorno invalida para la invitacion. Configura NEXT_PUBLIC_APP_URL en Vercel como la URL publica de esta app (ej. https://tu-proyecto.vercel.app), sin rutas raras.",
+    );
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") {
+    throw new Error("URL de retorno invalida (solo se permiten http o https).");
+  }
+  const host = u.hostname.toLowerCase();
+  if (host.endsWith(".supabase.co")) {
+    throw new Error(
+      "NEXT_PUBLIC_APP_URL apunta a *.supabase.co; debe ser el dominio donde corre esta aplicacion (p. ej. tu proyecto en Vercel). El correo de invitacion debe redirigir a /login de tu app, no al panel de Supabase.",
+    );
+  }
+  const isLocal = host === "localhost" || host === "127.0.0.1" || host === "[::1]";
+  if (process.env.NODE_ENV === "production" && !isLocal && u.protocol !== "https:") {
+    throw new Error(
+      "En produccion NEXT_PUBLIC_APP_URL debe usar https:// para que Supabase acepte redirectTo en invitaciones.",
+    );
+  }
+}
+
 function formatInviteAuthError(message: string): string {
+  const lower = message.toLowerCase();
+  if (/requested path is invalid/.test(lower)) {
+    return (
+      "Supabase Auth respondio «requested path is invalid». Suele deberse a: " +
+      "(1) NEXT_PUBLIC_SUPABASE_URL mal copiada: debe ser solo `https://xxxx.supabase.co` sin sufijo `/auth/v1` ni `/rest/v1`. " +
+      "(2) En Supabase → Authentication → URL Configuration: agrega en «Redirect URLs» tu `https://TU-DOMINIO/login` y `https://TU-DOMINIO/auth/callback`. " +
+      "(3) NEXT_PUBLIC_APP_URL en Vercel = URL publica exacta de la app (HTTPS). " +
+      "Tras corregir, redeploy. Atajo: crea el usuario en Supabase → Authentication → Users y que entre con «Olvide contrasena»; la invitacion pendiente en la app se aplica al iniciar sesion."
+    );
+  }
   if (/database error saving new user/i.test(message)) {
     return (
       "Supabase no pudo crear el usuario en Auth (error interno de base de datos). " +
@@ -70,6 +109,8 @@ export async function inviteAuthUserToTenant(input: {
   redirectTo: string;
 }): Promise<InviteAuthResult> {
   const email = input.email.trim().toLowerCase();
+
+  assertValidInviteRedirectTo(input.redirectTo);
 
   await removeOrphanAppUserRowIfAuthUserIsGone(email);
 

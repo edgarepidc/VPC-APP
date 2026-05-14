@@ -7,6 +7,21 @@
  * - PUBLIC_SUPABASE_* aparece en algunos snippets del dashboard de Supabase.
  * Use the HTTPS project URL (https://xxx.supabase.co), not DATABASE_URL.
  */
+/**
+ * Si copiaron la URL del dashboard con sufijo (/auth/v1, /rest/v1), el cliente JS
+ * construye https://…supabase.co/auth/auth/v1 y GoTrue responde errores opacos
+ * como {"error":"requested path is invalid"}.
+ */
+function normalizeHostedSupabaseProjectUrl(raw: string): string {
+  try {
+    const u = new URL(raw.trim());
+    if (!/\.supabase\.co$/i.test(u.hostname)) return raw.trim();
+    return u.origin;
+  } catch {
+    return raw.trim();
+  }
+}
+
 function isSupabaseApiUrl(value: string): boolean {
   if (/^postgres(ql)?:/i.test(value)) return false;
   return /^https:\/\//i.test(value);
@@ -17,7 +32,7 @@ function firstValidApiUrl(
 ): string | undefined {
   for (const raw of candidates) {
     const t = raw?.trim();
-    if (t && isSupabaseApiUrl(t)) return t;
+    if (t && isSupabaseApiUrl(t)) return normalizeHostedSupabaseProjectUrl(t);
   }
   return undefined;
 }
