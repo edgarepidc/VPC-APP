@@ -39,6 +39,9 @@ jobs:
             echo "::error::DATABASE_URL debe empezar por postgresql:// o postgres://"
             exit 1
           fi
+          if printf '%s' "$DATABASE_URL" | grep -qE 'db\.[^/]+\.supabase\.co:5432'; then
+            echo "::warning::Tu DATABASE_URL usa el host directo db.*.supabase.co:5432. Los runners de GitHub suelen obtener P1001 (no alcanza el servidor). En Supabase → Connect → elige «Transaction pooler» (host *.pooler.supabase.com, puerto 6543) y actualiza este secreto (y Vercel) con esa cadena."
+          fi
 
       - name: Prisma migrate deploy
         env:
