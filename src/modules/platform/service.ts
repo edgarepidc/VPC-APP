@@ -24,6 +24,7 @@ export async function listAllTenants(search?: string) {
       name: true,
       slug: true,
       plan: true,
+      logoUrl: true,
       createdAt: true,
       _count: { select: { memberships: true, projects: true } },
     },

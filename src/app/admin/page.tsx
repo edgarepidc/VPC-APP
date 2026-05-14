@@ -12,6 +12,8 @@ import {
   KpiCard,
   PlanDistributionPanel,
   TenantProjectShareBar,
+  VpcAdminGradientShell,
+  VpcAdminInsetShell,
 } from "./_components/vpc-visuals";
 import { DeleteTenantForm } from "./delete-tenant-form";
 import { deleteTenantPlatformAction } from "./tenant-delete-actions";
@@ -83,12 +85,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
         </p>
       )}
 
-      <section className="relative overflow-hidden rounded-xl border border-[#c9a46c]/40 bg-gradient-to-br from-[#0f1f5c] via-[#152d4f] to-[#261c16] p-6 text-white shadow-[0_16px_48px_-18px_rgba(15,31,92,0.5)] ring-1 ring-white/10">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_88%_8%,rgba(201,164,108,0.2),transparent_52%)]"
-          aria-hidden
-        />
-        <div className="relative">
+      <VpcAdminGradientShell className="p-6">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
           Value Project Consulting
         </p>
@@ -123,8 +120,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
             </p>
           </div>
         </div>
-        </div>
-      </section>
+      </VpcAdminGradientShell>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard
@@ -162,7 +158,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
         <TenantProjectShareBar tenants={tenantProjectRows} />
       </div>
 
-      <section className="rounded-xl border border-[#e3d6c4] bg-[linear-gradient(165deg,#ffffff_0%,#faf8f4_100%)] p-6 shadow-sm ring-1 ring-[#0f1f5c]/[0.04]">
+      <VpcAdminInsetShell innerClassName="p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-[#0f1f5c]">
@@ -217,6 +213,9 @@ export default async function AdminHomePage({ searchParams }: Props) {
             <thead>
               <tr className="border-b border-[#e8dfd0] text-left">
                 <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                  Logo
+                </th>
+                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
                   Organizacion
                 </th>
                 <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
@@ -242,6 +241,22 @@ export default async function AdminHomePage({ searchParams }: Props) {
                   key={t.id}
                   className="border-b border-[#f0ebe0] transition hover:bg-[#faf6ef]"
                 >
+                  <td className="py-3 pr-3 align-middle">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-[#e3d6c4] bg-white shadow-sm ring-1 ring-[#0f1f5c]/[0.04]">
+                      {t.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- URL pública Supabase Storage
+                        <img
+                          src={t.logoUrl}
+                          alt=""
+                          className="h-full w-full object-contain p-0.5"
+                        />
+                      ) : (
+                        <span className="text-[10px] font-semibold text-[#c9a46c]">
+                          —
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-3 pr-3 font-medium text-[#0f1f5c]">
                     {t.name}
                   </td>
@@ -293,7 +308,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
             </p>
           )}
         </div>
-      </section>
+      </VpcAdminInsetShell>
     </div>
   );
 }

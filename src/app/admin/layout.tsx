@@ -16,7 +16,7 @@ export default async function AdminLayout({
   if (!session.isSuperAdmin) redirect("/dashboard/projects");
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 bg-[linear-gradient(180deg,#faf8f4_0%,#ffffff_14rem)] px-6 py-8">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 bg-[linear-gradient(185deg,#e8ecf5_0%,#faf8f4_12rem,#ffffff_24rem)] px-6 py-8">
       <header className="space-y-5 border-b border-[#c9a46c]/35 pb-5">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="flex min-w-0 flex-wrap items-start gap-5 sm:gap-6">

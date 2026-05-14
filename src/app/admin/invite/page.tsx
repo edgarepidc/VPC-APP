@@ -17,6 +17,8 @@ import {
   IconMail,
   InvitationStatusDonut,
   KpiCard,
+  VpcAdminGradientShell,
+  VpcAdminInsetShell,
 } from "../_components/vpc-visuals";
 
 export const dynamic = "force-dynamic";
@@ -108,12 +110,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
         </p>
       )}
 
-      <section className="relative overflow-hidden rounded-xl border border-[#c9a46c]/40 bg-gradient-to-br from-[#0f1f5c] via-[#152d4f] to-[#261c16] p-6 text-white shadow-[0_16px_48px_-18px_rgba(15,31,92,0.5)] ring-1 ring-white/10">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_88%_8%,rgba(201,164,108,0.2),transparent_52%)]"
-          aria-hidden
-        />
-        <div className="relative">
+      <VpcAdminGradientShell className="p-6">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
           Value Project Consulting
         </p>
@@ -147,8 +144,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
             <dd className="mt-1 text-2xl font-semibold tabular-nums">{pendingTotal}</dd>
           </div>
         </dl>
-        </div>
-      </section>
+      </VpcAdminGradientShell>
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
@@ -175,27 +171,27 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
       <div className="grid gap-8 lg:grid-cols-5">
         <div className="space-y-6 lg:col-span-2">
           {tenants.length === 0 ? (
-            <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-base font-semibold text-slate-900">
+            <VpcAdminInsetShell innerClassName="p-6">
+              <h2 className="text-base font-semibold text-[#0f1f5c]">
                 Aún no hay organizaciones
               </h2>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-[#5c5346]">
                 Crea un tenant en{" "}
                 <Link
-                  className="font-medium text-[#0f1f5c] underline decoration-[#0f1f5c]/35 underline-offset-2 hover:decoration-[#0f1f5c]"
+                  className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
                   href="/admin/tenants"
                 >
                   Organizaciones
                 </Link>{" "}
                 para poder invitar miembros.
               </p>
-            </section>
+            </VpcAdminInsetShell>
           ) : (
-            <section className="rounded-xl border border-slate-200/90 bg-white p-6 shadow-sm ring-1 ring-slate-900/[0.04]">
-              <h2 className="text-base font-semibold text-slate-900">
+            <VpcAdminInsetShell innerClassName="p-6">
+              <h2 className="text-base font-semibold text-[#0f1f5c]">
                 Nueva invitación
               </h2>
-              <p className="mt-1 text-[13px] leading-relaxed text-slate-600">
+              <p className="mt-1 text-[13px] leading-relaxed text-[#5c5346]">
                 Si el correo ya tiene cuenta en Auth, la invitación queda pendiente
                 y al iniciar sesión se unirá al tenant con el rol indicado.
               </p>
@@ -204,11 +200,11 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                 className="mt-6 grid gap-4"
               >
                 <label className="grid gap-1.5 text-sm">
-                  <span className="font-medium text-slate-800">Organización</span>
+                  <span className="font-medium text-[#0f1f5c]">Organización</span>
                   <select
                     name="tenantId"
                     required
-                    className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#1b3a6b]/55 focus:bg-white focus:ring-2 focus:ring-[#0f1f5c]/18"
+                    className="rounded-lg border border-[#e3d6c4] bg-white px-3 py-2.5 text-sm text-[#1a1916] outline-none transition focus:border-[#0f1f5c]/40 focus:ring-2 focus:ring-[#0f1f5c]/15"
                     defaultValue=""
                   >
                     <option value="" disabled>
@@ -222,21 +218,21 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                   </select>
                 </label>
                 <label className="grid gap-1.5 text-sm">
-                  <span className="font-medium text-slate-800">Correo</span>
+                  <span className="font-medium text-[#0f1f5c]">Correo</span>
                   <input
                     name="email"
                     type="email"
                     required
                     placeholder="usuario@empresa.com"
-                    className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-[#1b3a6b]/55 focus:bg-white focus:ring-2 focus:ring-[#0f1f5c]/18"
+                    className="rounded-lg border border-[#e3d6c4] bg-white px-3 py-2.5 text-sm text-[#1a1916] outline-none transition placeholder:text-[#a09d98] focus:border-[#0f1f5c]/40 focus:ring-2 focus:ring-[#0f1f5c]/15"
                   />
                 </label>
                 <label className="grid gap-1.5 text-sm">
-                  <span className="font-medium text-slate-800">Rol en el tenant</span>
+                  <span className="font-medium text-[#0f1f5c]">Rol en el tenant</span>
                   <select
                     name="role"
                     defaultValue="member"
-                    className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#1b3a6b]/55 focus:bg-white focus:ring-2 focus:ring-[#0f1f5c]/18"
+                    className="rounded-lg border border-[#e3d6c4] bg-white px-3 py-2.5 text-sm text-[#1a1916] outline-none transition focus:border-[#0f1f5c]/40 focus:ring-2 focus:ring-[#0f1f5c]/15"
                   >
                     {(Object.keys(ROLE_LABELS) as RoleKey[]).map((key) => (
                       <option key={key} value={key}>
@@ -247,33 +243,33 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                 </label>
                 <button
                   type="submit"
-                  className="mt-1 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99]"
+                  className="mt-1 rounded-lg bg-gradient-to-b from-[#152d4f] to-[#0f1f5c] px-4 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-[#c9a46c]/35 transition hover:from-[#1a3a63] hover:to-[#12224d] active:scale-[0.99]"
                 >
                   Enviar invitación
                 </button>
               </form>
-            </section>
+            </VpcAdminInsetShell>
           )}
         </div>
 
-        <section className="rounded-xl border border-slate-200/90 bg-white p-0 shadow-sm ring-1 ring-slate-900/[0.04] lg:col-span-3">
-          <div className="border-b border-slate-100 px-5 py-4">
-            <h2 className="text-base font-semibold text-slate-900">
+        <VpcAdminInsetShell className="lg:col-span-3" innerClassName="overflow-hidden p-0">
+          <div className="border-b border-[#e8dfd0] bg-[linear-gradient(180deg,#faf8f4,#ffffff)] px-5 py-4">
+            <h2 className="text-base font-semibold text-[#0f1f5c]">
               Invitaciones recientes
             </h2>
-            <p className="mt-0.5 text-[13px] text-slate-500">
+            <p className="mt-0.5 text-[13px] text-[#6b5c48]">
               Últimas 50 en todos los clientes (pendientes y aceptadas).
             </p>
           </div>
           <div className="overflow-x-auto">
             {recentInvites.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-slate-500">
+              <p className="px-5 py-10 text-center text-sm text-[#8a7d6f]">
                 Aún no hay invitaciones registradas en la base de datos.
               </p>
             ) : (
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  <tr className="border-b border-[#e8dfd0] bg-[#faf8f4]/90 text-[11px] font-semibold uppercase tracking-wide text-[#8a7d6f]">
                     <th className="px-4 py-3">Correo</th>
                     <th className="px-4 py-3">Organización</th>
                     <th className="px-4 py-3">Rol</th>
@@ -282,7 +278,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                     <th className="px-4 py-3">Enviada</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[#f0ebe0]">
                   {recentInvites.map((row) => {
                     const roleLabel =
                       ROLE_LABELS[row.roleKey as RoleKey] ?? row.roleKey;
@@ -290,17 +286,17 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                     return (
                       <tr
                         key={row.id}
-                        className="transition hover:bg-slate-50/90"
+                        className="transition hover:bg-[#faf6ef]"
                       >
-                        <td className="px-4 py-3 font-medium text-slate-900">
+                        <td className="px-4 py-3 font-medium text-[#0f1f5c]">
                           {row.email}
                         </td>
-                        <td className="px-4 py-3 text-slate-700">
-                          <span className="font-medium">{row.tenant.name}</span>
-                          <span className="text-slate-400"> · {row.tenant.slug}</span>
+                        <td className="px-4 py-3 text-[#57534e]">
+                          <span className="font-medium text-[#0f1f5c]">{row.tenant.name}</span>
+                          <span className="text-[#a09d98]"> · {row.tenant.slug}</span>
                         </td>
-                        <td className="px-4 py-3 text-slate-600">{roleLabel}</td>
-                        <td className="max-w-[140px] truncate px-4 py-3 text-slate-600" title={row.sender.email}>
+                        <td className="px-4 py-3 text-[#57534e]">{roleLabel}</td>
+                        <td className="max-w-[140px] truncate px-4 py-3 text-[#57534e]" title={row.sender.email}>
                           {row.sender.name?.trim() || row.sender.email}
                         </td>
                         <td className="px-4 py-3">
@@ -309,15 +305,15 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                               Aceptada
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-400/25">
+                            <span className="inline-flex items-center rounded-full border border-[#e3d6c4] bg-white px-2.5 py-0.5 text-xs font-medium text-[#57534e] ring-1 ring-[#0f1f5c]/8">
                               Pendiente
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-slate-500 tabular-nums">
+                        <td className="px-4 py-3 text-[#6b5c48] tabular-nums">
                           <span className="block">{formatShortDate(row.createdAt)}</span>
                           {isAccepted && row.acceptedAt ? (
-                            <span className="mt-0.5 block text-[11px] text-slate-400">
+                            <span className="mt-0.5 block text-[11px] text-[#a09d98]">
                               Aceptada: {formatShortDate(row.acceptedAt)}
                             </span>
                           ) : null}
@@ -329,7 +325,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
               </table>
             )}
           </div>
-        </section>
+        </VpcAdminInsetShell>
       </div>
     </div>
   );
