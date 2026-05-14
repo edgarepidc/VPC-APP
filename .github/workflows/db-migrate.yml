@@ -40,10 +40,23 @@ jobs:
             exit 1
           fi
           if printf '%s' "$DATABASE_URL" | grep -qE 'db\.[^/]+\.supabase\.co:5432'; then
-            echo "::warning::Tu DATABASE_URL usa el host directo db.*.supabase.co:5432. Los runners de GitHub suelen obtener P1001 (no alcanza el servidor). En Supabase → Connect → elige «Transaction pooler» (host *.pooler.supabase.com, puerto 6543) y actualiza este secreto (y Vercel) con esa cadena."
+            echo "::warning::DATABASE_URL usa host directo db.*.supabase.co:5432. GitHub Actions suele fallar con P1001. Usa el pooler de Supabase (Session :5432 o Transaction :6543 según abajo)."
+          fi
+          if printf '%s' "$DATABASE_URL" | grep -qE ':6543'; then
+            echo "::warning::Puerto 6543 = pooler en modo TRANSACCIÓN. «prisma migrate deploy» a veces se queda colgado sin más salida. Para este workflow, pon en el secreto la URI «Session pooler» (mismo host *.pooler.supabase.com, puerto 5432). En Vercel la app puede seguir con 6543."
           fi
 
       - name: Prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx prisma migrate deploy
+        run: |
+          # Evita jobs colgados 30+ min si el pooler transaccional no coopera con migraciones
+          set +e
+          timeout 300 npx prisma migrate deploy
+          code=$?
+          set -e
+          if [ "$code" -eq 124 ]; then
+            echo "::error::Timeout (5 min). Suele pasar con Transaction pooler (:6543). Usa Session pooler (:5432) en el secreto DATABASE_URL de Actions y reintenta."
+            exit 1
+          fi
+          exit "$code"
