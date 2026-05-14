@@ -102,20 +102,22 @@ export function DashboardChrome({
 
   const panelBody = (opts: { onNav?: () => void; showCollapseHint?: boolean }) => (
     <>
-      <div className="flex gap-3 border-b border-[#e8dfd0] pb-4">
-        <div className="relative shrink-0 overflow-hidden rounded-xl border border-[#c9a46c]/45 bg-[linear-gradient(165deg,#ffffff_0%,#faf8f4_100%)] shadow-sm ring-1 ring-[#0f1f5c]/[0.05]">
+      <div className="flex items-start gap-3 border-b border-[#e8dfd0] pb-4">
+        <div
+          className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#c9a46c]/45 bg-[linear-gradient(165deg,#ffffff_0%,#faf8f4_100%)] p-1 shadow-sm ring-1 ring-[#0f1f5c]/[0.05]"
+        >
           {tenantLogoUrl ? (
             <Image
               src={tenantLogoUrl}
               alt=""
-              width={56}
-              height={56}
-              className="h-14 w-14 object-contain"
+              width={48}
+              height={48}
+              className="max-h-full max-w-full object-contain"
               unoptimized
             />
           ) : (
             <div
-              className="flex h-14 w-14 items-center justify-center text-sm font-bold tracking-tight text-[#c9a46c]"
+              className="flex h-full w-full items-center justify-center rounded-lg text-xs font-bold leading-tight tracking-tight text-[#c9a46c]"
               style={{ background: "linear-gradient(145deg,#0f1f5c 0%,#152d4f 100%)" }}
             >
               {tenantInitials}

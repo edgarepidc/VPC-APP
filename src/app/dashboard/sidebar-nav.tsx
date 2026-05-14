@@ -39,17 +39,6 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
         );
       })}
 
-      <Link
-        className="dash-nav-link mt-3 flex items-center gap-2.5 rounded-xl px-3 py-2.5 font-medium text-[#5c5346] transition-colors"
-        href="/select-tenant"
-        onClick={onLinkClick}
-      >
-        <span className="text-lg" aria-hidden>
-          🔄
-        </span>
-        Cambiar tenant
-      </Link>
-
       {showPlatformAdmin && (
         <Link
           className="mt-2 flex items-center gap-2.5 rounded-xl border border-[#c9a46c]/45 bg-[linear-gradient(135deg,#faf6ef_0%,#f3ead8_100%)] px-3 py-2.5 text-sm font-semibold text-[#3d2a12] shadow-sm ring-1 ring-[#0f1f5c]/8 transition hover:border-[#c9a46c]/70"
