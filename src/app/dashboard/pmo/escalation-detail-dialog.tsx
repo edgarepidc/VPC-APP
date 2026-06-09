@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useId } from "react";
 
 import { ESCALOMETRO_REPORT } from "@/lib/dashboard-paths";
+import { riskFromEscalationUrl } from "@/lib/escalation-risk-prefill";
 import {
   ESCALATION_INDICATOR_KEYS,
+  formatEscalationDateTime,
   formatRelativeDate,
   getEscalationTierBadge,
   getIndicatorLevelClass,
@@ -22,15 +24,21 @@ export type EscalationDetailRecord = {
   indicators: Record<string, string>;
   actions: string[];
   createdAt: string;
+  authorName: string;
   project: { id: string; name: string };
 };
 
 type EscalationDetailDialogProps = {
   record: EscalationDetailRecord | null;
   onClose: () => void;
+  canCreateRisk?: boolean;
 };
 
-export function EscalationDetailDialog({ record, onClose }: EscalationDetailDialogProps) {
+export function EscalationDetailDialog({
+  record,
+  onClose,
+  canCreateRisk = false,
+}: EscalationDetailDialogProps) {
   const titleId = useId();
 
   const handleKey = useCallback(
@@ -84,8 +92,10 @@ export function EscalationDetailDialog({ record, onClose }: EscalationDetailDial
 
         <p className="mt-2 text-sm font-medium text-slate-800">{record.title}</p>
         <p className="text-xs text-slate-500">
-          {record.levelLabel} · {formatRelativeDate(createdAt)}
+          {record.levelLabel} · Evaluado por {record.authorName} ·{" "}
+          {formatEscalationDateTime(createdAt)}
         </p>
+        <p className="text-xs text-slate-400">{formatRelativeDate(createdAt)}</p>
 
         <div className="mt-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -125,6 +135,11 @@ export function EscalationDetailDialog({ record, onClose }: EscalationDetailDial
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
+          {canCreateRisk && (
+            <Link href={riskFromEscalationUrl(record)} className={uiButtonSecondary}>
+              Crear riesgo
+            </Link>
+          )}
           <Link
             href={`${ESCALOMETRO_REPORT(record.id)}?auto=1`}
             target="_blank"

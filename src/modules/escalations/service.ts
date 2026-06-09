@@ -5,9 +5,39 @@ export type EscalationTier = "green" | "orange" | "red";
 
 export type EscalationIndicators = Record<string, "low" | "medium" | "high">;
 
-export type EscalationCheckRow = Awaited<
-  ReturnType<typeof listEscalationChecksByTenant>
->[number];
+export type EscalationCheckRow = {
+  id: string;
+  tenantId: string;
+  projectId: string;
+  topic: string | null;
+  tier: string;
+  title: string;
+  levelLabel: string;
+  indicators: unknown;
+  actions: unknown;
+  createdBy: string;
+  createdAt: Date;
+  project: { id: string; name: string };
+  authorName: string;
+};
+
+async function attachAuthorNames<
+  T extends { createdBy: string },
+>(rows: T[]): Promise<(T & { authorName: string })[]> {
+  if (rows.length === 0) return [];
+  const userIds = [...new Set(rows.map((row) => row.createdBy))];
+  const users = await db.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, name: true, email: true },
+  });
+  const byId = new Map(
+    users.map((user) => [user.id, user.name?.trim() || user.email.split("@")[0] || "Usuario"]),
+  );
+  return rows.map((row) => ({
+    ...row,
+    authorName: byId.get(row.createdBy) ?? "Usuario",
+  }));
+}
 
 export async function createEscalationCheck(input: {
   tenantId: string;
@@ -21,7 +51,7 @@ export async function createEscalationCheck(input: {
   createdBy: string;
 }) {
   try {
-    return await db.escalationCheck.create({
+    const created = await db.escalationCheck.create({
       data: {
         tenantId: input.tenantId,
         projectId: input.projectId,
@@ -37,6 +67,8 @@ export async function createEscalationCheck(input: {
         project: { select: { id: true, name: true } },
       },
     });
+    const [enriched] = await attachAuthorNames([created]);
+    return enriched!;
   } catch (err) {
     if (isMissingTableError(err, "EscalationCheck")) {
       throw new Error(escalationTableMissingMessage());
@@ -59,7 +91,7 @@ export async function listEscalationChecksByTenant(
     return [];
   }
   try {
-    return await db.escalationCheck.findMany({
+    const rows = await db.escalationCheck.findMany({
       where: {
         tenantId,
         ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
@@ -72,6 +104,7 @@ export async function listEscalationChecksByTenant(
       orderBy: { createdAt: "desc" },
       take: options?.limit ?? 50,
     });
+    return attachAuthorNames(rows);
   } catch (err) {
     if (isMissingTableError(err, "EscalationCheck")) {
       console.warn("[escalations] EscalationCheck table missing — returning empty list");
@@ -91,7 +124,7 @@ export async function getEscalationCheckById(
     return null;
   }
   try {
-    return await db.escalationCheck.findFirst({
+    const row = await db.escalationCheck.findFirst({
       where: {
         id: checkId,
         tenantId,
@@ -101,6 +134,9 @@ export async function getEscalationCheckById(
         project: { select: { id: true, name: true } },
       },
     });
+    if (!row) return null;
+    const [enriched] = await attachAuthorNames([row]);
+    return enriched ?? null;
   } catch (err) {
     if (isMissingTableError(err, "EscalationCheck")) return null;
     throw err;

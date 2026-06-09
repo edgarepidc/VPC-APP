@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { buildEscalationTrendsByProject } from "@/lib/escalation-utils";
 import {
   findGreenToRedDeteriorations,
   latestEscalationByProject,
@@ -85,7 +86,7 @@ export async function getPmoSnapshot(
     }),
     listEscalationChecksByTenant(tenantId, {
       restrictToProjectIds: restrict,
-      limit: 12,
+      limit: 200,
     }),
     latestEscalationByProject(tenantId, { restrictToProjectIds: restrict }),
     findGreenToRedDeteriorations(tenantId, {
@@ -153,6 +154,7 @@ export async function getPmoSnapshot(
       ["delivered", "approved"].includes(d.status),
     ).length;
     const latestEscalation = latestEscalations.get(project.id);
+    const trend = escalationTrends.get(project.id);
 
     return {
       id: project.id,
@@ -166,10 +168,19 @@ export async function getPmoSnapshot(
       risks: projectRisks.length,
       latestEscalationTier: latestEscalation?.tier ?? null,
       latestEscalationAt: latestEscalation?.createdAt ?? null,
+      escalationTrendTiers: trend?.tiers ?? [],
+      escalationTrendDirection: trend?.direction ?? null,
     };
   });
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const escalationTrends = buildEscalationTrendsByProject(
+    recentEscalations.map((row) => ({
+      projectId: row.projectId,
+      tier: row.tier,
+      createdAt: row.createdAt,
+    })),
+  );
   const escalationCounts = recentEscalations
     .filter((row) => row.createdAt >= thirtyDaysAgo)
     .reduce(

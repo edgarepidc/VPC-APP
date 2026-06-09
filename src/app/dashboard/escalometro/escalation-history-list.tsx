@@ -7,6 +7,7 @@ import { ESCALOMETRO_REPORT } from "@/lib/dashboard-paths";
 import {
   ESCALATION_INDICATOR_KEYS,
   ESCALATION_INDICATOR_SHORT,
+  formatEscalationDateTime,
   formatRelativeDate,
   getEscalationTierBadge,
   getIndicatorLevelClass,
@@ -19,9 +20,10 @@ import {
 
 type EscalationHistoryListProps = {
   rows: EscalationDetailRecord[];
+  canCreateRisk?: boolean;
 };
 
-export function EscalationHistoryList({ rows }: EscalationHistoryListProps) {
+export function EscalationHistoryList({ rows, canCreateRisk = false }: EscalationHistoryListProps) {
   const [selected, setSelected] = useState<EscalationDetailRecord | null>(null);
 
   return (
@@ -46,6 +48,9 @@ export function EscalationHistoryList({ rows }: EscalationHistoryListProps) {
                   ) : null}
                 </p>
                 <p className="text-slate-600">{check.title}</p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {check.authorName} · {formatEscalationDateTime(new Date(check.createdAt))}
+                </p>
               </button>
               <div className="text-right">
                 <span className={badge.className}>{badge.label}</span>
@@ -92,7 +97,11 @@ export function EscalationHistoryList({ rows }: EscalationHistoryListProps) {
           </li>
         );
       })}
-      <EscalationDetailDialog record={selected} onClose={() => setSelected(null)} />
+      <EscalationDetailDialog
+        record={selected}
+        onClose={() => setSelected(null)}
+        canCreateRisk={canCreateRisk}
+      />
     </>
   );
 }

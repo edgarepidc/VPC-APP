@@ -11,10 +11,24 @@ import { listDeliverablesByTenant } from "@/modules/deliverables/service";
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { dashAlertError, dashAlertOk, dashPage } from "@/lib/ui-classes";
 
+import { parseRiskPrefillFromSearchParams } from "@/lib/escalation-risk-prefill";
+
 import { RiskManagerView, type RiskClientRow } from "./risk-manager-view";
 
 type RisksPageProps = {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    ok?: string;
+    prefill?: string;
+    projectId?: string;
+    title?: string;
+    category?: string;
+    trigger?: string;
+    mitigation?: string;
+    probability?: string;
+    residualProb?: string;
+    impactAmount?: string;
+  }>;
 };
 
 export default async function RisksPage({ searchParams }: RisksPageProps) {
@@ -23,6 +37,7 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
   const canEdit = hasPermission(session.role, "tasks.write");
+  const riskPrefill = parseRiskPrefillFromSearchParams(params);
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
 
@@ -132,6 +147,7 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
         projects={projects}
         deliverables={deliverables}
         canEdit={canEdit}
+        prefill={riskPrefill}
         createAction={createAction}
         deleteAction={deleteAction}
       />

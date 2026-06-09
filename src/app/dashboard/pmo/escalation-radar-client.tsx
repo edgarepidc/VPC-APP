@@ -22,9 +22,14 @@ import {
 type EscalationRadarClientProps = {
   rows: EscalationDetailRecord[];
   counts: { red: number; orange: number; green: number };
+  canCreateRisk?: boolean;
 };
 
-export function EscalationRadarClient({ rows, counts }: EscalationRadarClientProps) {
+export function EscalationRadarClient({
+  rows,
+  counts,
+  canCreateRisk = false,
+}: EscalationRadarClientProps) {
   const [selected, setSelected] = useState<EscalationDetailRecord | null>(null);
 
   const sorted = useMemo(
@@ -151,7 +156,11 @@ export function EscalationRadarClient({ rows, counts }: EscalationRadarClientPro
         )}
       </section>
 
-      <EscalationDetailDialog record={selected} onClose={() => setSelected(null)} />
+      <EscalationDetailDialog
+        record={selected}
+        onClose={() => setSelected(null)}
+        canCreateRisk={canCreateRisk}
+      />
     </>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import type { RiskFormPrefill } from "@/lib/escalation-risk-prefill";
 
 import {
   dashAlertWarn,
@@ -47,6 +49,7 @@ type RiskManagerViewProps = {
   projects: { id: string; name: string }[];
   deliverables: { id: string; title: string }[];
   canEdit: boolean;
+  prefill?: RiskFormPrefill | null;
   createAction: (formData: FormData) => void | Promise<void>;
   deleteAction: (formData: FormData) => void | Promise<void>;
 };
@@ -148,14 +151,24 @@ export function RiskManagerView({
   projects,
   deliverables,
   canEdit,
+  prefill = null,
   createAction,
   deleteAction,
 }: RiskManagerViewProps) {
+  const formSectionRef = useRef<HTMLElement>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [memoOpen, setMemoOpen] = useState(false);
-  const [prob, setProb] = useState(50);
-  const [resProb, setResProb] = useState(20);
-  const [impact, setImpact] = useState(50_000);
+  const [prob, setProb] = useState(prefill?.probability ?? 50);
+  const [resProb, setResProb] = useState(prefill?.residualProb ?? 20);
+  const [impact, setImpact] = useState(prefill?.impactAmount ?? 50_000);
+
+  useEffect(() => {
+    if (!prefill) return;
+    setProb(prefill.probability);
+    setResProb(prefill.residualProb);
+    setImpact(prefill.impactAmount);
+    formSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [prefill]);
 
   const today = useMemo(() => startOfToday(), []);
 
@@ -293,8 +306,14 @@ ${D}`;
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_22rem] lg:items-start">
-        <section className={`${dashCard} p-4`}>
+        <section ref={formSectionRef} id="risk-register-form" className={`${dashCard} p-4`}>
           <h2 className={`mb-4 ${dashSectionTitle}`}>Registrar riesgo</h2>
+          {prefill && canEdit && (
+            <p className={`mb-4 ${dashAlertWarn}`}>
+              Formulario prellenado desde una evaluación del Escalómetro. Revisa y ajusta antes de
+              guardar.
+            </p>
+          )}
           {!canEdit ? (
             <p className={dashAlertWarn}>Tu rol es solo lectura para este módulo.</p>
           ) : (
@@ -324,6 +343,7 @@ ${D}`;
                     name="title"
                     required
                     rows={3}
+                    defaultValue={prefill?.title ?? ""}
                     placeholder="Describe el riesgo, causa y consecuencia posible…"
                     className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
                   />
@@ -334,6 +354,7 @@ ${D}`;
                   </span>
                   <select
                     name="category"
+                    defaultValue={prefill?.category ?? RISK_CATEGORIES[0]}
                     className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
                   >
                     {RISK_CATEGORIES.map((c) => (
@@ -361,6 +382,7 @@ ${D}`;
                   <select
                     name="projectId"
                     required
+                    defaultValue={prefill?.projectId ?? ""}
                     className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
                   >
                     <option value="">Selecciona proyecto</option>
@@ -439,6 +461,7 @@ ${D}`;
                   <textarea
                     name="mitigation"
                     rows={2}
+                    defaultValue={prefill?.mitigation ?? ""}
                     placeholder="¿Qué acciones reducen la probabilidad?"
                     className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white"
                   />
@@ -463,6 +486,7 @@ ${D}`;
                   </span>
                   <input
                     name="trigger"
+                    defaultValue={prefill?.trigger ?? ""}
                     placeholder="Ej.: Si la entrega no ocurre antes de semana 4…"
                     className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white"
                   />

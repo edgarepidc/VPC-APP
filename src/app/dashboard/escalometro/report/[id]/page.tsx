@@ -70,6 +70,7 @@ export default async function EscalationReportPage({ params }: ReportPageProps) 
           <p className="mt-1 text-sm text-slate-600">
             {check.levelLabel} · {dateLabel}
           </p>
+          <p className="text-xs text-slate-500">Evaluado por {check.authorName}</p>
         </div>
 
         <section className="mt-6">

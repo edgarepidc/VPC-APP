@@ -160,7 +160,8 @@
     pointer-events: none;
   }
   .help-wrap:hover .help-popover,
-  .help-wrap:focus-within .help-popover {
+  .help-wrap:focus-within .help-popover,
+  .help-wrap.open .help-popover {
     display: block;
     pointer-events: auto;
   }
@@ -788,7 +789,7 @@
           </label>
           ${ind.help ? `
           <div class="help-wrap">
-            <button type="button" class="help-btn" aria-label="Ayuda: ${ind.label}" aria-describedby="help-${ind.id}">?</button>
+            <button type="button" class="help-btn" aria-label="Ayuda: ${ind.label}" aria-describedby="help-${ind.id}" aria-expanded="false">?</button>
             <div class="help-popover" id="help-${ind.id}" role="tooltip">
               <div class="help-domain">${ind.help.domain}</div>
               <p>${ind.help.summary}</p>
@@ -905,9 +906,41 @@
   });
 
   /* ══════════════════════════════════════════════════════
+     AYUDA TÁCTIL (móvil) + hover (escritorio)
+  ══════════════════════════════════════════════════════ */
+
+  function initHelpTooltips() {
+    document.addEventListener('click', (event) => {
+      const btn = event.target.closest('.help-btn');
+      if (btn) {
+        event.preventDefault();
+        event.stopPropagation();
+        const wrap = btn.closest('.help-wrap');
+        const wasOpen = wrap.classList.contains('open');
+        document.querySelectorAll('.help-wrap.open').forEach((node) => {
+          node.classList.remove('open');
+          node.querySelector('.help-btn')?.setAttribute('aria-expanded', 'false');
+        });
+        if (!wasOpen) {
+          wrap.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+      if (!event.target.closest('.help-wrap')) {
+        document.querySelectorAll('.help-wrap.open').forEach((node) => {
+          node.classList.remove('open');
+          node.querySelector('.help-btn')?.setAttribute('aria-expanded', 'false');
+        });
+      }
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════
      INIT
   ══════════════════════════════════════════════════════ */
   renderCards();
+  initHelpTooltips();
 </script>
 </body>
 </html>

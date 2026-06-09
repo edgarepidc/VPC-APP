@@ -4,6 +4,7 @@ import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { EscalationHistoryList } from "@/app/dashboard/escalometro/escalation-history-list";
 import { EscalationDeteriorationAlerts } from "@/app/dashboard/pmo/escalation-deterioration-alerts";
 import { getSessionUser } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { serializeEscalationChecks } from "@/lib/escalation-serialize";
@@ -29,6 +30,7 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
   const session = await getSessionUser();
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
+  const canCreateRisk = hasPermission(session.role, "tasks.write");
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
 
   const [projects, checks, alerts] = await Promise.all([
@@ -95,7 +97,7 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
 
         <ul className="mt-3 space-y-2">
           {rows.length > 0 ? (
-            <EscalationHistoryList rows={rows} />
+            <EscalationHistoryList rows={rows} canCreateRisk={canCreateRisk} />
           ) : (
             <li className="rounded-lg border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
               Sin evaluaciones registradas.

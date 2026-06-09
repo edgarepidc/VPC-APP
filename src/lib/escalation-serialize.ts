@@ -13,6 +13,7 @@ type EscalationCheckLike = {
   indicators: unknown;
   actions: unknown;
   createdAt: Date;
+  authorName: string;
   project: { id: string; name: string };
 };
 
@@ -28,6 +29,7 @@ export function serializeEscalationCheck(
     indicators: parseEscalationIndicators(check.indicators),
     actions: parseEscalationActions(check.actions),
     createdAt: check.createdAt.toISOString(),
+    authorName: check.authorName,
     project: check.project,
   };
 }

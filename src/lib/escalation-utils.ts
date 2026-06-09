@@ -61,3 +61,59 @@ export function formatRelativeDate(date: Date) {
   if (diffDays < 7) return `Hace ${diffDays} días`;
   return date.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
 }
+
+export function formatEscalationDateTime(date: Date) {
+  return date.toLocaleString("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function tierNumeric(tier: string) {
+  if (tier === "red") return 2;
+  if (tier === "orange") return 1;
+  return 0;
+}
+
+export type EscalationTrendDirection = "up" | "down" | "flat" | null;
+
+export function computeEscalationTrend(tiersChronological: string[]): {
+  tiers: string[];
+  direction: EscalationTrendDirection;
+} {
+  const tiers = tiersChronological.slice(-5);
+  if (tiers.length < 2) {
+    return { tiers, direction: null };
+  }
+  const latest = tierNumeric(tiers[tiers.length - 1]!);
+  const previous = tierNumeric(tiers[tiers.length - 2]!);
+  if (latest > previous) return { tiers, direction: "up" };
+  if (latest < previous) return { tiers, direction: "down" };
+  return { tiers, direction: "flat" };
+}
+
+export function buildEscalationTrendsByProject(
+  checks: Array<{ projectId: string; tier: string; createdAt: Date }>,
+): Map<string, { tiers: string[]; direction: EscalationTrendDirection }> {
+  const grouped = new Map<string, Array<{ tier: string; createdAt: Date }>>();
+  for (const check of checks) {
+    const list = grouped.get(check.projectId) ?? [];
+    list.push({ tier: check.tier, createdAt: check.createdAt });
+    grouped.set(check.projectId, list);
+  }
+
+  const result = new Map<string, { tiers: string[]; direction: EscalationTrendDirection }>();
+  for (const [projectId, list] of grouped) {
+    const chronological = [...list].sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    );
+    result.set(
+      projectId,
+      computeEscalationTrend(chronological.map((item) => item.tier)),
+    );
+  }
+  return result;
+}

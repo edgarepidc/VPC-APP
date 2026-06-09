@@ -8,6 +8,7 @@ import {
   dashPage,
 } from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { getProjectStatusBadge, getSemaphoreBadge } from "@/lib/ui";
@@ -16,6 +17,7 @@ import { serializeEscalationChecks } from "@/lib/escalation-serialize";
 import { getPmoSnapshot } from "@/modules/pmo/service";
 import { EscalationRadarClient } from "./escalation-radar-client";
 import { EscalationDeteriorationAlerts } from "./escalation-deterioration-alerts";
+import { EscalationTrendDots } from "./escalation-trend-dots";
 
 function money(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -29,6 +31,7 @@ export default async function PmoPage() {
   const session = await getSessionUser();
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
+  const canCreateRisk = hasPermission(session.role, "tasks.write");
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
   const snapshot = await getPmoSnapshot(tenantId, {
@@ -83,6 +86,7 @@ export default async function PmoPage() {
       <EscalationRadarClient
         rows={radarRows}
         counts={snapshot.escalationRadar.counts}
+        canCreateRisk={canCreateRisk}
       />
 
       <section className="grid gap-4 lg:grid-cols-3">
@@ -104,6 +108,7 @@ export default async function PmoPage() {
                   <th className="py-2">Avance</th>
                   <th className="py-2">Riesgos</th>
                   <th className="py-2">Escalamiento</th>
+                  <th className="py-2">Tendencia</th>
                 </tr>
               </thead>
               <tbody>
@@ -134,12 +139,18 @@ export default async function PmoPage() {
                           <span className="text-xs text-slate-400">Sin evaluar</span>
                         )}
                       </td>
+                      <td className="py-2">
+                        <EscalationTrendDots
+                          tiers={project.escalationTrendTiers}
+                          direction={project.escalationTrendDirection}
+                        />
+                      </td>
                     </tr>
                   );
                 })}
                 {snapshot.projectHealth.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-6 text-center text-sm text-slate-500">
+                    <td colSpan={8} className="py-6 text-center text-sm text-slate-500">
                       Sin proyectos en este workspace.
                     </td>
                   </tr>
