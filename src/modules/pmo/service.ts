@@ -1,10 +1,16 @@
 import { db } from "@/lib/db";
 import { buildEscalationTrendsByProject } from "@/lib/escalation-utils";
+import { buildMeetingCostTrendsByProject } from "@/lib/meeting-roi-utils";
 import {
   findGreenToRedDeteriorations,
   latestEscalationByProject,
   listEscalationChecksByTenant,
 } from "@/modules/escalations/service";
+import {
+  findMeetingCostAlerts,
+  latestMeetingRoiByProject,
+  listMeetingRoiSessionsByTenant,
+} from "@/modules/meeting-roi/service";
 
 export async function getPmoSnapshot(
   tenantId: string,
@@ -30,6 +36,9 @@ export async function getPmoSnapshot(
     recentEscalations,
     latestEscalations,
     deteriorationAlerts,
+    recentMeetings,
+    latestMeetings,
+    meetingCostAlerts,
   ] = await Promise.all([
     db.project.findMany({
       where: projectWhere,
@@ -90,6 +99,15 @@ export async function getPmoSnapshot(
     }),
     latestEscalationByProject(tenantId, { restrictToProjectIds: restrict }),
     findGreenToRedDeteriorations(tenantId, {
+      restrictToProjectIds: restrict,
+      withinDays: 7,
+    }),
+    listMeetingRoiSessionsByTenant(tenantId, {
+      restrictToProjectIds: restrict,
+      limit: 200,
+    }),
+    latestMeetingRoiByProject(tenantId, { restrictToProjectIds: restrict }),
+    findMeetingCostAlerts(tenantId, {
       restrictToProjectIds: restrict,
       withinDays: 7,
     }),
@@ -155,6 +173,14 @@ export async function getPmoSnapshot(
     })),
   );
 
+  const meetingCostTrends = buildMeetingCostTrendsByProject(
+    recentMeetings.map((row) => ({
+      projectId: row.projectId,
+      costLevel: row.costLevel,
+      createdAt: row.createdAt,
+    })),
+  );
+
   const projectHealth = projects.map((project) => {
     const projectDeliverables = deliverables.filter((d) => d.projectId === project.id);
     const projectRisks = risks.filter((r) => r.projectId === project.id);
@@ -163,6 +189,8 @@ export async function getPmoSnapshot(
     ).length;
     const latestEscalation = latestEscalations.get(project.id);
     const trend = escalationTrends.get(project.id);
+    const latestMeeting = latestMeetings.get(project.id);
+    const meetingTrend = meetingCostTrends.get(project.id);
 
     return {
       id: project.id,
@@ -178,6 +206,11 @@ export async function getPmoSnapshot(
       latestEscalationAt: latestEscalation?.createdAt ?? null,
       escalationTrendTiers: trend?.tiers ?? [],
       escalationTrendDirection: trend?.direction ?? null,
+      latestMeetingCostLevel: latestMeeting?.costLevel ?? null,
+      latestMeetingCost: latestMeeting?.totalCost ?? null,
+      latestMeetingAt: latestMeeting?.createdAt ?? null,
+      meetingCostTrendLevels: meetingTrend?.levels ?? [],
+      meetingCostTrendDirection: meetingTrend?.direction ?? null,
     };
   });
 
@@ -194,6 +227,19 @@ export async function getPmoSnapshot(
       { red: 0, orange: 0, green: 0 },
     );
 
+  const meetingsLast30 = recentMeetings.filter((row) => row.createdAt >= thirtyDaysAgo);
+  const meetingCostCounts = meetingsLast30.reduce(
+    (acc, row) => {
+      if (row.costLevel === "Crítico") acc.critico += 1;
+      else if (row.costLevel === "Alto") acc.alto += 1;
+      else if (row.costLevel === "Moderado") acc.moderado += 1;
+      else acc.bajo += 1;
+      return acc;
+    },
+    { bajo: 0, moderado: 0, alto: 0, critico: 0 },
+  );
+  const totalMeetingCostMxn = meetingsLast30.reduce((sum, row) => sum + row.totalCost, 0);
+
   return {
     kpis: {
       projects: projects.length,
@@ -205,6 +251,8 @@ export async function getPmoSnapshot(
       portfolioProgressPct,
       totalResidualVme,
       escalationChecks: recentEscalations.filter((r) => r.createdAt >= thirtyDaysAgo).length,
+      meetingSessions: meetingsLast30.length,
+      totalMeetingCostMxn,
     },
     overdueDeliverables,
     criticalRiskRows,
@@ -214,6 +262,12 @@ export async function getPmoSnapshot(
       rows: recentEscalations.slice(0, 12),
       counts: escalationCounts,
     },
+    meetingRoiRadar: {
+      rows: recentMeetings.slice(0, 12),
+      counts: meetingCostCounts,
+      totalCostMxn: totalMeetingCostMxn,
+    },
     deteriorationAlerts,
+    meetingCostAlerts,
   };
 }

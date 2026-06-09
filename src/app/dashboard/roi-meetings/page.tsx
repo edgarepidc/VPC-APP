@@ -64,20 +64,20 @@ export default async function RoiMeetingsPage({ searchParams }: RoiMeetingsPageP
       <RoiMeetingsClient projects={projects} canSave={canSave} />
 
       <section className={`${dashCard} p-4`}>
-        <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-slate-900">Registros recientes</h2>
             <span className="text-xs text-slate-500">
               Historial de sesiones registradas por proyecto
             </span>
           </div>
-          <form method="get" className="flex flex-wrap items-end gap-2">
-            <label className="block">
+          <form method="get" className="flex w-full flex-wrap items-end gap-2 sm:w-auto">
+            <label className="block min-w-0 flex-1 sm:flex-none">
               <span className={uiLabel}>Filtrar por proyecto</span>
               <select
                 name="projectId"
                 defaultValue={filterProjectId}
-                className={`${uiInput} mt-1 min-w-[200px]`}
+                className={`${uiInput} mt-1 w-full min-w-0 sm:min-w-[200px]`}
               >
                 <option value="">Todos los proyectos</option>
                 {projects.map((project) => (

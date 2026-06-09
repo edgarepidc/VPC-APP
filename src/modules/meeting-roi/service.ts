@@ -149,3 +149,170 @@ export async function isMeetingRoiStorageReady() {
     throw err;
   }
 }
+
+export type MeetingCostAlert = {
+  projectId: string;
+  projectName: string;
+  sessionName: string | null;
+  costLevel: string;
+  totalCost: number;
+  diagnosisTitle: string;
+  createdAt: Date;
+  alertType: "critical" | "inefficient" | "spike";
+};
+
+/** Sesiones de alto impacto económico en los últimos N días. */
+export async function findMeetingCostAlerts(
+  tenantId: string,
+  options?: { restrictToProjectIds?: string[]; withinDays?: number },
+): Promise<MeetingCostAlert[]> {
+  const withinDays = options?.withinDays ?? 7;
+  const since = new Date(Date.now() - withinDays * 24 * 60 * 60 * 1000);
+  const rows = await listMeetingRoiSessionsByTenant(tenantId, {
+    restrictToProjectIds: options?.restrictToProjectIds,
+    since,
+    limit: 500,
+  });
+
+  const alerts: MeetingCostAlert[] = [];
+  const byProject = new Map<string, typeof rows>();
+
+  for (const row of rows) {
+    const list = byProject.get(row.projectId) ?? [];
+    list.push(row);
+    byProject.set(row.projectId, list);
+
+    if (row.costLevel === "Crítico") {
+      alerts.push({
+        projectId: row.projectId,
+        projectName: row.project.name,
+        sessionName: row.sessionName,
+        costLevel: row.costLevel,
+        totalCost: row.totalCost,
+        diagnosisTitle: row.diagnosisTitle,
+        createdAt: row.createdAt,
+        alertType: "critical",
+      });
+    } else if (row.objective === "informativa" && row.totalCost >= 8000) {
+      alerts.push({
+        projectId: row.projectId,
+        projectName: row.project.name,
+        sessionName: row.sessionName,
+        costLevel: row.costLevel,
+        totalCost: row.totalCost,
+        diagnosisTitle: row.diagnosisTitle,
+        createdAt: row.createdAt,
+        alertType: "inefficient",
+      });
+    }
+  }
+
+  for (const [, sessions] of byProject) {
+    const sorted = [...sessions].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+    const latest = sorted[0];
+    if (!latest || !["Alto", "Crítico"].includes(latest.costLevel)) continue;
+
+    const priorLow = sorted.find(
+      (s) =>
+        s.id !== latest.id &&
+        ["Bajo", "Moderado"].includes(s.costLevel) &&
+        latest.createdAt.getTime() - s.createdAt.getTime() <=
+          withinDays * 24 * 60 * 60 * 1000,
+    );
+    if (!priorLow) continue;
+
+    alerts.push({
+      projectId: latest.projectId,
+      projectName: latest.project.name,
+      sessionName: latest.sessionName,
+      costLevel: latest.costLevel,
+      totalCost: latest.totalCost,
+      diagnosisTitle: latest.diagnosisTitle,
+      createdAt: latest.createdAt,
+      alertType: "spike",
+    });
+  }
+
+  const seen = new Set<string>();
+  return alerts
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .filter((alert) => {
+      const key = `${alert.projectId}-${alert.alertType}-${alert.createdAt.toISOString()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+/** Última sesión registrada por proyecto (tabla de salud PMO). */
+export async function latestMeetingRoiByProject(
+  tenantId: string,
+  options?: { restrictToProjectIds?: string[] },
+) {
+  const restrict = options?.restrictToProjectIds;
+  let rows: Array<{
+    projectId: string;
+    costLevel: string;
+    totalCost: number;
+    sessionName: string | null;
+    diagnosisTitle: string;
+    createdAt: Date;
+  }>;
+
+  try {
+    rows = await db.meetingRoiSession.findMany({
+      where: {
+        tenantId,
+        ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        projectId: true,
+        costLevel: true,
+        totalCost: true,
+        sessionName: true,
+        diagnosisTitle: true,
+        createdAt: true,
+      },
+    });
+  } catch (err) {
+    if (isMissingTableError(err, "MeetingRoiSession")) {
+      return new Map<
+        string,
+        {
+          costLevel: string;
+          totalCost: number;
+          sessionName: string | null;
+          diagnosisTitle: string;
+          createdAt: Date;
+        }
+      >();
+    }
+    throw err;
+  }
+
+  const byProject = new Map<
+    string,
+    {
+      costLevel: string;
+      totalCost: number;
+      sessionName: string | null;
+      diagnosisTitle: string;
+      createdAt: Date;
+    }
+  >();
+  for (const row of rows) {
+    if (!byProject.has(row.projectId)) {
+      byProject.set(row.projectId, {
+        costLevel: row.costLevel,
+        totalCost: row.totalCost,
+        sessionName: row.sessionName,
+        diagnosisTitle: row.diagnosisTitle,
+        createdAt: row.createdAt,
+      });
+    }
+  }
+  return byProject;
+}

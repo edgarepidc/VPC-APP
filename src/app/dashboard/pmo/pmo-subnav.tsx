@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { dashTabActive, dashTabIdle } from "@/lib/ui-classes";
-import { PMO_HUB, PMO_PROJECTS, PMO_TEAM, PMO_ESCALATIONS } from "@/lib/dashboard-paths";
+import { PMO_HUB, PMO_PROJECTS, PMO_TEAM, PMO_ESCALATIONS, PMO_MEETINGS } from "@/lib/dashboard-paths";
 
 const TABS = [
   { href: PMO_HUB, label: "Resumen", exact: true },
   { href: PMO_PROJECTS, label: "Proyectos", exact: false },
   { href: PMO_ESCALATIONS, label: "Escalamientos", exact: false },
+  { href: PMO_MEETINGS, label: "Reuniones", exact: false },
   { href: PMO_TEAM, label: "Equipo", exact: false },
 ] as const;
 
@@ -23,7 +24,7 @@ export function PmoSubnav() {
 
   return (
     <nav
-      className="mb-4 flex flex-wrap gap-1 border-b border-slate-200 pb-2"
+      className="mb-4 -mx-1 flex gap-1 overflow-x-auto border-b border-slate-200 pb-2 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       aria-label="Secciones PMO"
     >
       {TABS.map((tab) => {
@@ -32,7 +33,7 @@ export function PmoSubnav() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={active ? dashTabActive : dashTabIdle}
+            className={`${active ? dashTabActive : dashTabIdle} shrink-0 whitespace-nowrap`}
             aria-current={active ? "page" : undefined}
           >
             {tab.label}

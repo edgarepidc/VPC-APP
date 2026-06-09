@@ -180,7 +180,7 @@ export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps)
         ref={iframeRef}
         title="ROI de Reuniones"
         src="/roi-meetings.html"
-        className="min-h-[820px] w-full border-0 bg-slate-50"
+        className="min-h-[720px] w-full border-0 bg-slate-50 sm:min-h-[820px]"
         sandbox="allow-scripts allow-same-origin"
       />
     </section>

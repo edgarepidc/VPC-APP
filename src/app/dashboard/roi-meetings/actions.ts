@@ -133,6 +133,8 @@ export async function saveMeetingRoiSessionAction(input: {
   }
 
   revalidatePath("/dashboard/roi-meetings");
+  revalidatePath("/dashboard/pmo");
+  revalidatePath("/dashboard/pmo/meetings");
 
   return { ok: true as const };
 }

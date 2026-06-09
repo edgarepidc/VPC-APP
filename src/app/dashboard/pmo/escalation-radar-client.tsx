@@ -95,7 +95,7 @@ export function EscalationRadarClient({
           </div>
         )}
 
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {sorted.slice(0, 6).map((row) => {
             const badge = getEscalationTierBadge(row.tier);
             const borderTone =
@@ -110,7 +110,7 @@ export function EscalationRadarClient({
                 key={row.id}
                 type="button"
                 onClick={() => setSelected(row)}
-                className={`rounded-lg border border-slate-200 border-l-4 ${borderTone} bg-white p-3 text-left transition hover:border-slate-300 hover:shadow-sm`}
+                className={`rounded-lg border border-slate-200 border-l-4 ${borderTone} bg-white p-3 text-left transition hover:border-slate-300 hover:shadow-sm active:scale-[0.99]`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

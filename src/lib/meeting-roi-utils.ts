@@ -29,6 +29,65 @@ export function getCostLevelBadge(level: MeetingCostLevel | string) {
   }
 }
 
+export function costLevelSortWeight(level: string) {
+  if (level === "Crítico") return 0;
+  if (level === "Alto") return 1;
+  if (level === "Moderado") return 2;
+  return 3;
+}
+
+export function costLevelNumeric(level: string) {
+  if (level === "Crítico") return 3;
+  if (level === "Alto") return 2;
+  if (level === "Moderado") return 1;
+  return 0;
+}
+
+export type MeetingCostTrendDirection = "up" | "down" | "flat" | null;
+
+export function buildMeetingCostTrendsByProject(
+  rows: Array<{ projectId: string; costLevel: string; createdAt: Date }>,
+) {
+  const byProject = new Map<string, Array<{ costLevel: string; createdAt: Date }>>();
+  for (const row of rows) {
+    const list = byProject.get(row.projectId) ?? [];
+    list.push({ costLevel: row.costLevel, createdAt: row.createdAt });
+    byProject.set(row.projectId, list);
+  }
+
+  const trends = new Map<
+    string,
+    { levels: string[]; direction: MeetingCostTrendDirection }
+  >();
+
+  for (const [projectId, sessions] of byProject) {
+    const chronological = [...sessions]
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .slice(-5);
+    const levels = chronological.map((s) => s.costLevel);
+
+    let direction: MeetingCostTrendDirection = null;
+    if (levels.length >= 2) {
+      const prev = costLevelNumeric(levels[levels.length - 2]!);
+      const last = costLevelNumeric(levels[levels.length - 1]!);
+      if (last > prev) direction = "up";
+      else if (last < prev) direction = "down";
+      else direction = "flat";
+    }
+
+    trends.set(projectId, { levels, direction });
+  }
+
+  return trends;
+}
+
+export const COST_LEVEL_DOT: Record<string, string> = {
+  Bajo: "bg-emerald-500",
+  Moderado: "bg-sky-500",
+  Alto: "bg-amber-400",
+  Crítico: "bg-rose-500",
+};
+
 export function formatMxn(amount: number) {
   return amount.toLocaleString("es-MX", {
     style: "currency",
