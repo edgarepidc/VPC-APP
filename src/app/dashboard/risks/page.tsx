@@ -7,7 +7,7 @@ import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { requireTenantId } from "@/lib/tenancy";
-import { createRisk, deleteRisk, listRisksByTenant } from "@/modules/risks/service";
+import { createRisk, deleteRisk, getRiskById, listRisksByTenant, updateRisk } from "@/modules/risks/service";
 import { listDeliverablesByTenant } from "@/modules/deliverables/service";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
@@ -15,6 +15,7 @@ import { dashAlertError, dashAlertOk, dashPage } from "@/lib/ui-classes";
 
 import { parseRiskPrefillFromSearchParams } from "@/lib/escalation-risk-prefill";
 
+import { residualScore } from "./risk-utils";
 import { RiskManagerView, type RiskClientRow } from "./risk-manager-view";
 
 type RisksPageProps = {
@@ -108,6 +109,72 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
     redirect("/dashboard/risks?ok=Riesgo+registrado");
   }
 
+  async function updateAction(formData: FormData) {
+    "use server";
+    const current = await getSessionUser();
+    if (!current?.activeTenantId) redirect("/login");
+    if (!hasPermission(current.role, "tasks.write")) {
+      redirect("/dashboard/risks?error=No+tienes+permiso+para+editar+riesgos");
+    }
+
+    const riskId = String(formData.get("riskId") ?? "").trim();
+    const ownerName = String(formData.get("ownerName") ?? "").trim();
+    const residualProb = Number(formData.get("residualProb") ?? 20);
+    const mitigation = String(formData.get("mitigation") ?? "").trim();
+    const contingency = String(formData.get("contingency") ?? "").trim();
+    const trigger = String(formData.get("trigger") ?? "").trim();
+    const dueDateRaw = String(formData.get("dueDate") ?? "").trim();
+
+    if (!riskId || !ownerName) {
+      redirect("/dashboard/risks?error=Datos+incompletos+para+actualizar");
+    }
+
+    const existing = await getRiskById(current.activeTenantId, riskId);
+    if (!existing) {
+      redirect("/dashboard/risks?error=Riesgo+no+encontrado");
+    }
+
+    try {
+      await assertCanAccessProject({
+        tenantId: current.activeTenantId,
+        userId: current.userId,
+        role: current.role,
+        projectId: existing.projectId,
+        isPlatformVisit: current.isPlatformVisit,
+      });
+    } catch (e) {
+      redirect(`/dashboard/risks?error=${encodeURIComponent((e as Error).message)}`);
+    }
+
+    if (
+      residualScore(residualProb, existing.impactAmount) > 10 &&
+      !contingency
+    ) {
+      redirect(
+        `/dashboard/risks?id=${encodeURIComponent(riskId)}&error=Contingencia+obligatoria+con+score+residual+%3E+10`,
+      );
+    }
+
+    const updated = await updateRisk({
+      tenantId: current.activeTenantId,
+      id: riskId,
+      ownerName,
+      residualProb,
+      mitigation,
+      contingency,
+      trigger,
+      dueDate: dueDateRaw ? new Date(`${dueDateRaw}T00:00:00`) : null,
+    });
+
+    if (updated === 0) {
+      redirect("/dashboard/risks?error=Riesgo+no+encontrado");
+    }
+
+    redirect(
+      `/dashboard/risks?id=${encodeURIComponent(riskId)}&ok=Riesgo+actualizado`,
+    );
+  }
+
   async function deleteAction(formData: FormData) {
     "use server";
     const current = await getSessionUser();
@@ -169,6 +236,7 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
           q: params.q,
         }}
         createAction={createAction}
+        updateAction={updateAction}
         deleteAction={deleteAction}
       />
     </main>

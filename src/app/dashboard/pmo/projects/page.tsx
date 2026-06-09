@@ -6,6 +6,7 @@ import {
   DELIVERABLES_PROJECT,
   PMO_ESCALATIONS_PROJECT,
   PMO_MEETINGS_PROJECT,
+  PMO_PROJECT_DETAIL,
   PMO_TEAM,
   RISKS_PROJECT,
 } from "@/lib/dashboard-paths";
@@ -242,7 +243,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
                   <tr key={project.id} className="border-b border-slate-100">
                     <td className="py-2">
                       <Link
-                        href={DELIVERABLES_PROJECT(project.id)}
+                        href={PMO_PROJECT_DETAIL(project.id)}
                         className="font-medium text-slate-900 hover:underline"
                       >
                         {project.name}

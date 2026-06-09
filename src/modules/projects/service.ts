@@ -64,6 +64,12 @@ export async function createProject(input: {
   });
 }
 
+export async function getProjectById(tenantId: string, projectId: string) {
+  return db.project.findFirst({
+    where: { id: projectId, tenantId },
+  });
+}
+
 export async function deleteProject(input: {
   tenantId: string;
   projectId: string;

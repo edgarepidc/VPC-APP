@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { MeetingCostTrendDirection } from "@/lib/meeting-roi-utils";
 import type { EscalationTrendDirection } from "@/lib/escalation-utils";
 import { getEscalationTierBadge } from "@/lib/escalation-utils";
-import { DELIVERABLES_HUB, DELIVERABLES_PROJECT, PMO_ESCALATIONS_PROJECT, PMO_MEETINGS_PROJECT, RISKS_PROJECT } from "@/lib/dashboard-paths";
+import { DELIVERABLES_HUB, DELIVERABLES_PROJECT, PMO_ESCALATIONS_PROJECT, PMO_MEETINGS_PROJECT, PMO_PROJECT_DETAIL, RISKS_PROJECT } from "@/lib/dashboard-paths";
 import { getProjectStatusBadge, getSemaphoreBadge } from "@/lib/ui";
 import { getCostLevelBadge, formatMxn } from "@/lib/meeting-roi-utils";
 import { dashCard } from "@/lib/ui-classes";
@@ -65,7 +65,12 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
               className="rounded-lg border border-slate-200 p-3 text-sm"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <p className="font-medium text-slate-900">{project.name}</p>
+                <Link
+                  href={PMO_PROJECT_DETAIL(project.id)}
+                  className="font-medium text-slate-900 hover:underline"
+                >
+                  {project.name}
+                </Link>
                 <span className={semaphore.className}>{semaphore.label}</span>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -170,7 +175,14 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
 
               return (
                 <tr key={project.id} className="border-b border-slate-100">
-                  <td className="py-2 font-medium text-slate-900">{project.name}</td>
+                  <td className="py-2">
+                    <Link
+                      href={PMO_PROJECT_DETAIL(project.id)}
+                      className="font-medium text-slate-900 hover:underline"
+                    >
+                      {project.name}
+                    </Link>
+                  </td>
                   <td className="py-2">
                     <span className={semaphore.className}>{semaphore.label}</span>
                   </td>

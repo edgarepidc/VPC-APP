@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import type { RiskFormPrefill } from "@/lib/escalation-risk-prefill";
-import { DELIVERABLE_DETAIL_IN_PROJECT, DELIVERABLES_PROJECT } from "@/lib/dashboard-paths";
+import { DELIVERABLE_DETAIL_IN_PROJECT, DELIVERABLES_PROJECT, RISKS_PROJECT } from "@/lib/dashboard-paths";
 
 import {
   dashAlertWarn,
@@ -19,6 +19,7 @@ import {
 } from "@/lib/ui-classes";
 
 import { CreateRiskModal } from "./create-risk-modal";
+import { RiskDetailEditForm } from "./risk-detail-edit-form";
 import {
   fmtMoneyMxn,
   grossScore,
@@ -60,6 +61,7 @@ type RiskManagerViewProps = {
   prefill?: RiskFormPrefill | null;
   initial?: { id?: string; project?: string; q?: string };
   createAction: (formData: FormData) => void | Promise<void>;
+  updateAction: (formData: FormData) => void | Promise<void>;
   deleteAction: (formData: FormData) => void | Promise<void>;
 };
 
@@ -163,6 +165,7 @@ export function RiskManagerView({
   prefill = null,
   initial,
   createAction,
+  updateAction,
   deleteAction,
 }: RiskManagerViewProps) {
   const router = useRouter();
@@ -469,6 +472,7 @@ ${D}`;
                 <th className="whitespace-nowrap px-3 py-2">Descripción</th>
                 <th className="whitespace-nowrap px-3 py-2">Categoría</th>
                 <th className="whitespace-nowrap px-3 py-2">Dueño</th>
+                <th className="whitespace-nowrap px-3 py-2">Entregable</th>
                 <th className="whitespace-nowrap px-3 py-2">Prob.</th>
                 <th className="whitespace-nowrap px-3 py-2">Impacto</th>
                 <th className="whitespace-nowrap px-3 py-2">VME bruto</th>
@@ -527,6 +531,19 @@ ${D}`;
                       </span>
                     </td>
                     <td className="px-3 py-3 align-middle text-slate-600">{risk.ownerName}</td>
+                    <td className="max-w-[140px] px-3 py-3 align-middle" onClick={(e) => e.stopPropagation()}>
+                      {risk.deliverable ? (
+                        <Link
+                          href={DELIVERABLE_DETAIL_IN_PROJECT(risk.deliverable.id, risk.project.id)}
+                          className="block truncate text-slate-700 underline"
+                          title={risk.deliverable.title}
+                        >
+                          {risk.deliverable.title}
+                        </Link>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
                     <td className="px-3 py-3 align-middle tabular-nums text-xs">{risk.probability}%</td>
                     <td className="px-3 py-3 align-middle tabular-nums text-xs">{fmtMoneyMxn(risk.impactAmount)}</td>
                     <td className="px-3 py-3 align-middle tabular-nums text-xs text-red-600">{fmtMoneyMxn(vg)}</td>
@@ -592,7 +609,7 @@ ${D}`;
               })}
               {scopedRisks.length === 0 && (
                 <tr>
-                  <td colSpan={13} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={14} className="py-12 text-center text-sm text-slate-400">
                     Sin riesgos en este alcance.
                   </td>
                 </tr>
@@ -679,7 +696,7 @@ ${D}`;
             <p className="mt-4 text-xs text-slate-500">
               Proyecto:{" "}
               <Link
-                href={DELIVERABLES_PROJECT(detail.project.id)}
+                href={RISKS_PROJECT(detail.project.id)}
                 className="font-medium text-slate-800 underline"
               >
                 {detail.project.name}
@@ -697,6 +714,7 @@ ${D}`;
                 </>
               ) : null}
             </p>
+            {canEdit ? <RiskDetailEditForm risk={detail} updateAction={updateAction} /> : null}
           </div>
         </div>
       )}

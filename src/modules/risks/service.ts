@@ -18,9 +18,63 @@ export async function listRisksByTenant(
   });
 }
 
+export async function getRiskById(tenantId: string, riskId: string) {
+  return db.risk.findFirst({
+    where: { id: riskId, tenantId },
+    select: { id: true, projectId: true, impactAmount: true },
+  });
+}
+
 export async function deleteRisk(tenantId: string, riskId: string) {
   const result = await db.risk.deleteMany({
     where: { id: riskId, tenantId },
+  });
+  return result.count;
+}
+
+export async function updateRisk(input: {
+  tenantId: string;
+  id: string;
+  ownerName?: string;
+  mitigation?: string;
+  contingency?: string;
+  trigger?: string;
+  dueDate?: Date | null;
+  residualProb?: number;
+}) {
+  const data: {
+    ownerName?: string;
+    mitigation?: string | null;
+    contingency?: string | null;
+    trigger?: string | null;
+    dueDate?: Date | null;
+    residualProb?: number;
+  } = {};
+
+  if (input.ownerName !== undefined) {
+    const ownerName = input.ownerName.trim();
+    if (!ownerName) throw new Error("El dueño del riesgo es obligatorio.");
+    data.ownerName = ownerName;
+  }
+  if (input.mitigation !== undefined) {
+    data.mitigation = input.mitigation.trim() || null;
+  }
+  if (input.contingency !== undefined) {
+    data.contingency = input.contingency.trim() || null;
+  }
+  if (input.trigger !== undefined) {
+    data.trigger = input.trigger.trim() || null;
+  }
+  if (input.dueDate !== undefined) {
+    data.dueDate = input.dueDate;
+  }
+  if (input.residualProb !== undefined) {
+    data.residualProb = Math.max(1, Math.min(100, input.residualProb));
+  }
+
+  const result = await db.risk.updateMany({
+    where: { id: input.id, tenantId: input.tenantId },
+    data,
   });
   return result.count;
 }
