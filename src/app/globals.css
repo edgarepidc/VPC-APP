@@ -231,8 +231,24 @@ body {
   }
 }
 
+.dash-detail-drawer {
+  animation: dash-detail-in 0.22s ease-out;
+}
+
+@keyframes dash-detail-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0.92;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .dash-bottom-sheet {
+  .dash-bottom-sheet,
+  .dash-detail-drawer {
     animation: none;
   }
 

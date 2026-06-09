@@ -91,18 +91,18 @@ type Props = {
 };
 
 const pillClass: Record<DeliverableStatus, string> = {
-  pending: "bg-[#F1EFE8] text-slate-700",
-  review: "bg-[#E6F1FB] text-[#0C447C]",
-  approved: "bg-[#EAF3DE] text-[#27500A]",
-  rejected: "bg-[#FCEBEB] text-[#791F1F]",
+  pending: "bg-slate-100 text-slate-700",
+  review: "bg-sky-50 text-sky-800",
+  approved: "bg-emerald-50 text-emerald-800",
+  rejected: "bg-rose-50 text-rose-800",
   delivered: "bg-slate-100 text-slate-800",
 };
 
 const statusBtnActive: Record<DeliverableStatus, string> = {
-  pending: "bg-[#F1EFE8] text-slate-700 border-[#B4B2A9]",
-  review: "bg-[#E6F1FB] text-[#0C447C] border-[#85B7EB]",
-  approved: "bg-[#EAF3DE] text-[#27500A] border-[#97C459]",
-  rejected: "bg-[#FCEBEB] text-[#791F1F] border-[#F09595]",
+  pending: "bg-slate-100 text-slate-700 border-slate-300",
+  review: "bg-sky-50 text-sky-800 border-sky-300",
+  approved: "bg-emerald-50 text-emerald-800 border-emerald-300",
+  rejected: "bg-rose-50 text-rose-800 border-rose-300",
   delivered: "bg-slate-100 text-slate-800 border-slate-300",
 };
 
@@ -154,24 +154,24 @@ function dayChip(due: string | null, status: string) {
   if (df === null) return null;
   if (df < 0)
     return (
-      <span className="ml-1 inline-block rounded-full bg-[#FCEBEB] px-1.5 py-0.5 text-xs font-medium text-[#791F1F]">
+      <span className="ml-1 inline-block rounded-full bg-rose-50 px-1.5 py-0.5 text-xs font-medium text-rose-800">
         {Math.abs(df)}d vencido
       </span>
     );
   if (df === 0)
     return (
-      <span className="ml-1 inline-block rounded-full bg-[#FAEEDA] px-1.5 py-0.5 text-xs font-medium text-[#633806]">
+      <span className="ml-1 inline-block rounded-full bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-900">
         hoy
       </span>
     );
   if (df <= 5)
     return (
-      <span className="ml-1 inline-block rounded-full bg-[#FAEEDA] px-1.5 py-0.5 text-xs font-medium text-[#633806]">
+      <span className="ml-1 inline-block rounded-full bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-900">
         {df}d
       </span>
     );
   return (
-    <span className="ml-1 inline-block rounded-full bg-[#EAF3DE] px-1.5 py-0.5 text-xs font-medium text-[#27500A]">
+    <span className="ml-1 inline-block rounded-full bg-emerald-50 px-1.5 py-0.5 text-xs font-medium text-emerald-800">
       {df}d
     </span>
   );
@@ -182,10 +182,11 @@ function acuseMini(acuses: DeliverableAcuse[]) {
     return <span className="text-xs text-slate-400">Sin acuses</span>;
   const ok = acuses.filter((a) => a.ok).length;
   const tot = acuses.length;
-  const c = ok === tot ? "#27500A" : ok > 0 ? "#633806" : "#791F1F";
+  const tone =
+    ok === tot ? "text-emerald-700" : ok > 0 ? "text-amber-800" : "text-rose-700";
   return (
     <span className="text-xs">
-      <span className="font-semibold" style={{ color: c }}>
+      <span className={`font-semibold ${tone}`}>
         {ok}/{tot}
       </span>
       <span className="text-slate-400"> confirmados</span>
@@ -227,9 +228,9 @@ function calcPortfolioProgress(rows: DeliverableTrackerRow[]) {
 
 function progressBarColor(pct: number): string {
   if (pct === 100) return "#1e293b";
-  if (pct >= 70) return "#639922";
-  if (pct >= 40) return "#BA7517";
-  return "#E24B4A";
+  if (pct >= 70) return "#059669";
+  if (pct >= 40) return "#d97706";
+  return "#e11d48";
 }
 
 export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props) {
@@ -351,6 +352,26 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
       }
     });
   }
+
+  useEffect(() => {
+    if (panel !== "detail") return;
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    if (isDesktop) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closeDetail();
+    }
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lock scroll while mobile drawer open
+  }, [panel]);
 
   useEffect(() => {
     if (initial?.id && rows.some((r) => r.id === initial.id)) {
@@ -496,7 +517,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             </div>
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">Completados</div>
-              <div className="text-lg font-semibold tabular-nums leading-none text-[#27500A]">{comp}</div>
+              <div className="text-lg font-semibold tabular-nums leading-none text-emerald-700">{comp}</div>
               <div className="mt-0.5 text-xs text-slate-400">aprobados / entregados</div>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
@@ -507,8 +528,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">Vencidos</div>
               <div
-                className="text-lg font-semibold tabular-nums leading-none"
-                style={{ color: venc > 0 ? "#791F1F" : undefined }}
+                className={`text-lg font-semibold tabular-nums leading-none ${venc > 0 ? "text-rose-700" : ""}`}
               >
                 {venc}
               </div>
@@ -517,8 +537,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">Acuses pendientes</div>
               <div
-                className="text-lg font-semibold tabular-nums leading-none"
-                style={{ color: acPend > 0 ? "#633806" : undefined }}
+                className={`text-lg font-semibold tabular-nums leading-none ${acPend > 0 ? "text-amber-800" : ""}`}
               >
                 {acPend}
               </div>
@@ -538,7 +557,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             </div>
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">A tiempo</div>
-              <div className="text-lg font-semibold tabular-nums leading-none text-[#27500A]">
+              <div className="text-lg font-semibold tabular-nums leading-none text-emerald-700">
                 {compliance.onTimePct !== null ? `${compliance.onTimePct}%` : "—"}
               </div>
               <div className="mt-0.5 text-xs text-slate-400">
@@ -564,7 +583,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
                 setProjectFilter(e.target.value);
                 setFocusId(null);
               }}
-              className="h-[34px] rounded-lg border border-black/[0.17] bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
+              className="h-[34px] rounded-lg border border-slate-300 bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
             >
               <option value="">Todos los proyectos</option>
               {projects.map((p) => (
@@ -620,7 +639,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
                 </div>
               </div>
             </div>
-            <div className="mb-2.5 h-3 overflow-hidden rounded-md bg-[#f7f5f1]">
+            <div className="mb-2.5 h-3 overflow-hidden rounded-md bg-slate-100">
               <div className="flex h-full overflow-hidden rounded-md">
                 <div
                   className="h-full transition-[width] duration-500"
@@ -628,10 +647,10 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
                 />
                 <div
                   className="h-full transition-[width] duration-500"
-                  style={{ width: `${pctInProg}%`, background: "#B5D4F4" }}
+                  style={{ width: `${pctInProg}%`, background: "#38bdf8" }}
                 />
                 <div
-                  className="h-full bg-[#f7f5f1]"
+                  className="h-full bg-slate-100"
                   style={{ width: `${remPct}%` }}
                 />
               </div>
@@ -643,12 +662,12 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
               </div>
               {pctInProg > 0 ? (
                 <div className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 shrink-0 rounded-sm bg-[#85B7EB]" />
+                  <span className="h-2 w-2 shrink-0 rounded-sm bg-sky-400" />
                   En revisión ({pctInProg}%)
                 </div>
               ) : null}
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 shrink-0 rounded-sm bg-[#D3D1C7]" />
+                <span className="h-2 w-2 shrink-0 rounded-sm bg-slate-300" />
                 Pendiente ({remPct}%)
               </div>
               <span className="ml-auto text-xs text-slate-400">
@@ -668,7 +687,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             <select
               value={st}
               onChange={(e) => setSt(e.target.value)}
-              className="h-[34px] rounded-lg border border-black/[0.17] bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
+              className="h-[34px] rounded-lg border border-slate-300 bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
             >
               <option value="">Todos los estados</option>
               {DELIVERABLE_STATUSES.map((s) => (
@@ -680,7 +699,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             <select
               value={phase}
               onChange={(e) => setPhase(e.target.value)}
-              className="h-[34px] rounded-lg border border-black/[0.17] bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
+              className="h-[34px] rounded-lg border border-slate-300 bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
             >
               <option value="">Todas las fases</option>
               {phases.map((f) => (
@@ -692,7 +711,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as typeof sort)}
-              className="h-[34px] rounded-lg border border-black/[0.17] bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
+              className="h-[34px] rounded-lg border border-slate-300 bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
             >
               <option value="fecha">Fecha compromiso</option>
               <option value="peso">Mayor % de avance</option>
@@ -727,7 +746,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             <button
               type="button"
               onClick={exportCsv}
-              className="h-[34px] whitespace-nowrap rounded-lg border border-black/[0.17] bg-white px-3.5 text-xs font-medium hover:bg-[#f7f5f1]"
+              className="h-[34px] whitespace-nowrap rounded-lg border border-slate-300 bg-white px-3.5 text-xs font-medium hover:bg-slate-50"
             >
               CSV
             </button>
@@ -737,7 +756,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-[#f7f5f1] text-left text-xs font-medium text-slate-500">
+                  <tr className="border-b border-slate-200 bg-slate-100 text-left text-xs font-medium text-slate-500">
                     <th className="w-[72px] whitespace-nowrap px-3 py-2">ID</th>
                     <th className="w-[120px] whitespace-nowrap px-3 py-2">Proyecto</th>
                     <th className="px-3 py-2">Entregable</th>
@@ -765,7 +784,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
                         }}
                         onClick={() => openDetail(d.id)}
                         onMouseEnter={() => setFocusId(d.id)}
-                        className={`cursor-pointer border-b border-slate-200 last:border-b-0 hover:bg-[#f7f5f1] ${
+                        className={`cursor-pointer border-b border-slate-200 last:border-b-0 hover:bg-slate-50 ${
                           isFocused ? "bg-slate-100 ring-1 ring-inset ring-slate-400 hover:bg-slate-100" : ""
                         } ${pending ? "opacity-60" : ""}`}
                       >
@@ -805,9 +824,9 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
                         </td>
                         <td className="px-3 py-2.5">
                           <div className="flex items-center gap-1.5">
-                            <div className="inline-block h-[5px] w-[60px] overflow-hidden rounded-sm bg-[#f7f5f1]">
+                            <div className="inline-block h-[5px] w-[60px] overflow-hidden rounded-sm bg-slate-100">
                               <div
-                                className="h-full rounded-sm bg-[#AFA9EC]"
+                                className="h-full rounded-sm bg-slate-600"
                                 style={{ width: `${clampWeight(d.weight)}%` }}
                               />
                             </div>
@@ -859,24 +878,52 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
       </div>
 
       {panel === "detail" && selected ? (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden" role="presentation">
           <button
             type="button"
             className="dash-drawer-backdrop absolute inset-0 bg-black/40"
             aria-label="Cerrar detalle"
             onClick={closeDetail}
           />
-          <div className="dash-bottom-sheet absolute bottom-0 left-0 right-0 max-h-[min(88dvh,720px)] overflow-y-auto rounded-t-2xl border border-slate-200 bg-white shadow-2xl">
-            <DetailPanel
-              row={selected}
-              allRows={rows}
-              rowById={rowById}
-              projects={projects}
-              phaseOptions={phases}
-              canEdit={canEdit}
-              onClose={closeDetail}
-              run={run}
-            />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="deliverable-drawer-title"
+            className="dash-detail-drawer absolute inset-y-0 right-0 flex w-full max-w-none flex-col bg-white shadow-2xl"
+          >
+            <header className="flex shrink-0 items-center gap-3 border-b border-slate-200 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+              <button
+                type="button"
+                onClick={closeDetail}
+                className="shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                ← Volver
+              </button>
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                  {selected.displayId}
+                </p>
+                <h2
+                  id="deliverable-drawer-title"
+                  className="truncate text-sm font-semibold text-slate-900"
+                >
+                  {selected.title}
+                </h2>
+              </div>
+            </header>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <DetailPanel
+                row={selected}
+                allRows={rows}
+                rowById={rowById}
+                projects={projects}
+                phaseOptions={phases}
+                canEdit={canEdit}
+                onClose={closeDetail}
+                run={run}
+                embedded
+              />
+            </div>
           </div>
         </div>
       ) : null}
@@ -912,6 +959,7 @@ function DetailPanel({
   canEdit,
   onClose,
   run,
+  embedded = false,
 }: {
   row: DeliverableTrackerRow;
   allRows: DeliverableTrackerRow[];
@@ -921,6 +969,7 @@ function DetailPanel({
   canEdit: boolean;
   onClose: () => void;
   run: (fn: () => Promise<string | void>, okMessage?: string) => void;
+  embedded?: boolean;
 }) {
   const stKey = normalizeDeliverableStatus(row.status);
   const projectRows = allRows.filter((r) => r.projectId === row.projectId);
@@ -972,39 +1021,56 @@ function DetailPanel({
   }
 
   return (
-    <div className="w-full min-w-[min(100vw,430px)] max-w-full p-[18px] lg:w-[430px]">
-      <div className="mb-4 flex items-start justify-between gap-2 border-b border-slate-200 pb-3">
-        <div>
-          <div className="text-xs text-slate-500">
-            {row.displayId} · {row.phase || "—"} · {row.ownerName || "—"}
-          </div>
-          <div className="mt-0.5 text-sm font-semibold leading-snug">{row.title}</div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${pillClass[stKey]}`}>
-              {DELIVERABLE_STATUS_LABEL[stKey]}
-            </span>
-            <span className="text-xs text-slate-500">
-              Compromiso: {formatCommitment(row.dueDate)}
-            </span>
-            {row.deliveredAt ? (
-              <span className="text-xs text-emerald-700">
-                Entregado: {formatDeliveredAt(row.deliveredAt) ?? "—"}
+    <div className={embedded ? "w-full p-4" : "w-full min-w-[min(100vw,430px)] max-w-full p-[18px] lg:w-[430px]"}>
+      {!embedded ? (
+        <div className="mb-4 flex items-start justify-between gap-2 border-b border-slate-200 pb-3">
+          <div>
+            <div className="text-xs text-slate-500">
+              {row.displayId} · {row.phase || "—"} · {row.ownerName || "—"}
+            </div>
+            <div className="mt-0.5 text-sm font-semibold leading-snug">{row.title}</div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${pillClass[stKey]}`}>
+                {DELIVERABLE_STATUS_LABEL[stKey]}
               </span>
-            ) : null}
-            {row.dependsOnTitle ? (
-              <span className="text-xs text-slate-500">Dep.: {row.dependsOnTitle}</span>
-            ) : null}
-            {dayChip(row.dueDate, row.status)}
+              <span className="text-xs text-slate-500">
+                Compromiso: {formatCommitment(row.dueDate)}
+              </span>
+              {row.deliveredAt ? (
+                <span className="text-xs text-emerald-700">
+                  Entregado: {formatDeliveredAt(row.deliveredAt) ?? "—"}
+                </span>
+              ) : null}
+              {row.dependsOnTitle ? (
+                <span className="text-xs text-slate-500">Dep.: {row.dependsOnTitle}</span>
+              ) : null}
+              {dayChip(row.dueDate, row.status)}
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 text-xs hover:bg-slate-50"
+          >
+            ✕
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-black/[0.17] text-xs hover:bg-[#f7f5f1]"
-        >
-          ✕
-        </button>
-      </div>
+      ) : (
+        <div className="mb-4 flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-3">
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${pillClass[stKey]}`}>
+            {DELIVERABLE_STATUS_LABEL[stKey]}
+          </span>
+          <span className="text-xs text-slate-500">
+            Compromiso: {formatCommitment(row.dueDate)}
+          </span>
+          {row.deliveredAt ? (
+            <span className="text-xs text-emerald-700">
+              Entregado: {formatDeliveredAt(row.deliveredAt) ?? "—"}
+            </span>
+          ) : null}
+          {dayChip(row.dueDate, row.status)}
+        </div>
+      )}
 
       {canEdit ? (
         <DetailEditForm
@@ -1036,7 +1102,7 @@ function DetailPanel({
                   disabled={disabled}
                   title={disabled ? (block ?? undefined) : undefined}
                   onClick={() => changeStatus(s)}
-                  className={`rounded-full border border-black/[0.17] px-3 py-1 text-xs font-medium text-slate-500 hover:bg-[#f7f5f1] disabled:cursor-not-allowed disabled:opacity-40 ${
+                  className={`rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 ${
                     stKey === s ? statusBtnActive[s] : "bg-white"
                   }`}
                 >
@@ -1068,15 +1134,15 @@ function DetailPanel({
                 }
                 className={`mt-0.5 flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded border-[1.5px] ${
                   ac.ok
-                    ? "border-[#97C459] bg-[#EAF3DE]"
-                    : "border-black/[0.17] bg-white"
+                    ? "border-emerald-400 bg-emerald-50"
+                    : "border-slate-300 bg-white"
                 } ${canEdit ? "cursor-pointer" : "cursor-default opacity-60"}`}
               >
                 {ac.ok ? (
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
                     <path
                       d="M2 5l2.2 2.5L8 3"
-                      stroke="#27500A"
+                      stroke="#047857"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -1101,7 +1167,7 @@ function DetailPanel({
                       await removeDeliverableAcuseAction(row.id, i);
                     })
                   }
-                  className="shrink-0 rounded border border-slate-200 px-1.5 py-0.5 text-xs text-slate-400 hover:bg-[#f7f5f1]"
+                  className="shrink-0 rounded border border-slate-200 px-1.5 py-0.5 text-xs text-slate-400 hover:bg-slate-50"
                 >
                   ✕
                 </button>
@@ -1115,13 +1181,13 @@ function DetailPanel({
               value={acName}
               onChange={(e) => setAcName(e.target.value)}
               placeholder="Nombre"
-              className="h-[30px] min-w-[80px] flex-1 max-w-[130px] rounded-lg border border-black/[0.17] px-2 text-xs"
+              className="h-[30px] min-w-[80px] flex-1 max-w-[130px] rounded-lg border border-slate-300 px-2 text-xs"
             />
             <input
               value={acRole}
               onChange={(e) => setAcRole(e.target.value)}
               placeholder="Rol"
-              className="h-[30px] min-w-[80px] max-w-[100px] rounded-lg border border-black/[0.17] px-2 text-xs"
+              className="h-[30px] min-w-[80px] max-w-[100px] rounded-lg border border-slate-300 px-2 text-xs"
             />
             <button
               type="button"
@@ -1132,7 +1198,7 @@ function DetailPanel({
                   setAcRole("");
                 })
               }
-              className="h-[30px] rounded-lg border border-black/[0.17] bg-white px-2.5 text-xs font-medium hover:bg-[#f7f5f1]"
+              className="h-[30px] rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium hover:bg-slate-50"
             >
               + Agregar
             </button>
@@ -1154,7 +1220,7 @@ function DetailPanel({
             >
               <span
                 className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ background: h.color ?? "#888780" }}
+                style={{ background: h.color ?? "#94a3b8" }}
               />
               <span className="w-14 shrink-0 whitespace-nowrap text-xs text-slate-400">
                 {formatLogAt(h.at)}
@@ -1169,7 +1235,7 @@ function DetailPanel({
         <button
           type="button"
           onClick={() => setConfirmDelete(true)}
-          className="w-full rounded-lg border border-[#F09595] py-2 text-xs font-medium text-[#791F1F] hover:bg-[#FCEBEB]"
+          className="w-full rounded-lg border border-rose-300 py-2 text-xs font-medium text-rose-800 hover:bg-rose-50"
         >
           Eliminar entregable
         </button>
@@ -1191,7 +1257,7 @@ function DetailPanel({
             onChange={(e) => setRejectReason(e.target.value)}
             rows={3}
             placeholder="Motivo obligatorio…"
-            className="mt-3 w-full rounded-lg border border-black/[0.17] px-3 py-2 text-sm"
+            className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             autoFocus
           />
           <div className="mt-4 flex flex-wrap gap-2">

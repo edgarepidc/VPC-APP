@@ -24,11 +24,11 @@ const STATUS_THEME: Record<
   DeliverableStatus,
   { accent: string; soft: string; ring: string }
 > = {
-  pending: { accent: STATUS_LOG_COLORS.pending, soft: "#f8f8f6", ring: "rgba(136,135,128,0.28)" },
-  review: { accent: STATUS_LOG_COLORS.review, soft: "#eff6ff", ring: "rgba(55,138,221,0.28)" },
-  approved: { accent: STATUS_LOG_COLORS.approved, soft: "#ecfdf5", ring: "rgba(99,153,34,0.28)" },
-  rejected: { accent: STATUS_LOG_COLORS.rejected, soft: "#fef2f2", ring: "rgba(226,75,74,0.28)" },
-  delivered: { accent: STATUS_LOG_COLORS.delivered, soft: "#f5f3ff", ring: "rgba(83,74,183,0.28)" },
+  pending: { accent: STATUS_LOG_COLORS.pending, soft: "#f8fafc", ring: "rgba(100,116,139,0.28)" },
+  review: { accent: STATUS_LOG_COLORS.review, soft: "#f0f9ff", ring: "rgba(14,165,233,0.28)" },
+  approved: { accent: STATUS_LOG_COLORS.approved, soft: "#ecfdf5", ring: "rgba(16,185,129,0.28)" },
+  rejected: { accent: STATUS_LOG_COLORS.rejected, soft: "#fff1f2", ring: "rgba(244,63,94,0.28)" },
+  delivered: { accent: STATUS_LOG_COLORS.delivered, soft: "#f8fafc", ring: "rgba(100,116,139,0.28)" },
 };
 
 function themeForRow(row: DeliverableTrackerRow, overdue: boolean) {
