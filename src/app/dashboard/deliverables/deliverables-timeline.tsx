@@ -76,28 +76,25 @@ export function DeliverablesTimeline({ rows, onSelect }: DeliverablesTimelinePro
 
   if (items.length === 0) {
     return (
-      <section className="rounded-lg border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+      <section className="py-6 text-center text-sm text-slate-500">
         Añade fechas compromiso para ver la línea de tiempo.
       </section>
     );
   }
 
   return (
-    <section
-      className="overflow-visible rounded-lg border border-slate-200 bg-white p-4"
-      onMouseLeave={() => setActiveId(null)}
-    >
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+    <section className="overflow-visible py-1" onMouseLeave={() => setActiveId(null)}>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-base font-semibold text-slate-900">Línea de tiempo</h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Tarjetas alternadas sobre la línea; el detalle ampliado aparece abajo sin tapar otros hitos.
+            Hitos sobre la línea; el detalle ampliado aparece abajo.
           </p>
         </div>
-        <span className="text-xs text-slate-500">{items.length} fechas</span>
+        <span className="text-xs text-slate-400">{items.length} fechas</span>
       </div>
 
-      <div className="-mx-1 overflow-x-auto overflow-y-visible overscroll-x-contain pb-1 pt-1">
+      <div className="overflow-x-auto overflow-y-visible overscroll-x-contain pb-1 pt-1">
         <div
           className="relative mx-auto"
           style={{
@@ -238,8 +235,8 @@ export function DeliverablesTimeline({ rows, onSelect }: DeliverablesTimelinePro
           onOpen={() => onSelect(activeItem.row.id)}
         />
       ) : (
-        <p className="mt-3 text-center text-xs text-slate-400">
-          Pasa el cursor sobre un hito para ver responsable, estado y descripción.
+        <p className="mt-2 text-center text-xs text-slate-400">
+          Pasa el cursor sobre un hito para ver más información.
         </p>
       )}
     </section>
@@ -327,7 +324,7 @@ function TimelineDetailPanel({
   const year = date.getFullYear();
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/90 p-4 shadow-sm">
+    <div className="mt-5 border-t border-slate-200/80 pt-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
@@ -338,7 +335,7 @@ function TimelineDetailPanel({
         <button
           type="button"
           onClick={onOpen}
-          className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+          className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
         >
           Abrir detalle
         </button>
@@ -370,7 +367,7 @@ function TimelineDetailPanel({
                 href={row.supportUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
+                className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
               >
                 Ubicación
               </a>
@@ -380,7 +377,7 @@ function TimelineDetailPanel({
                 href={row.supportFileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
+                className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
               >
                 PDF
               </a>
