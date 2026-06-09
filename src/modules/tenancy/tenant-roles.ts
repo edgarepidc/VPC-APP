@@ -22,15 +22,14 @@ export async function ensureGlobalPermissions() {
 }
 
 const ROLE_DEFS: [string, string][] = [
-  ["owner", "Owner"],
-  ["admin", "Admin"],
+  ["admin", "Administrador"],
   ["manager", "Manager"],
   ["member", "Member"],
 ];
 
 /**
  * Crea roles estandar y permisos por tenant.
- * owner/admin/manager: escritura; member: solo lectura (consultante).
+ * admin/manager: escritura; member: solo lectura (consultante).
  */
 export async function createStandardRolesForTenantWithClient(
   client: RolePermClient,
@@ -63,7 +62,7 @@ export async function createStandardRolesForTenantWithClient(
     }
   }
 
-  return roles as Record<"owner" | "admin" | "manager" | "member", { id: string }>;
+  return roles as Record<"admin" | "manager" | "member", { id: string }>;
 }
 
 export async function createStandardRolesForTenant(

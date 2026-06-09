@@ -13,7 +13,6 @@ export const dynamic = "force-dynamic";
 
 function roleLabelEs(role: RoleKey): string {
   const map: Record<RoleKey, string> = {
-    owner: "Propietario",
     admin: "Administrador",
     manager: "Gestor",
     member: "Miembro",

@@ -54,7 +54,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
 
     const email = String(formData.get("email") ?? "");
     const roleKey = String(formData.get("role")) as RoleKey;
-    const validRoles: RoleKey[] = ["owner", "admin", "manager", "member"];
+    const validRoles: RoleKey[] = ["admin", "manager", "member"];
     if (!email || !validRoles.includes(roleKey)) {
       redirect("/dashboard/members?error=Datos+de+entrada+invalidos");
     }

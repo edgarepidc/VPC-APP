@@ -324,7 +324,7 @@ export async function setActiveTenant(tenantId: string) {
 
 /**
  * Solo superadmin consultora: entra al workspace de un tenant sin ser miembro.
- * En sesión tendrá rol owner para ese tenant (ver getRoleForTenant).
+ * En sesión tendrá rol admin para ese tenant (ver getRoleForTenant).
  */
 export async function setActiveTenantAsPlatformOwner(tenantId: string) {
   const session = await getSessionUser();
@@ -404,7 +404,7 @@ async function resolveActiveTenantContext(
   if (isSuperAdmin) {
     return {
       activeTenantId: cookieTenantId,
-      role: "owner",
+      role: "admin",
       isPlatformVisit: true,
     };
   }

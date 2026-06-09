@@ -42,8 +42,7 @@ async function main() {
 
   async function ensureTenantRoles(tenantId) {
     const roleDefs = [
-      ["owner", "Owner"],
-      ["admin", "Admin"],
+      ["admin", "Administrador"],
       ["manager", "Manager"],
       ["member", "Member"],
     ];
@@ -97,11 +96,11 @@ async function main() {
         userId: user.id,
       },
     },
-    update: { roleId: acmeRoles.owner.id, status: "active" },
+    update: { roleId: acmeRoles.admin.id, status: "active" },
     create: {
       tenantId: acme.id,
       userId: user.id,
-      roleId: acmeRoles.owner.id,
+      roleId: acmeRoles.admin.id,
       status: "active",
     },
   });

@@ -1,5 +1,5 @@
 /**
- * Crea un tenant y te asigna como owner a un usuario ya existente (mismo email que Supabase Auth).
+ * Crea un tenant y te asigna como administrador a un usuario ya existente (mismo email que Supabase Auth).
  *
  * Uso (DATABASE_URL = pooler de Supabase, misma que en Vercel):
  *   BOOTSTRAP_USER_EMAIL=diazcruzee@gmail.com \\
@@ -42,8 +42,7 @@ async function ensurePermissions() {
 
 async function ensureTenantRoles(tenantId, allPermissions) {
   const roleDefs = [
-    ["owner", "Owner"],
-    ["admin", "Admin"],
+    ["admin", "Administrador"],
     ["manager", "Manager"],
     ["member", "Member"],
   ];
@@ -126,18 +125,18 @@ async function main() {
         userId: user.id,
       },
     },
-    update: { roleId: roles.owner.id, status: "active" },
+    update: { roleId: roles.admin.id, status: "active" },
     create: {
       tenantId: tenant.id,
       userId: user.id,
-      roleId: roles.owner.id,
+      roleId: roles.admin.id,
       status: "active",
     },
   });
 
   console.log("Listo.");
   console.log(`  Tenant: ${tenant.name} (${tenant.slug}) id=${tenant.id}`);
-  console.log(`  Usuario: ${user.email} → rol owner`);
+  console.log(`  Usuario: ${user.email} → rol admin`);
   console.log("Vuelve a /select-tenant y elige este tenant.");
 }
 

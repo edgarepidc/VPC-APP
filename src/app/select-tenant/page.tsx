@@ -10,7 +10,7 @@ import {
   uiLabel,
 } from "@/lib/ui-classes";
 import { getSessionUser, setActiveTenant } from "@/lib/auth/session";
-import { createFirstOrganizationAsOwner } from "@/modules/tenancy/first-tenant";
+import { createFirstOrganizationAsAdmin } from "@/modules/tenancy/first-tenant";
 import { listTenantsForUser } from "@/modules/tenancy/service";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +51,7 @@ export default async function SelectTenantPage({
     if (!s) redirect("/login");
     const name = String(formData.get("orgName") ?? "");
     const slug = String(formData.get("orgSlug") ?? "");
-    const result = await createFirstOrganizationAsOwner({
+    const result = await createFirstOrganizationAsAdmin({
       userId: s.userId,
       name,
       slug,
@@ -78,7 +78,7 @@ export default async function SelectTenantPage({
 
       {tenants.length === 0 ? (
         <div className={`mt-6 space-y-4 ${uiAlertWarning}`}>
-          <p>No hay organizaciones asignadas. Crea la primera (seras owner).</p>
+          <p>No hay organizaciones asignadas. Crea la primera (serás administrador).</p>
           <div className="rounded-lg border border-slate-200 bg-white p-4 text-slate-800">
             <p className="mb-3 font-medium text-slate-900">Nueva organizacion</p>
             <form action={createFirstTenantAction} className="space-y-3">

@@ -11,9 +11,9 @@ type CreateResult =
   | { ok: false; message: string };
 
 /**
- * Crea un tenant con roles base y membresía owner, solo si el usuario aún no tiene ninguna org activa.
+ * Crea un tenant con roles base y membresía admin, solo si el usuario aún no tiene ninguna org activa.
  */
-export async function createFirstOrganizationAsOwner(input: {
+export async function createFirstOrganizationAsAdmin(input: {
   userId: string;
   name: string;
   slug: string;
@@ -73,7 +73,7 @@ export async function createFirstOrganizationAsOwner(input: {
         data: {
           tenantId: tenant.id,
           userId: input.userId,
-          roleId: roles.owner.id,
+          roleId: roles.admin.id,
           status: "active",
         },
       });
@@ -96,7 +96,7 @@ export async function createFirstOrganizationAsOwner(input: {
         message: "Ese identificador ya existe. Prueba otro slug.",
       };
     }
-    console.error("[createFirstOrganizationAsOwner]", e);
+    console.error("[createFirstOrganizationAsAdmin]", e);
     return {
       ok: false,
       message: "No se pudo crear la organizacion. Intenta de nuevo o revisa los logs.",

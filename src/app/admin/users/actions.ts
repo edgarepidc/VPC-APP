@@ -15,7 +15,7 @@ import {
   updatePlatformUserProfile,
 } from "@/modules/platform-users/service";
 
-const VALID_ROLES: RoleKey[] = ["owner", "admin", "manager", "member"];
+const VALID_ROLES: RoleKey[] = ["admin", "manager", "member"];
 
 function usersQuery(params: {
   tenantId?: string;

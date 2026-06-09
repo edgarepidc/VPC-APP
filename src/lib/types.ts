@@ -1,4 +1,4 @@
-export type RoleKey = "owner" | "admin" | "manager" | "member";
+export type RoleKey = "admin" | "manager" | "member";
 
 export type PermissionKey =
   | "projects.read"
@@ -18,7 +18,7 @@ export type SessionUser = {
   isSuperAdminFromDb: boolean;
   /**
    * Superadmin entró con “Entrar al workspace” sin membresía en ese tenant.
-   * Rol efectivo owner; útil para avisos de gobernanza en UI.
+   * Rol efectivo admin; útil para avisos de gobernanza en UI.
    */
   isPlatformVisit: boolean;
 };
