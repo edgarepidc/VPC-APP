@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { ensurePublicImageBucket } from "@/lib/supabase/ensure-image-bucket";
 import { db } from "@/lib/db";
 import { createAdminClient } from "@/utils/supabase/admin";
 
@@ -22,7 +23,7 @@ async function putUserAvatarFromBuffer(
   userId: string,
   buf: Buffer,
   mime: string,
-): Promise<{ ok: true } | { ok: false; code: string }> {
+): Promise<{ ok: true } | { ok: false; code: string; detail?: string }> {
   if (!ALLOWED.has(mime)) return { ok: false, code: "tipo_avatar" };
   if (buf.length > MAX_BYTES) return { ok: false, code: "tamano_avatar" };
 
@@ -30,13 +31,21 @@ async function putUserAvatarFromBuffer(
 
   try {
     const admin = createAdminClient();
+    const bucket = await ensurePublicImageBucket(admin, BUCKET, {
+      fileSizeLimit: MAX_BYTES,
+    });
+    if (!bucket.ok) {
+      console.error("[putUserAvatarFromBuffer] bucket:", bucket.message);
+      return { ok: false, code: "storage_avatar", detail: bucket.message };
+    }
+
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, buf, {
       contentType: mime,
       upsert: true,
     });
     if (upErr) {
       console.error("[putUserAvatarFromBuffer]", upErr);
-      return { ok: false, code: "storage_avatar" };
+      return { ok: false, code: "storage_avatar", detail: upErr.message };
     }
     const { data: pub } = admin.storage.from(BUCKET).getPublicUrl(path);
     await db.user.update({
@@ -46,14 +55,19 @@ async function putUserAvatarFromBuffer(
     return { ok: true };
   } catch (e) {
     console.error("[putUserAvatarFromBuffer]", e);
-    return { ok: false, code: "storage_avatar" };
+    return {
+      ok: false,
+      code: "storage_avatar",
+      detail: e instanceof Error ? e.message : String(e),
+    };
   }
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
   tipo_avatar: "Formato no válido. Usa PNG, JPG o WebP.",
   tamano_avatar: "La imagen supera 2 MB.",
-  storage_avatar: "No se pudo guardar la foto. Revisa el bucket user-avatars en Supabase.",
+  storage_avatar:
+    "No se pudo guardar la foto. Si persiste, pide al administrador ejecutar prisma/user_avatars_bucket.sql en Supabase.",
   archivo_avatar: "Selecciona una imagen.",
 };
 
@@ -69,7 +83,8 @@ export async function uploadUserAvatarAction(formData: FormData) {
   const buf = Buffer.from(await file.arrayBuffer());
   const put = await putUserAvatarFromBuffer(session.userId, buf, file.type);
   if (!put.ok) {
-    const msg = ERROR_MESSAGES[put.code] ?? put.code;
+    const base = ERROR_MESSAGES[put.code] ?? put.code;
+    const msg = put.detail ? `${base} (${put.detail})` : base;
     redirect(`/dashboard/settings?error=${encodeURIComponent(msg)}`);
   }
 

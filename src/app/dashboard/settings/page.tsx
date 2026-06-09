@@ -17,6 +17,7 @@ import { personInitialsFromName } from "@/lib/role-labels";
 import { requireTenantId } from "@/lib/tenancy";
 
 import { clearUserAvatarAction, uploadUserAvatarAction } from "./avatar-actions";
+import { updateSelfProfileAction } from "./profile-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -33,19 +34,15 @@ export default async function DashboardSettingsPage({
   const [tenant, user] = await Promise.all([
     db.tenant.findUnique({
       where: { id: tenantId },
-      select: { name: true, slug: true },
+      select: { name: true },
     }),
     db.user.findUnique({
       where: { id: session.userId },
-      select: { avatarUrl: true, name: true, email: true },
+      select: { avatarUrl: true, name: true, email: true, phone: true },
     }),
   ]);
   if (!tenant) redirect("/select-tenant");
 
-  const personDisplayName =
-    user?.name?.trim() && user.name.trim() !== user.email
-      ? user.name.trim()
-      : session.email;
   const personInitials = personInitialsFromName(
     user?.name ?? session.name,
     session.email,
@@ -74,9 +71,49 @@ export default async function DashboardSettingsPage({
       ) : null}
 
       <section className={`${dashCard} p-4`}>
-        <h2 className="text-base font-semibold text-slate-900">Mi perfil</h2>
+        <h2 className="text-base font-semibold text-slate-900">Datos personales</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Tu foto aparece en el menú lateral junto a tu nombre.
+          Nombre y teléfono visibles para tu equipo en la organización.
+        </p>
+        <form action={updateSelfProfileAction} className="mt-4 grid max-w-md gap-3">
+          <div>
+            <label className={uiLabel}>Correo</label>
+            <input
+              type="email"
+              value={user?.email ?? session.email}
+              readOnly
+              className={`mt-1 ${uiInput} bg-slate-50 text-slate-600`}
+            />
+          </div>
+          <div>
+            <label className={uiLabel}>Nombre</label>
+            <input
+              name="name"
+              defaultValue={user?.name ?? ""}
+              placeholder="Ej. María José"
+              className={`mt-1 ${uiInput}`}
+            />
+          </div>
+          <div>
+            <label className={uiLabel}>Teléfono</label>
+            <input
+              name="phone"
+              type="tel"
+              defaultValue={user?.phone ?? ""}
+              placeholder="Ej. +52 55 1234 5678"
+              className={`mt-1 ${uiInput}`}
+            />
+          </div>
+          <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
+            Guardar datos
+          </button>
+        </form>
+      </section>
+
+      <section className={`${dashCard} p-4`}>
+        <h2 className="text-base font-semibold text-slate-900">Foto de perfil</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Aparece en el menú lateral junto a tu nombre.
         </p>
         <div className="mt-4 flex flex-wrap items-start gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-800 text-lg font-semibold text-white">
@@ -92,7 +129,6 @@ export default async function DashboardSettingsPage({
             )}
           </div>
           <div className="min-w-[14rem] flex-1 space-y-3">
-            <p className="text-sm font-medium text-slate-900">{personDisplayName}</p>
             <form action={uploadUserAvatarAction} className="space-y-2">
               <div>
                 <label className={uiLabel}>Subir foto (PNG, JPG o WebP, máx. 2 MB)</label>
