@@ -14,6 +14,48 @@ export type DeliverableLogEntry = {
   color?: string;
 };
 
+export type DeliverableSupportFile = {
+  url: string;
+  name: string;
+  uploadedAt: string;
+};
+
+export function parseSupportFiles(
+  raw: unknown,
+  legacy?: { url: string | null; name: string | null },
+): DeliverableSupportFile[] {
+  const out: DeliverableSupportFile[] = [];
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (!item || typeof item !== "object") continue;
+      const o = item as Record<string, unknown>;
+      const url = String(o.url ?? "").trim();
+      if (!url) continue;
+      out.push({
+        url,
+        name: String(o.name ?? "soporte.pdf").trim() || "soporte.pdf",
+        uploadedAt: String(o.uploadedAt ?? new Date().toISOString()),
+      });
+    }
+  }
+  if (legacy?.url && !out.some((f) => f.url === legacy.url)) {
+    out.unshift({
+      url: legacy.url,
+      name: legacy.name?.trim() || "soporte.pdf",
+      uploadedAt: new Date().toISOString(),
+    });
+  }
+  return out;
+}
+
+export function toJsonSupportFiles(list: DeliverableSupportFile[]): unknown {
+  return list.map((f) => ({
+    url: f.url,
+    name: f.name,
+    uploadedAt: f.uploadedAt,
+  }));
+}
+
 export function parseAcuses(raw: unknown): DeliverableAcuse[] {
   if (!Array.isArray(raw)) return [];
   const out: DeliverableAcuse[] = [];

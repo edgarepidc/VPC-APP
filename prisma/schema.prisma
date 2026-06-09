@@ -202,6 +202,14 @@ model Deliverable {
   /** URL pública del PDF de soporte en storage. */
   supportFileUrl      String?
   supportFileName     String?
+  /** PDFs adjuntos: [{ "url", "name", "uploadedAt" }]. */
+  supportFiles        Json      @default("[]")
+  /** Fecha real de cierre (aprobado / entregado). */
+  deliveredAt         DateTime?
+  /** Entregable predecesor que debe completarse antes. */
+  dependsOnId         String?
+  dependsOn           Deliverable?  @relation("DeliverableDependency", fields: [dependsOnId], references: [id], onDelete: SetNull)
+  dependents          Deliverable[] @relation("DeliverableDependency")
   /** Lista de acuses: [{ "name", "role", "ok", "confirmedAt" }]. */
   acuses              Json      @default("[]")
   /** Historial: [{ "at", "text", "color?" }]. */

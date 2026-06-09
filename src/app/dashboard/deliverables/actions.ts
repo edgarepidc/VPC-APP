@@ -6,6 +6,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import {
   addDeliverableAcuse,
+  applyDeliverableTemplate,
   createDeliverable,
   deleteDeliverable,
   removeDeliverableAcuse,
@@ -46,6 +47,7 @@ export type CreateDeliverableInput = {
   acceptanceCriteria?: string;
   notes?: string;
   supportUrl?: string;
+  dependsOnId?: string | null;
 };
 
 export async function createDeliverableAction(input: CreateDeliverableInput) {
@@ -67,6 +69,7 @@ export async function createDeliverableAction(input: CreateDeliverableInput) {
     acceptanceCriteria: input.acceptanceCriteria?.trim() || null,
     notes: input.notes?.trim() || null,
     supportUrl: input.supportUrl?.trim() || null,
+    dependsOnId: input.dependsOnId?.trim() || null,
   });
   revalidatePath("/dashboard/deliverables");
   return { id: created.id };
@@ -85,6 +88,7 @@ export type UpdateDeliverableDetailInput = {
   acceptanceCriteria?: string;
   notes?: string;
   supportUrl?: string;
+  dependsOnId?: string | null;
 };
 
 export async function updateDeliverableDetailAction(input: UpdateDeliverableDetailInput) {
@@ -106,8 +110,32 @@ export async function updateDeliverableDetailAction(input: UpdateDeliverableDeta
     acceptanceCriteria: input.acceptanceCriteria?.trim() || null,
     notes: input.notes?.trim() || null,
     supportUrl: input.supportUrl?.trim() || null,
+    dependsOnId: input.dependsOnId?.trim() || null,
   });
   revalidatePath("/dashboard/deliverables");
+}
+
+export async function applyDeliverableTemplateAction(input: {
+  projectId: string;
+  templateId: string;
+  startDate: string;
+  ownerName?: string;
+  clientName?: string;
+}) {
+  const tenantId = await requireWriteTenantId();
+  const start = parseLocalDate(input.startDate);
+  if (!start) throw new Error("La fecha de inicio es obligatoria.");
+
+  const result = await applyDeliverableTemplate({
+    tenantId,
+    projectId: input.projectId.trim(),
+    templateId: input.templateId.trim(),
+    startDate: start,
+    ownerName: input.ownerName?.trim() || null,
+    clientName: input.clientName?.trim() || null,
+  });
+  revalidatePath("/dashboard/deliverables");
+  return result;
 }
 
 export async function setDeliverableStatusAction(id: string, status: string) {

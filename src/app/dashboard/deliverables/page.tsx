@@ -15,7 +15,7 @@ import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { normalizeDeliverableStatus } from "@/modules/deliverables/constants";
-import { parseAcuses, parseActivityLog } from "@/modules/deliverables/json";
+import { parseAcuses, parseActivityLog, parseSupportFiles } from "@/modules/deliverables/json";
 import { listDeliverablesByTenant } from "@/modules/deliverables/service";
 
 import { DeliverablesTracker, type DeliverableTrackerRow } from "./deliverables-tracker";
@@ -36,6 +36,11 @@ function dueToYmd(d: Date | null): string | null {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+function dateToIso(d: Date | null): string | null {
+  if (!d) return null;
+  return d.toISOString();
 }
 
 export default async function DeliverablesPage({ searchParams }: PageProps) {
@@ -93,7 +98,7 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
     );
   }
 
-  const rows: DeliverableTrackerRow[] = deliverables.map((d) => ({
+  const rowsBase: DeliverableTrackerRow[] = deliverables.map((d) => ({
     id: d.id,
     displayId: displayEntId(d.id),
     title: d.title,
@@ -109,11 +114,24 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
     supportUrl: d.supportUrl,
     supportFileUrl: d.supportFileUrl,
     supportFileName: d.supportFileName,
+    supportFiles: parseSupportFiles(d.supportFiles, {
+      url: d.supportFileUrl,
+      name: d.supportFileName,
+    }),
+    deliveredAt: dateToIso(d.deliveredAt),
+    dependsOnId: d.dependsOnId,
+    dependsOnTitle: null,
     description: d.description,
     acceptanceCriteria: d.acceptanceCriteria,
     notes: d.notes,
     acuses: parseAcuses(d.acuses),
     activityLog: parseActivityLog(d.activityLog),
+  }));
+
+  const titleById = new Map(rowsBase.map((r) => [r.id, r.title]));
+  const rows: DeliverableTrackerRow[] = rowsBase.map((r) => ({
+    ...r,
+    dependsOnTitle: r.dependsOnId ? titleById.get(r.dependsOnId) ?? null : null,
   }));
 
   const projectOptions = projects.map((p) => ({ id: p.id, name: p.name }));

@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 
+import type { DeliverableSupportFile } from "@/modules/deliverables/json";
 import { uiInput, uiLabel } from "@/lib/ui-classes";
 
 import {
@@ -13,8 +14,7 @@ type DeliverableSupportFieldsProps = {
   deliverableId?: string;
   supportUrl: string;
   onSupportUrlChange: (value: string) => void;
-  supportFileUrl: string | null;
-  supportFileName: string | null;
+  supportFiles: DeliverableSupportFile[];
   canEdit: boolean;
   onUploadComplete?: () => void;
   compact?: boolean;
@@ -24,8 +24,7 @@ export function DeliverableSupportFields({
   deliverableId,
   supportUrl,
   onSupportUrlChange,
-  supportFileUrl,
-  supportFileName,
+  supportFiles,
   canEdit,
   onUploadComplete,
   compact = false,
@@ -33,6 +32,9 @@ export function DeliverableSupportFields({
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    supportFiles[0]?.url ?? null,
+  );
 
   function uploadFile(file: File) {
     if (!deliverableId) {
@@ -58,7 +60,7 @@ export function DeliverableSupportFields({
       <p className={uiLabel}>Soporte documental</p>
       {!compact ? (
         <p className="mt-1 text-xs text-slate-500">
-          Enlace a carpeta compartida o PDF de respaldo del entregable.
+          Enlace a carpeta compartida y uno o más PDFs de respaldo.
         </p>
       ) : null}
 
@@ -75,36 +77,54 @@ export function DeliverableSupportFields({
       </label>
 
       <div className="mt-3">
-        <span className="text-xs text-slate-600">PDF adjunto</span>
-        {supportFileUrl ? (
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <a
-              href={supportFileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-slate-800 underline"
-            >
-              {supportFileName ?? "Ver PDF"}
-            </a>
-            {canEdit ? (
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() =>
-                  deliverableId &&
-                  startTransition(async () => {
-                    await clearDeliverablePdfAction(deliverableId);
-                    onUploadComplete?.();
-                  })
-                }
-                className="text-xs text-rose-700 underline"
-              >
-                Quitar
-              </button>
-            ) : null}
-          </div>
-        ) : canEdit ? (
-          <div className="mt-1">
+        <span className="text-xs text-slate-600">PDFs adjuntos</span>
+        {supportFiles.length > 0 ? (
+          <ul className="mt-1 space-y-1">
+            {supportFiles.map((file) => (
+              <li key={file.url} className="flex flex-wrap items-center gap-2 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setPreviewUrl(file.url)}
+                  className={`font-medium underline ${
+                    previewUrl === file.url ? "text-slate-900" : "text-slate-700"
+                  }`}
+                >
+                  {file.name}
+                </button>
+                <a
+                  href={file.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-slate-500 hover:text-slate-800"
+                >
+                  Abrir
+                </a>
+                {canEdit ? (
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() =>
+                      deliverableId &&
+                      startTransition(async () => {
+                        await clearDeliverablePdfAction(deliverableId, file.url);
+                        if (previewUrl === file.url) setPreviewUrl(null);
+                        onUploadComplete?.();
+                      })
+                    }
+                    className="text-xs text-rose-700 underline"
+                  >
+                    Quitar
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-1 text-xs text-slate-400">Sin PDFs adjuntos</p>
+        )}
+
+        {canEdit ? (
+          <div className="mt-2">
             <input
               ref={fileRef}
               type="file"
@@ -125,10 +145,21 @@ export function DeliverableSupportFields({
               {pending ? "Subiendo…" : deliverableId ? "Adjuntar PDF" : "PDF tras guardar"}
             </button>
           </div>
-        ) : (
-          <p className="mt-1 text-xs text-slate-400">Sin PDF adjunto</p>
-        )}
+        ) : null}
       </div>
+
+      {previewUrl ? (
+        <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+          <div className="border-b border-slate-200 px-2 py-1 text-[10px] font-medium text-slate-500">
+            Vista previa
+          </div>
+          <iframe
+            title="Vista previa PDF"
+            src={previewUrl}
+            className="h-[min(320px,50vh)] w-full bg-white"
+          />
+        </div>
+      ) : null}
 
       {error ? <p className="mt-2 text-xs text-rose-700">{error}</p> : null}
     </div>

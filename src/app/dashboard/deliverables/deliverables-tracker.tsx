@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -10,7 +10,7 @@ import {
   normalizeDeliverableStatus,
   type DeliverableStatus,
 } from "@/modules/deliverables/constants";
-import type { DeliverableAcuse, DeliverableLogEntry } from "@/modules/deliverables/json";
+import type { DeliverableAcuse, DeliverableLogEntry, DeliverableSupportFile } from "@/modules/deliverables/json";
 import {
   clampWeight,
   computeProjectProgress,
@@ -19,8 +19,15 @@ import {
 import { uiInput, uiLabel } from "@/lib/ui-classes";
 
 import { CreateDeliverableModal } from "./create-deliverable-modal";
+import {
+  buildDeliverableActionItems,
+  formatDeliveredAt,
+  projectWeightAssigned,
+} from "./deliverable-utils";
 import { DeliverableSupportFields } from "./deliverable-support-fields";
+import { DeliverableTemplateModal } from "./deliverable-template-modal";
 import { DeliverableWeightField } from "./deliverable-weight-field";
+import { DeliverablesActionQueue } from "./deliverables-action-queue";
 import { DeliverablesTimeline } from "./deliverables-timeline";
 import {
   addDeliverableAcuseAction,
@@ -53,6 +60,10 @@ export type DeliverableTrackerRow = {
   supportUrl: string | null;
   supportFileUrl: string | null;
   supportFileName: string | null;
+  supportFiles: DeliverableSupportFile[];
+  deliveredAt: string | null;
+  dependsOnId: string | null;
+  dependsOnTitle: string | null;
   description: string | null;
   acceptanceCriteria: string | null;
   notes: string | null;
@@ -210,25 +221,40 @@ function progressBarColor(pct: number): string {
 
 export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
   const router = useRouter();
+  const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map());
   const [pending, startTransition] = useTransition();
   const [q, setQ] = useState("");
   const [st, setSt] = useState("");
   const [phase, setPhase] = useState("");
+  const [projectFilter, setProjectFilter] = useState("");
   const [sort, setSort] = useState<"fecha" | "peso" | "estado" | "fase">("fecha");
-  const [panel, setPanel] = useState<"closed" | "detail" | "create">("closed");
+  const [panel, setPanel] = useState<"closed" | "detail" | "create" | "template">("closed");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [focusId, setFocusId] = useState<string | null>(null);
+
+  const scopeRows = useMemo(
+    () => (projectFilter ? rows.filter((r) => r.projectId === projectFilter) : rows),
+    [rows, projectFilter],
+  );
+
+  const rowById = useMemo(() => new Map(rows.map((r) => [r.id, r])), [rows]);
+
+  const actionItems = useMemo(
+    () => buildDeliverableActionItems(scopeRows, rowById),
+    [scopeRows, rowById],
+  );
 
   const phases = useMemo(() => {
     const set = new Set<string>();
-    for (const r of rows) {
+    for (const r of scopeRows) {
       if (r.phase?.trim()) set.add(r.phase.trim());
     }
     return [...set].sort((a, b) => a.localeCompare(b));
-  }, [rows]);
+  }, [scopeRows]);
 
   const filtered = useMemo(() => {
     const ql = q.trim().toLowerCase();
-    let list = rows.filter((d) => {
+    let list = scopeRows.filter((d) => {
       const hay =
         !ql ||
         d.title.toLowerCase().includes(ql) ||
@@ -255,26 +281,28 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
       return (a.phase ?? "").localeCompare(b.phase ?? "");
     });
     return list;
-  }, [rows, q, st, phase, sort]);
+  }, [scopeRows, q, st, phase, sort]);
 
   const { pct, pctInProg, doneWeight, totalWeight, projectCount } = useMemo(
-    () => calcPortfolioProgress(rows),
-    [rows],
+    () => calcPortfolioProgress(scopeRows),
+    [scopeRows],
   );
   const remPct = Math.max(0, 100 - pct - pctInProg);
   const barC = progressBarColor(pct);
 
-  const total = rows.length;
-  const comp = rows.filter((d) => isDeliverableDoneStatus(d.status)).length;
-  const pend = rows.filter((d) => {
+  const total = scopeRows.length;
+  const comp = scopeRows.filter((d) => isDeliverableDoneStatus(d.status)).length;
+  const pend = scopeRows.filter((d) => {
     const s = normalizeDeliverableStatus(d.status);
     return s === "pending" || s === "review";
   }).length;
-  const venc = rows.filter((d) => {
+  const venc = scopeRows.filter((d) => {
     const df = daysFromDue(d.dueDate, d.status);
     return df !== null && df < 0;
   }).length;
-  const acPend = rows.reduce((a, d) => a + d.acuses.filter((ac) => !ac.ok).length, 0);
+  const acPend = scopeRows.reduce((a, d) => a + d.acuses.filter((ac) => !ac.ok).length, 0);
+
+  const weightAssigned = projectFilter ? projectWeightAssigned(scopeRows, projectFilter) : null;
 
   const selected = selectedId ? rows.find((r) => r.id === selectedId) : undefined;
 
@@ -289,15 +317,32 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
     });
   }
 
+  function focusDeliverable(id: string, openPanel = false) {
+    setFocusId(id);
+    if (openPanel) {
+      setSelectedId(id);
+      setPanel("detail");
+    }
+    requestAnimationFrame(() => {
+      rowRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }
+
   function openDetail(id: string) {
     if (selectedId === id && panel === "detail") {
       setPanel("closed");
       setSelectedId(null);
+      setFocusId(null);
       return;
     }
-    setSelectedId(id);
-    setPanel("detail");
+    focusDeliverable(id, true);
   }
+
+  useEffect(() => {
+    if (focusId) {
+      rowRefs.current.get(focusId)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [focusId]);
 
   function exportCsv() {
     const hdr = [
@@ -411,13 +456,48 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
             </div>
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-xs font-medium text-slate-600">Proyecto</label>
+            <select
+              value={projectFilter}
+              onChange={(e) => {
+                setProjectFilter(e.target.value);
+                setFocusId(null);
+              }}
+              className="h-[34px] rounded-lg border border-black/[0.17] bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
+            >
+              <option value="">Todos los proyectos</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            {weightAssigned !== null ? (
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                  weightAssigned === TARGET_SUM
+                    ? "bg-emerald-50 text-emerald-800"
+                    : "bg-amber-50 text-amber-900"
+                }`}
+              >
+                Peso asignado: {weightAssigned}/{TARGET_SUM}%
+              </span>
+            ) : null}
+          </div>
+
+          <DeliverablesActionQueue
+            items={actionItems}
+            activeId={focusId}
+            onSelect={(id) => focusDeliverable(id, true)}
+          />
+
           <div className="min-w-0 overflow-x-auto overflow-y-visible">
             <DeliverablesTimeline
               rows={filtered}
-              onSelect={(id) => {
-                setSelectedId(id);
-                setPanel("detail");
-              }}
+              focusId={focusId}
+              onFocusChange={setFocusId}
+              onSelect={(id) => openDetail(id)}
             />
           </div>
 
@@ -523,6 +603,18 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
               <button
                 type="button"
                 onClick={() => {
+                  setPanel("template");
+                  setSelectedId(null);
+                }}
+                className="h-[34px] whitespace-nowrap rounded-lg border border-slate-300 bg-white px-3.5 text-xs font-medium hover:bg-slate-50"
+              >
+                Plantilla
+              </button>
+            ) : null}
+            {canEdit ? (
+              <button
+                type="button"
+                onClick={() => {
                   setPanel("create");
                   setSelectedId(null);
                 }}
@@ -561,14 +653,18 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                 <tbody>
                   {filtered.map((d) => {
                     const stKey = normalizeDeliverableStatus(d.status);
+                    const isFocused = focusId === d.id || (selectedId === d.id && panel === "detail");
                     return (
                       <tr
                         key={d.id}
+                        ref={(el) => {
+                          if (el) rowRefs.current.set(d.id, el);
+                          else rowRefs.current.delete(d.id);
+                        }}
                         onClick={() => openDetail(d.id)}
+                        onMouseEnter={() => setFocusId(d.id)}
                         className={`cursor-pointer border-b border-slate-200 last:border-b-0 hover:bg-[#f7f5f1] ${
-                          selectedId === d.id && panel === "detail"
-                            ? "bg-slate-100 hover:bg-slate-100"
-                            : ""
+                          isFocused ? "bg-slate-100 ring-1 ring-inset ring-slate-400 hover:bg-slate-100" : ""
                         } ${pending ? "opacity-60" : ""}`}
                       >
                         <td className="px-3 py-2.5 font-mono text-xs text-slate-400">
@@ -581,7 +677,12 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                           {d.ownerName || "—"}
                         </td>
                         <td className="px-3 py-2.5 text-xs">
-                          <span>{formatCommitment(d.dueDate)}</span>
+                          <div>{formatCommitment(d.dueDate)}</div>
+                          {d.deliveredAt ? (
+                            <div className="mt-0.5 text-[10px] text-emerald-700">
+                              Entregado: {formatDeliveredAt(d.deliveredAt) ?? "—"}
+                            </div>
+                          ) : null}
                           {dayChip(d.dueDate, d.status)}
                         </td>
                         <td className="px-3 py-2.5">
@@ -653,6 +754,15 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
           allRows={rows}
           projects={projects}
           phaseOptions={phases}
+          defaultProjectId={projectFilter || undefined}
+          onClose={() => setPanel("closed")}
+          run={run}
+        />
+      ) : null}
+      {panel === "template" && canEdit ? (
+        <DeliverableTemplateModal
+          projects={projects}
+          defaultProjectId={projectFilter || undefined}
           onClose={() => setPanel("closed")}
           run={run}
         />
@@ -698,6 +808,14 @@ function DetailPanel({
             <span className="text-xs text-slate-500">
               Compromiso: {formatCommitment(row.dueDate)}
             </span>
+            {row.deliveredAt ? (
+              <span className="text-xs text-emerald-700">
+                Entregado: {formatDeliveredAt(row.deliveredAt) ?? "—"}
+              </span>
+            ) : null}
+            {row.dependsOnTitle ? (
+              <span className="text-xs text-slate-500">Dep.: {row.dependsOnTitle}</span>
+            ) : null}
             {dayChip(row.dueDate, row.status)}
           </div>
         </div>
@@ -899,7 +1017,13 @@ function ReadOnlyDetail({ row }: { row: DeliverableTrackerRow }) {
       <Field label="Criterios de aceptación" value={row.acceptanceCriteria} />
       <Field label="Cliente / destinatario" value={row.clientName} />
       <Field label="Notas" value={row.notes} />
-      {row.supportUrl || row.supportFileUrl ? (
+      {row.dependsOnTitle ? (
+        <Field label="Depende de" value={row.dependsOnTitle} />
+      ) : null}
+      {row.deliveredAt ? (
+        <Field label="Fecha de entrega" value={formatDeliveredAt(row.deliveredAt)} />
+      ) : null}
+      {row.supportUrl || row.supportFiles.length > 0 ? (
         <div className="mb-3">
           <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Soporte documental
@@ -915,16 +1039,17 @@ function ReadOnlyDetail({ row }: { row: DeliverableTrackerRow }) {
                 Abrir ubicación
               </a>
             ) : null}
-            {row.supportFileUrl ? (
+            {row.supportFiles.map((file) => (
               <a
-                href={row.supportFileUrl}
+                key={file.url}
+                href={file.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-slate-800 underline"
               >
-                {row.supportFileName ?? "Ver PDF"}
+                {file.name}
               </a>
-            ) : null}
+            ))}
           </div>
         </div>
       ) : null}
@@ -970,6 +1095,11 @@ function DetailEditForm({
   const [acceptanceCriteria, setAcceptanceCriteria] = useState(row.acceptanceCriteria ?? "");
   const [notes, setNotes] = useState(row.notes ?? "");
   const [supportUrl, setSupportUrl] = useState(row.supportUrl ?? "");
+  const [dependsOnId, setDependsOnId] = useState(row.dependsOnId ?? "");
+
+  const dependencyOptions = allRows.filter(
+    (r) => r.projectId === projectId && r.id !== row.id,
+  );
 
   const rowsForWeight =
     projectId === row.projectId
@@ -1051,6 +1181,21 @@ function DetailEditForm({
           />
         </div>
         <div className="sm:col-span-2">
+          <label className={uiLabel}>Depende de</label>
+          <select
+            value={dependsOnId}
+            onChange={(e) => setDependsOnId(e.target.value)}
+            className={`${uiInput} mt-1`}
+          >
+            <option value="">Sin dependencia</option>
+            {dependencyOptions.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.title}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="sm:col-span-2">
           <label className={uiLabel}>Descripción</label>
           <textarea
             value={description}
@@ -1083,8 +1228,7 @@ function DetailEditForm({
         deliverableId={row.id}
         supportUrl={supportUrl}
         onSupportUrlChange={setSupportUrl}
-        supportFileUrl={row.supportFileUrl}
-        supportFileName={row.supportFileName}
+        supportFiles={row.supportFiles}
         canEdit
         onUploadComplete={() => router.refresh()}
       />
@@ -1106,6 +1250,7 @@ function DetailEditForm({
               acceptanceCriteria,
               notes,
               supportUrl,
+              dependsOnId: dependsOnId || null,
             });
           })
         }

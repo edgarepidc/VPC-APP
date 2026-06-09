@@ -11,7 +11,6 @@ import { clampWeight, TARGET_SUM } from "@/lib/deliverable-weight-utils";
 import { uiInput, uiLabel } from "@/lib/ui-classes";
 
 import { createDeliverableAction } from "./actions";
-import { DeliverableSupportFields } from "./deliverable-support-fields";
 import { DeliverableWeightField } from "./deliverable-weight-field";
 import type { DeliverableTrackerProject, DeliverableTrackerRow } from "./deliverables-tracker";
 import { uploadDeliverablePdfAction } from "./support-actions";
@@ -20,6 +19,7 @@ type CreateDeliverableModalProps = {
   allRows: DeliverableTrackerRow[];
   projects: DeliverableTrackerProject[];
   phaseOptions: string[];
+  defaultProjectId?: string;
   onClose: () => void;
   run: (fn: () => Promise<void>) => void;
 };
@@ -28,11 +28,12 @@ export function CreateDeliverableModal({
   allRows,
   projects,
   phaseOptions,
+  defaultProjectId,
   onClose,
   run,
 }: CreateDeliverableModalProps) {
   const pdfRef = useRef<File | null>(null);
-  const [projectId, setProjectId] = useState(projects[0]?.id ?? "");
+  const [projectId, setProjectId] = useState(defaultProjectId || projects[0]?.id || "");
   const [title, setTitle] = useState("");
   const [phase, setPhase] = useState("");
   const [ownerName, setOwnerName] = useState("");
@@ -42,6 +43,7 @@ export function CreateDeliverableModal({
   const [description, setDescription] = useState("");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
   const [supportUrl, setSupportUrl] = useState("");
+  const [dependsOnId, setDependsOnId] = useState("");
   const [pendingPdfName, setPendingPdfName] = useState<string | null>(null);
 
   const projectRows = allRows.filter((r) => r.projectId === projectId);
@@ -189,6 +191,21 @@ export function CreateDeliverableModal({
                 />
               </div>
               <div>
+                <label className={uiLabel}>Depende de</label>
+                <select
+                  value={dependsOnId}
+                  onChange={(e) => setDependsOnId(e.target.value)}
+                  className={`${uiInput} mt-1`}
+                >
+                  <option value="">Sin dependencia</option>
+                  {projectRows.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className={uiLabel}>Descripción</label>
                 <textarea
                   value={description}
@@ -263,6 +280,7 @@ export function CreateDeliverableModal({
                   description: description.trim(),
                   acceptanceCriteria: acceptanceCriteria.trim(),
                   supportUrl: supportUrl.trim(),
+                  dependsOnId: dependsOnId || null,
                 });
                 if (pdfRef.current) {
                   const fd = new FormData();

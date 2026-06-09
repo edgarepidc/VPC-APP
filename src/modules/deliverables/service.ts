@@ -10,16 +10,24 @@ import {
   type WeightRow,
 } from "@/lib/deliverable-weight-utils";
 
-import { DELIVERABLE_STATUS_LABEL, normalizeDeliverableStatus } from "./constants";
+import { DELIVERABLE_STATUS_LABEL, isDeliverableDoneStatus, normalizeDeliverableStatus } from "./constants";
 import {
   appendLog,
   parseAcuses,
   parseActivityLog,
+  parseSupportFiles,
   toJsonAcuses,
   toJsonActivityLog,
+  toJsonSupportFiles,
   type DeliverableAcuse,
   type DeliverableLogEntry,
+  type DeliverableSupportFile,
 } from "./json";
+import {
+  getDeliverableTemplate,
+  normalizeTemplateWeights,
+  templateDueDate,
+} from "./templates";
 
 function normalizeSupportUrl(raw: string | null | undefined): string | null {
   const value = raw?.trim();
@@ -34,6 +42,50 @@ function normalizeSupportUrl(raw: string | null | undefined): string | null {
 }
 
 export { normalizeSupportUrl };
+
+async function validateDependsOn(
+  tenantId: string,
+  projectId: string,
+  deliverableId: string,
+  dependsOnId: string | null | undefined,
+) {
+  if (!dependsOnId) return;
+  if (dependsOnId === deliverableId) {
+    throw new Error("Un entregable no puede depender de sí mismo.");
+  }
+  const dep = await db.deliverable.findFirst({
+    where: { id: dependsOnId, tenantId, projectId },
+    select: { id: true },
+  });
+  if (!dep) throw new Error("El entregable predecesor no es válido para este proyecto.");
+
+  let cur: string | null = dependsOnId;
+  const seen = new Set<string>([deliverableId]);
+  for (let i = 0; i < 24 && cur; i += 1) {
+    if (seen.has(cur)) throw new Error("Dependencia circular detectada.");
+    seen.add(cur);
+    const next: { dependsOnId: string | null } | null = await db.deliverable.findFirst({
+      where: { id: cur, tenantId },
+      select: { dependsOnId: true },
+    });
+    cur = next?.dependsOnId ?? null;
+  }
+}
+
+async function assertDependencyClear(tenantId: string, id: string) {
+  const row = await db.deliverable.findFirst({
+    where: { id, tenantId },
+    select: { dependsOnId: true },
+  });
+  if (!row?.dependsOnId) return;
+  const dep = await db.deliverable.findFirst({
+    where: { id: row.dependsOnId, tenantId },
+    select: { status: true, title: true },
+  });
+  if (dep && !isDeliverableDoneStatus(dep.status)) {
+    throw new Error(`Completa primero «${dep.title}» antes de avanzar este entregable.`);
+  }
+}
 
 async function applyWeightPlan(
   tenantId: string,
@@ -167,6 +219,7 @@ export async function createDeliverable(input: {
   acceptanceCriteria?: string | null;
   notes?: string | null;
   supportUrl?: string | null;
+  dependsOnId?: string | null;
 }) {
   const project = await db.project.findFirst({
     where: { id: input.projectId, tenantId: input.tenantId },
@@ -182,6 +235,8 @@ export async function createDeliverable(input: {
   }
 
   const st = normalizeDeliverableStatus(input.status ?? "pending");
+  await validateDependsOn(input.tenantId, input.projectId, "new", input.dependsOnId);
+
   const existing = await listProjectWeightRows(input.tenantId, input.projectId);
   const initialWeight =
     existing.length === 0
@@ -216,6 +271,7 @@ export async function createDeliverable(input: {
       acceptanceCriteria: input.acceptanceCriteria?.trim() || null,
       notes: input.notes?.trim() || null,
       supportUrl: normalizeSupportUrl(input.supportUrl),
+      dependsOnId: input.dependsOnId ?? null,
       acuses: [] as unknown as Prisma.InputJsonValue,
       activityLog: toJsonActivityLog(initialLog) as Prisma.InputJsonValue,
     },
@@ -257,6 +313,7 @@ export async function updateDeliverable(input: {
   supportUrl?: string | null;
   supportFileUrl?: string | null;
   supportFileName?: string | null;
+  dependsOnId?: string | null;
   acuses?: DeliverableAcuse[];
   activityLog?: DeliverableLogEntry[];
 }) {
@@ -266,6 +323,13 @@ export async function updateDeliverable(input: {
   });
   if (!existing) {
     throw new Error("Entregable no encontrado.");
+  }
+
+  const nextProjectId =
+    input.projectId !== undefined ? input.projectId : existing.projectId;
+
+  if (input.dependsOnId !== undefined) {
+    await validateDependsOn(input.tenantId, nextProjectId, input.id, input.dependsOnId);
   }
 
   if (input.projectId !== undefined) {
@@ -311,6 +375,11 @@ export async function updateDeliverable(input: {
   if (input.supportFileName !== undefined) {
     data.supportFileName = input.supportFileName?.trim() || null;
   }
+  if (input.dependsOnId !== undefined) {
+    data.dependsOn = input.dependsOnId
+      ? { connect: { id: input.dependsOnId } }
+      : { disconnect: true };
+  }
   if (input.acuses !== undefined) {
     data.acuses = toJsonAcuses(input.acuses) as Prisma.InputJsonValue;
   }
@@ -322,9 +391,6 @@ export async function updateDeliverable(input: {
     where: { id: input.id },
     data,
   });
-
-  const nextProjectId =
-    input.projectId !== undefined ? input.projectId : existing.projectId;
 
   if (input.weight !== undefined) {
     const projectRows = await listProjectWeightRows(input.tenantId, nextProjectId);
@@ -384,6 +450,11 @@ export async function updateDeliverableStatus(input: {
   const prev = normalizeDeliverableStatus(row.status);
   if (prev === next) return;
 
+  const advancingToDone = next === "approved" || next === "delivered";
+  if (advancingToDone) {
+    await assertDependencyClear(input.tenantId, input.id);
+  }
+
   let acuses = parseAcuses(row.acuses);
   const log = parseActivityLog(row.activityLog);
 
@@ -397,10 +468,18 @@ export async function updateDeliverableStatus(input: {
   const label = DELIVERABLE_STATUS_LABEL[next];
   const nextLog = appendLog(log, `Estado cambiado a: ${label}`, next);
 
+  let deliveredAt = row.deliveredAt;
+  if (advancingToDone && !isDeliverableDoneStatus(prev)) {
+    deliveredAt = new Date();
+  } else if (!advancingToDone && isDeliverableDoneStatus(prev)) {
+    deliveredAt = null;
+  }
+
   await db.deliverable.update({
     where: { id: input.id },
     data: {
       status: next,
+      deliveredAt,
       acuses: toJsonAcuses(acuses) as Prisma.InputJsonValue,
       activityLog: toJsonActivityLog(nextLog) as Prisma.InputJsonValue,
     },
@@ -410,16 +489,31 @@ export async function updateDeliverableStatus(input: {
 export async function deleteDeliverable(input: { tenantId: string; id: string }) {
   const row = await db.deliverable.findFirst({
     where: { id: input.id, tenantId: input.tenantId },
-    select: { id: true, projectId: true, supportFileUrl: true },
+    select: {
+      id: true,
+      projectId: true,
+      supportFileUrl: true,
+      supportFileName: true,
+      supportFiles: true,
+    },
   });
   if (!row) throw new Error("Entregable no encontrado.");
+
+  await db.deliverable.updateMany({
+    where: { tenantId: input.tenantId, dependsOnId: input.id },
+    data: { dependsOnId: null },
+  });
 
   await db.deliverable.deleteMany({
     where: { id: input.id, tenantId: input.tenantId },
   });
 
-  if (row.supportFileUrl) {
-    await removeDeliverableStorageObject(row.supportFileUrl).catch(() => undefined);
+  const files = parseSupportFiles(row.supportFiles, {
+    url: row.supportFileUrl,
+    name: row.supportFileName,
+  });
+  for (const file of files) {
+    await removeDeliverableStorageObject(file.url).catch(() => undefined);
   }
 
   const remaining = await listProjectWeightRows(input.tenantId, row.projectId);
@@ -556,7 +650,7 @@ export async function setDeliverableSupportFile(input: {
 }) {
   const row = await db.deliverable.findFirst({
     where: { id: input.id, tenantId: input.tenantId },
-    select: { id: true, supportFileUrl: true },
+    select: { id: true, supportFileUrl: true, supportFileName: true, supportFiles: true },
   });
   if (!row) throw new Error("Entregable no encontrado.");
 
@@ -564,11 +658,133 @@ export async function setDeliverableSupportFile(input: {
     await removeDeliverableStorageObject(row.supportFileUrl).catch(() => undefined);
   }
 
+  let files = parseSupportFiles(row.supportFiles, {
+    url: row.supportFileUrl,
+    name: row.supportFileName,
+  });
+  if (input.supportFileUrl) {
+    files = [
+      ...files.filter((f) => f.url !== input.supportFileUrl),
+      {
+        url: input.supportFileUrl,
+        name: input.supportFileName?.trim() || "soporte.pdf",
+        uploadedAt: new Date().toISOString(),
+      },
+    ];
+  } else if (row.supportFileUrl) {
+    files = files.filter((f) => f.url !== row.supportFileUrl);
+  }
+
   await db.deliverable.update({
     where: { id: input.id },
     data: {
       supportFileUrl: input.supportFileUrl,
       supportFileName: input.supportFileName,
+      supportFiles: toJsonSupportFiles(files) as Prisma.InputJsonValue,
     },
   });
+}
+
+export async function addDeliverableSupportFile(input: {
+  tenantId: string;
+  id: string;
+  url: string;
+  name: string;
+}) {
+  const row = await db.deliverable.findFirst({
+    where: { id: input.id, tenantId: input.tenantId },
+    select: { supportFileUrl: true, supportFileName: true, supportFiles: true },
+  });
+  if (!row) throw new Error("Entregable no encontrado.");
+
+  const files = parseSupportFiles(row.supportFiles, {
+    url: row.supportFileUrl,
+    name: row.supportFileName,
+  });
+  const entry: DeliverableSupportFile = {
+    url: input.url,
+    name: input.name,
+    uploadedAt: new Date().toISOString(),
+  };
+  const next = [...files.filter((f) => f.url !== entry.url), entry];
+
+  await db.deliverable.update({
+    where: { id: input.id },
+    data: {
+      supportFiles: toJsonSupportFiles(next) as Prisma.InputJsonValue,
+      supportFileUrl: entry.url,
+      supportFileName: entry.name,
+    },
+  });
+}
+
+export async function removeDeliverableSupportFile(input: {
+  tenantId: string;
+  id: string;
+  url: string;
+}) {
+  const row = await db.deliverable.findFirst({
+    where: { id: input.id, tenantId: input.tenantId },
+    select: { supportFileUrl: true, supportFileName: true, supportFiles: true },
+  });
+  if (!row) throw new Error("Entregable no encontrado.");
+
+  await removeDeliverableStorageObject(input.url).catch(() => undefined);
+
+  const files = parseSupportFiles(row.supportFiles, {
+    url: row.supportFileUrl,
+    name: row.supportFileName,
+  }).filter((f) => f.url !== input.url);
+  const latest = files[files.length - 1];
+
+  await db.deliverable.update({
+    where: { id: input.id },
+    data: {
+      supportFiles: toJsonSupportFiles(files) as Prisma.InputJsonValue,
+      supportFileUrl: latest?.url ?? null,
+      supportFileName: latest?.name ?? null,
+    },
+  });
+}
+
+export async function applyDeliverableTemplate(input: {
+  tenantId: string;
+  projectId: string;
+  templateId: string;
+  startDate: Date;
+  ownerName?: string | null;
+  clientName?: string | null;
+}) {
+  const template = getDeliverableTemplate(input.templateId);
+  if (!template) throw new Error("Plantilla no encontrada.");
+
+  const project = await db.project.findFirst({
+    where: { id: input.projectId, tenantId: input.tenantId },
+    select: { id: true },
+  });
+  if (!project) throw new Error("Proyecto no válido para esta organización.");
+
+  const weights = normalizeTemplateWeights(template.items);
+  const createdIds: string[] = [];
+
+  for (let i = 0; i < template.items.length; i += 1) {
+    const item = template.items[i]!;
+    const created = await createDeliverable({
+      tenantId: input.tenantId,
+      projectId: input.projectId,
+      title: item.title,
+      cell: item.phase,
+      ownerName: input.ownerName,
+      clientName: input.clientName,
+      dueDate: templateDueDate(input.startDate, item.daysFromStart),
+      status: "pending",
+      weight: weights[i]!,
+      description: item.description ?? null,
+      acceptanceCriteria: item.acceptanceCriteria ?? null,
+      dependsOnId: i > 0 ? createdIds[i - 1] : null,
+    });
+    createdIds.push(created.id);
+  }
+
+  return { count: createdIds.length };
 }

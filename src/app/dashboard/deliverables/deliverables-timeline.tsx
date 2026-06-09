@@ -4,10 +4,13 @@ import { useMemo, useState } from "react";
 
 import {
   DELIVERABLE_STATUS_LABEL,
+  STATUS_LOG_COLORS,
   isDeliverableDoneStatus,
   normalizeDeliverableStatus,
+  type DeliverableStatus,
 } from "@/modules/deliverables/constants";
 
+import { formatDeliveredAt, formatDueYmd } from "./deliverable-utils";
 import type { DeliverableTrackerRow } from "./deliverables-tracker";
 
 function parseYmd(s: string | null): Date | null {
@@ -17,25 +20,44 @@ function parseYmd(s: string | null): Date | null {
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
 }
 
-const MILESTONE_THEMES = [
-  { accent: "#ea580c", soft: "#fff7ed", ring: "rgba(234,88,12,0.28)" },
-  { accent: "#2563eb", soft: "#eff6ff", ring: "rgba(37,99,235,0.28)" },
-  { accent: "#7c3aed", soft: "#f5f3ff", ring: "rgba(124,58,237,0.28)" },
-  { accent: "#059669", soft: "#ecfdf5", ring: "rgba(5,150,105,0.28)" },
-  { accent: "#0d9488", soft: "#f0fdfa", ring: "rgba(13,148,136,0.28)" },
-  { accent: "#db2777", soft: "#fdf2f8", ring: "rgba(219,39,119,0.28)" },
-] as const;
+const STATUS_THEME: Record<
+  DeliverableStatus,
+  { accent: string; soft: string; ring: string }
+> = {
+  pending: { accent: STATUS_LOG_COLORS.pending, soft: "#f8f8f6", ring: "rgba(136,135,128,0.28)" },
+  review: { accent: STATUS_LOG_COLORS.review, soft: "#eff6ff", ring: "rgba(55,138,221,0.28)" },
+  approved: { accent: STATUS_LOG_COLORS.approved, soft: "#ecfdf5", ring: "rgba(99,153,34,0.28)" },
+  rejected: { accent: STATUS_LOG_COLORS.rejected, soft: "#fef2f2", ring: "rgba(226,75,74,0.28)" },
+  delivered: { accent: STATUS_LOG_COLORS.delivered, soft: "#f5f3ff", ring: "rgba(83,74,183,0.28)" },
+};
+
+function themeForRow(row: DeliverableTrackerRow, overdue: boolean) {
+  const st = normalizeDeliverableStatus(row.status);
+  if (overdue && !isDeliverableDoneStatus(st)) {
+    return { accent: "#dc2626", soft: "#fef2f2", ring: "rgba(220,38,38,0.28)" };
+  }
+  return STATUS_THEME[st];
+}
 
 const TRACK_INSET = 12;
 const TRACK_SIDE_PAD = 128;
 
 type DeliverablesTimelineProps = {
   rows: DeliverableTrackerRow[];
+  focusId?: string | null;
+  onFocusChange?: (id: string | null) => void;
   onSelect: (id: string) => void;
 };
 
-export function DeliverablesTimeline({ rows, onSelect }: DeliverablesTimelineProps) {
-  const [activeId, setActiveId] = useState<string | null>(null);
+export function DeliverablesTimeline({
+  rows,
+  focusId,
+  onFocusChange,
+  onSelect,
+}: DeliverablesTimelineProps) {
+  const [localFocus, setLocalFocus] = useState<string | null>(null);
+  const focusedId = focusId !== undefined ? focusId : localFocus;
+  const setFocus = onFocusChange ?? setLocalFocus;
 
   const items = useMemo(() => {
     return rows
@@ -62,7 +84,12 @@ export function DeliverablesTimeline({ rows, onSelect }: DeliverablesTimelinePro
 
   const gradientLine = useMemo(() => {
     if (items.length === 0) return "#cbd5e1";
-    const colors = items.map((_, i) => MILESTONE_THEMES[i % MILESTONE_THEMES.length]!.accent);
+    const colors = items.map(({ row, date }) => {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const overdue = !isDeliverableDoneStatus(row.status) && date.getTime() < todayStart.getTime();
+      return themeForRow(row, overdue).accent;
+    });
     if (colors.length === 1) return colors[0]!;
     return `linear-gradient(to right, ${colors.join(", ")})`;
   }, [items]);
@@ -70,8 +97,8 @@ export function DeliverablesTimeline({ rows, onSelect }: DeliverablesTimelinePro
   const trackMinWidth = Math.max(760, items.length * 220 + TRACK_SIDE_PAD * 2);
 
   const activeItem = useMemo(
-    () => items.find(({ row }) => row.id === activeId) ?? null,
-    [activeId, items],
+    () => items.find(({ row }) => row.id === focusedId) ?? null,
+    [focusedId, items],
   );
 
   if (items.length === 0) {
@@ -83,7 +110,10 @@ export function DeliverablesTimeline({ rows, onSelect }: DeliverablesTimelinePro
   }
 
   return (
-    <section className="overflow-visible py-1" onMouseLeave={() => setActiveId(null)}>
+    <section
+      className="overflow-visible py-1"
+      onMouseLeave={() => setFocus(null)}
+    >
       <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-base font-semibold text-slate-900">Línea de tiempo</h2>
@@ -130,14 +160,14 @@ export function DeliverablesTimeline({ rows, onSelect }: DeliverablesTimelinePro
                     ? ((date.getTime() - range.min) / range.span) * 100
                     : 0;
               const left = TRACK_INSET + (rawPct * (100 - TRACK_INSET * 2)) / 100;
-              const theme = MILESTONE_THEMES[index % MILESTONE_THEMES.length]!;
               const st = normalizeDeliverableStatus(row.status);
               const isDone = isDeliverableDoneStatus(row.status);
-              const isActive = activeId === row.id;
-              const isAbove = index % 2 === 0;
               const todayStart = new Date();
               todayStart.setHours(0, 0, 0, 0);
               const overdue = !isDone && date.getTime() < todayStart.getTime();
+              const theme = themeForRow(row, overdue);
+              const isActive = focusedId === row.id;
+              const isAbove = index % 2 === 0;
 
               const day = date.getDate();
               const month = date.toLocaleDateString("es-MX", { month: "short" }).replace(".", "");
@@ -156,10 +186,10 @@ export function DeliverablesTimeline({ rows, onSelect }: DeliverablesTimelinePro
                 >
                   <button
                     type="button"
-                    onMouseEnter={() => setActiveId(row.id)}
-                    onFocus={() => setActiveId(row.id)}
+                    onMouseEnter={() => setFocus(row.id)}
+                    onFocus={() => setFocus(row.id)}
                     onClick={() => {
-                      setActiveId(row.id);
+                      setFocus(row.id);
                       onSelect(row.id);
                     }}
                     className={`flex flex-col items-center outline-none ${
@@ -245,7 +275,7 @@ export function DeliverablesTimeline({ rows, onSelect }: DeliverablesTimelinePro
 
 type MilestoneCardProps = {
   row: DeliverableTrackerRow;
-  theme: (typeof MILESTONE_THEMES)[number];
+  theme: { accent: string; soft: string; ring: string };
   day: number;
   month: string;
   year: number;
@@ -355,12 +385,29 @@ function TimelineDetailPanel({
             <span className="font-semibold text-slate-900">Fase:</span> {row.phase}
           </p>
         ) : null}
+        {row.deliveredAt ? (
+          <p className="text-sm text-slate-700 sm:col-span-2">
+            <span className="font-semibold text-slate-900">Entregado:</span>{" "}
+            {formatDeliveredAt(row.deliveredAt) ?? row.deliveredAt}
+            {row.dueDate ? (
+              <span className="text-slate-500">
+                {" "}
+                · Compromiso: {formatDueYmd(row.dueDate) ?? row.dueDate}
+              </span>
+            ) : null}
+          </p>
+        ) : null}
+        {row.dependsOnId && row.dependsOnTitle ? (
+          <p className="text-sm text-slate-700 sm:col-span-2">
+            <span className="font-semibold text-slate-900">Depende de:</span> {row.dependsOnTitle}
+          </p>
+        ) : null}
         {row.description?.trim() ? (
           <p className="text-sm leading-relaxed text-slate-600 sm:col-span-2">
             {row.description.trim()}
           </p>
         ) : null}
-        {row.supportUrl || row.supportFileUrl ? (
+        {row.supportUrl || row.supportFiles.length > 0 ? (
           <div className="flex flex-wrap gap-2 sm:col-span-2">
             {row.supportUrl ? (
               <a
@@ -372,16 +419,17 @@ function TimelineDetailPanel({
                 Ubicación
               </a>
             ) : null}
-            {row.supportFileUrl ? (
+            {row.supportFiles.map((file) => (
               <a
-                href={row.supportFileUrl}
+                key={file.url}
+                href={file.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
               >
-                PDF
+                {file.name}
               </a>
-            ) : null}
+            ))}
           </div>
         ) : null}
       </div>

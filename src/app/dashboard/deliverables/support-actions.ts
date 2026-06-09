@@ -6,8 +6,9 @@ import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { ensureDeliverableDocumentBucket } from "@/lib/supabase/ensure-document-bucket";
 import {
+  addDeliverableSupportFile,
   getDeliverableById,
-  setDeliverableSupportFile,
+  removeDeliverableSupportFile,
 } from "@/modules/deliverables/service";
 import { createAdminClient } from "@/utils/supabase/admin";
 
@@ -62,11 +63,11 @@ export async function uploadDeliverablePdfAction(formData: FormData) {
     }
 
     const { data: pub } = admin.storage.from(BUCKET).getPublicUrl(path);
-    await setDeliverableSupportFile({
+    await addDeliverableSupportFile({
       tenantId,
       id: deliverableId,
-      supportFileUrl: pub.publicUrl,
-      supportFileName: safeName,
+      url: pub.publicUrl,
+      name: safeName,
     });
   } catch (e) {
     return { ok: false as const, error: (e as Error).message };
@@ -76,16 +77,18 @@ export async function uploadDeliverablePdfAction(formData: FormData) {
   return { ok: true as const };
 }
 
-export async function clearDeliverablePdfAction(deliverableId: string) {
+export async function clearDeliverablePdfAction(deliverableId: string, url?: string) {
   const tenantId = await requireWriteTenantId();
   const row = await getDeliverableById(tenantId, deliverableId);
   if (!row) return { ok: false as const, error: "Entregable no encontrado." };
 
-  await setDeliverableSupportFile({
+  const targetUrl = url?.trim() || row.supportFileUrl;
+  if (!targetUrl) return { ok: true as const };
+
+  await removeDeliverableSupportFile({
     tenantId,
     id: deliverableId,
-    supportFileUrl: null,
-    supportFileName: null,
+    url: targetUrl,
   });
 
   revalidatePath("/dashboard/deliverables");
