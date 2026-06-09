@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { adminActionBtnDanger } from "@/lib/ui-classes";
+
 type Props = {
   deleteAction: (formData: FormData) => Promise<void>;
   tenantId: string;
@@ -28,11 +30,7 @@ export function DeleteTenantForm({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={
-          compact
-            ? "rounded-md border border-rose-200 bg-white px-2 py-1 text-[11px] font-medium text-rose-800 hover:bg-rose-50"
-            : "rounded-md border border-rose-200 bg-white px-2 py-1 text-xs font-medium text-rose-800 hover:bg-rose-50"
-        }
+        className={compact ? adminActionBtnDanger : adminActionBtnDanger}
       >
         Eliminar…
       </button>

@@ -11,9 +11,10 @@ const links = [
       pathname === "/admin" || pathname.startsWith("/admin/tenants"),
   },
   {
-    href: "/admin/invite",
-    label: "Accesos",
-    match: (pathname: string) => pathname.startsWith("/admin/invite"),
+    href: "/admin/users",
+    label: "Usuarios",
+    match: (pathname: string) =>
+      pathname.startsWith("/admin/users") || pathname.startsWith("/admin/invite"),
   },
 ] as const;
 

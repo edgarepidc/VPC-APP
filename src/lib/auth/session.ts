@@ -65,7 +65,7 @@ function prismaFailureMessage(err: unknown): string {
     return (
       "Falta una columna en Postgres (P2022" +
       (col ? `: ${col}` : "") +
-      '). Lo habitual es la migración user_superadmin: en Supabase → SQL Editor ejecuta: ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isSuperAdmin" BOOLEAN NOT NULL DEFAULT false; O en tu PC: npx prisma migrate deploy con DATABASE_URL de producción.'
+      '). Ejecuta prisma migrate deploy contra producción, o en Supabase SQL Editor aplica la migración pendiente (p. ej. ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT;).'
     );
   }
 
@@ -199,16 +199,24 @@ export async function getSessionUser(
       }
     }
 
+    const metaName = authUser.user_metadata?.name;
+    const metaPhone =
+      typeof authUser.user_metadata?.phone === "string"
+        ? authUser.user_metadata.phone.trim() || null
+        : null;
+
     await db.user.upsert({
       where: { id: authUser.id },
       update: {
         email: authEmail,
-        name: authUser.user_metadata?.name ?? authEmail,
+        name: metaName ?? authEmail,
+        ...(metaPhone !== null ? { phone: metaPhone } : {}),
       },
       create: {
         id: authUser.id,
         email: authEmail,
-        name: authUser.user_metadata?.name ?? authEmail,
+        name: metaName ?? authEmail,
+        phone: metaPhone,
       },
     });
   } catch (err) {
@@ -237,8 +245,17 @@ export async function getSessionUser(
   try {
     const row = await db.user.findUnique({
       where: { id: authUser.id },
-      select: { isSuperAdmin: true },
+      select: { isSuperAdmin: true, isActive: true },
     });
+    if (row && row.isActive === false) {
+      await supabase.auth.signOut();
+      if (redirectOnDbFailure) {
+        redirect(
+          `/login?error=${encodeURIComponent("Tu cuenta está desactivada. Contacta al administrador.")}`,
+        );
+      }
+      return null;
+    }
     isSuperAdminDb = row?.isSuperAdmin ?? false;
   } catch {
     /* columna aun no migrada */

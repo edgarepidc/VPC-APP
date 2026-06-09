@@ -83,6 +83,19 @@ export const adminAlertOk =
 export const adminAlertWarn =
   "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950";
 
+/** Botones compactos en tablas admin (misma altura y ancho mínimo). */
+export const adminActionBtn =
+  "inline-flex h-8 min-w-[5.25rem] items-center justify-center rounded-lg px-2.5 text-xs font-medium transition";
+
+export const adminActionBtnPrimary =
+  `${adminActionBtn} bg-slate-800 text-white hover:bg-slate-700`;
+
+export const adminActionBtnSecondary =
+  `${adminActionBtn} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`;
+
+export const adminActionBtnDanger =
+  `${adminActionBtn} border border-rose-200 bg-white text-rose-800 hover:bg-rose-50`;
+
 /** Dashboard workspace — escala tipográfica y espaciado unificados */
 export const dashShell =
   "dash-shell mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-5 sm:px-5";

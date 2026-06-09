@@ -143,6 +143,63 @@ export function PlanDistributionPanel({
   );
 }
 
+export function TenantMembersShareBar({
+  tenants,
+  title = "Miembros por organización (vista actual)",
+}: {
+  tenants: { id: string; name: string; slug: string; members: number }[];
+  title?: string;
+}) {
+  const sorted = [...tenants]
+    .filter((t) => t.members > 0)
+    .sort((a, b) => b.members - a.members)
+    .slice(0, 10);
+
+  if (sorted.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-sm text-slate-600">
+        Aún no hay miembros en las organizaciones de esta vista.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <p className="mt-1 text-[12px] text-slate-600">
+        Franjas proporcionales a miembros activos; hasta 10 organizaciones.
+      </p>
+      <div
+        className="mt-4 flex h-4 overflow-hidden rounded-full ring-1 ring-slate-200"
+        role="img"
+        aria-label="Distribución de miembros entre organizaciones"
+      >
+        {sorted.map((t, i) => (
+          <div
+            key={t.id}
+            style={{ flex: t.members }}
+            className={`${SEGMENT_COLS[i % SEGMENT_COLS.length]} min-w-px transition-[flex] duration-500`}
+            title={`${t.name}: ${t.members} miembros`}
+          />
+        ))}
+      </div>
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-slate-600">
+        {sorted.slice(0, 6).map((t, i) => (
+          <li key={t.id} className="flex items-center gap-1.5">
+            <span
+              className={`h-2 w-2 shrink-0 rounded-sm ${SEGMENT_COLS[i % SEGMENT_COLS.length]}`}
+            />
+            <span className="max-w-[140px] truncate font-medium text-slate-800">
+              {t.name}
+            </span>
+            <span className="tabular-nums text-slate-500">({t.members})</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function TenantProjectShareBar({
   tenants,
   title = "Proyectos por organización (vista actual)",

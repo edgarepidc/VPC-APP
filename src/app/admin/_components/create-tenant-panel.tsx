@@ -93,12 +93,11 @@ export async function CreateTenantPanel({
   })();
 
   return (
-    <details className={`${adminCard} group`} open={!!newTenantRow}>
-      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden">
+    <details className={`${adminCard} group w-fit max-w-full`} open={!!newTenantRow}>
+      <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-900 marker:content-none hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+        <span aria-hidden>✨</span>
         Nueva organización
-        <span className="ml-2 font-normal text-slate-500 group-open:hidden">
-          — crear cliente
-        </span>
+        <span className="font-normal text-slate-500 group-open:hidden">— crear cliente</span>
       </summary>
 
       <div className="border-t border-slate-200 px-4 py-4">
@@ -133,7 +132,7 @@ export async function CreateTenantPanel({
         <form
           action={createTenantAction}
           encType="multipart/form-data"
-          className="grid gap-3 sm:grid-cols-2"
+          className="grid max-w-2xl gap-3 sm:grid-cols-2"
         >
           <div className="sm:col-span-2">
             <label className={uiLabel}>Logo (opcional)</label>
@@ -141,7 +140,7 @@ export async function CreateTenantPanel({
               type="file"
               name="logo"
               accept="image/png,image/jpeg,image/webp"
-              className="mt-1 block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
+              className="mt-1 block w-full max-w-md text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
             />
           </div>
           <div>
@@ -179,8 +178,12 @@ export async function CreateTenantPanel({
             </button>
           </div>
         </form>
-        <p className={`mt-3 ${adminSectionSub}`}>
-          Los usuarios entran por invitación desde la sección Accesos o el enlace Invitar en cada fila.
+        <p className={`mt-3 max-w-2xl ${adminSectionSub}`}>
+          Los usuarios se crean desde{" "}
+          <Link href="/admin/users" className="font-medium text-slate-800 underline">
+            Usuarios
+          </Link>{" "}
+          con correo y contraseña confirmados.
         </p>
       </div>
     </details>

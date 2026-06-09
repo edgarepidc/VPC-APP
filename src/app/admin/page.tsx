@@ -1,7 +1,17 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CreateTenantPanel } from "./_components/create-tenant-panel";
+import {
+  IconOrg,
+  IconPeople,
+  IconProjects,
+  KpiCard,
+  PlanDistributionPanel,
+  TenantMembersShareBar,
+  TenantProjectShareBar,
+} from "./_components/vpc-visuals";
 import { DeleteTenantForm } from "./delete-tenant-form";
 import {
   platformClearTenantLogoAction,
@@ -9,15 +19,14 @@ import {
 } from "./tenant-logo-actions";
 import { deleteTenantPlatformAction } from "./tenant-delete-actions";
 import {
+  adminActionBtnPrimary,
+  adminActionBtnSecondary,
   adminAlertError,
   adminAlertOk,
   adminCard,
   adminPage,
   adminSectionSub,
   adminSectionTitle,
-  adminStatLabel,
-  adminStatsBar,
-  adminStatValue,
   adminTable,
   adminTd,
   adminTh,
@@ -80,6 +89,19 @@ export default async function AdminHomePage({ searchParams }: Props) {
   const totalProjects = tenants.reduce((acc, t) => acc + t._count.projects, 0);
   const totalMembers = tenants.reduce((acc, t) => acc + t._count.memberships, 0);
 
+  const planCounts = tenants.reduce<Record<string, number>>((acc, t) => {
+    acc[t.plan] = (acc[t.plan] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const chartTenants = tenants.map((t) => ({
+    id: t.id,
+    name: t.name,
+    slug: t.slug,
+    projects: t._count.projects,
+    members: t._count.memberships,
+  }));
+
   async function enterWorkspace(formData: FormData) {
     "use server";
     const s = await getSessionUser();
@@ -98,24 +120,40 @@ export default async function AdminHomePage({ searchParams }: Props) {
       {errorMsg && <p className={adminAlertError}>{errorMsg}</p>}
       {okMsg && <p className={adminAlertOk}>{okMsg}</p>}
 
-      <div className={adminStatsBar}>
-        <div>
-          <p className={adminStatLabel}>{isFiltered ? "Resultados" : "Organizaciones"}</p>
-          <p className={adminStatValue}>
-            {tenants.length}
-            {isFiltered ? (
-              <span className="ml-1 text-sm font-normal text-slate-500">/ {totalOrgCount}</span>
-            ) : null}
-          </p>
-        </div>
-        <div>
-          <p className={adminStatLabel}>Proyectos</p>
-          <p className={adminStatValue}>{totalProjects}</p>
-        </div>
-        <div>
-          <p className={adminStatLabel}>Miembros</p>
-          <p className={adminStatValue}>{totalMembers}</p>
-        </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <KpiCard
+          label={isFiltered ? "Organizaciones (vista)" : "Organizaciones"}
+          value={
+            <>
+              {tenants.length}
+              {isFiltered ? (
+                <span className="ml-1 text-base font-normal text-slate-500">
+                  / {totalOrgCount}
+                </span>
+              ) : null}
+            </>
+          }
+          hint="Clientes activos en la plataforma"
+          icon={<IconOrg />}
+        />
+        <KpiCard
+          label="Proyectos"
+          value={totalProjects}
+          hint="Suma en la vista actual"
+          icon={<IconProjects />}
+        />
+        <KpiCard
+          label="Miembros"
+          value={totalMembers}
+          hint="Membresías activas en la vista"
+          icon={<IconPeople />}
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <PlanDistributionPanel counts={planCounts} />
+        <TenantProjectShareBar tenants={chartTenants} />
+        <TenantMembersShareBar tenants={chartTenants} />
       </div>
 
       <CreateTenantPanel
@@ -127,7 +165,9 @@ export default async function AdminHomePage({ searchParams }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className={adminSectionTitle}>Cartera de clientes</h2>
-            <p className={adminSectionSub}>Entra al workspace o invita miembros por fila.</p>
+            <p className={adminSectionSub}>
+              Entra al workspace, crea usuarios o gestiona cada organización.
+            </p>
           </div>
         </div>
 
@@ -157,76 +197,87 @@ export default async function AdminHomePage({ searchParams }: Props) {
           <table className={adminTable}>
             <thead>
               <tr className="border-b border-slate-200">
-                <th className={adminTh}>Logo</th>
+                <th className={`${adminTh} min-w-[11rem]`}>Logo</th>
                 <th className={adminTh}>Organización</th>
                 <th className={adminTh}>Plan</th>
                 <th className={`${adminTh} text-right`}>Proy.</th>
                 <th className={`${adminTh} text-right`}>Miembros</th>
-                <th className={`${adminTh} text-right`}>Acciones</th>
+                <th className={`${adminTh} text-right min-w-[15rem]`}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {tenants.map((t) => (
                 <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className={`${adminTd} w-28`}>
-                    <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
-                      {t.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={t.logoUrl} alt="" className="h-full w-full object-contain p-0.5" />
-                      ) : (
-                        <span className="text-xs text-slate-400">—</span>
-                      )}
+                  <td className={`${adminTd} min-w-[11rem] align-top`}>
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        {t.logoUrl ? (
+                          <Image
+                            src={t.logoUrl}
+                            alt=""
+                            width={40}
+                            height={40}
+                            className="h-full w-full object-contain p-0.5"
+                            unoptimized
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <form action={platformUploadTenantLogoAction} className="space-y-1">
+                          <input type="hidden" name="tenantId" value={t.id} />
+                          <input
+                            type="file"
+                            name="logo"
+                            accept="image/png,image/jpeg,image/webp"
+                            className="w-full min-w-[9rem] text-xs text-slate-600 file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-slate-700 file:px-2 file:py-1 file:text-[11px] file:font-medium file:text-white hover:file:bg-slate-800"
+                          />
+                          <button
+                            type="submit"
+                            className="text-xs font-medium text-slate-700 underline hover:text-slate-900"
+                          >
+                            Subir logo
+                          </button>
+                        </form>
+                        {t.logoUrl ? (
+                          <form action={platformClearTenantLogoAction}>
+                            <input type="hidden" name="tenantId" value={t.id} />
+                            <button
+                              type="submit"
+                              className="text-xs text-rose-700 underline hover:text-rose-900"
+                            >
+                              Quitar
+                            </button>
+                          </form>
+                        ) : null}
+                      </div>
                     </div>
-                    <form action={platformUploadTenantLogoAction} className="mt-1.5 space-y-1">
-                      <input type="hidden" name="tenantId" value={t.id} />
-                      <input
-                        type="file"
-                        name="logo"
-                        accept="image/png,image/jpeg,image/webp"
-                        className="w-full max-w-[7rem] text-xs text-slate-500 file:mr-1 file:rounded file:border-0 file:bg-slate-700 file:px-1.5 file:py-0.5 file:text-[10px] file:text-white"
-                      />
-                      <button
-                        type="submit"
-                        className="text-xs font-medium text-slate-700 underline"
-                      >
-                        Subir
-                      </button>
-                    </form>
-                    {t.logoUrl ? (
-                      <form action={platformClearTenantLogoAction} className="mt-1">
-                        <input type="hidden" name="tenantId" value={t.id} />
-                        <button
-                          type="submit"
-                          className="text-xs text-rose-700 underline"
-                        >
-                          Quitar
-                        </button>
-                      </form>
-                    ) : null}
                   </td>
                   <td className={adminTd}>
                     <p className="font-medium text-slate-900">{t.name}</p>
                     <p className="font-mono text-xs text-slate-500">{t.slug}</p>
                   </td>
-                  <td className={adminTd}>{t.plan}</td>
+                  <td className={adminTd}>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium capitalize text-slate-700">
+                      {t.plan}
+                    </span>
+                  </td>
                   <td className={`${adminTd} text-right tabular-nums`}>{t._count.projects}</td>
                   <td className={`${adminTd} text-right tabular-nums`}>{t._count.memberships}</td>
-                  <td className={`${adminTd} text-right`}>
-                    <div className="flex flex-col items-end gap-1.5">
+                  <td className={`${adminTd} text-right align-top`}>
+                    <div className="flex flex-wrap items-center justify-end gap-1.5">
                       <form action={enterWorkspace}>
                         <input type="hidden" name="tenantId" value={t.id} />
-                        <button
-                          type="submit"
-                          className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
-                        >
+                        <button type="submit" className={adminActionBtnPrimary}>
                           Entrar
                         </button>
                       </form>
                       <Link
-                        href={`/admin/invite?tenantId=${encodeURIComponent(t.id)}`}
-                        className="text-sm font-medium text-slate-700 underline"
+                        href={`/admin/users?tenantId=${encodeURIComponent(t.id)}`}
+                        className={adminActionBtnSecondary}
                       >
-                        Invitar
+                        Usuario
                       </Link>
                       <DeleteTenantForm
                         deleteAction={deleteTenantPlatformAction}
