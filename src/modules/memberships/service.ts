@@ -2,6 +2,11 @@ import type { RoleKey } from "@/lib/types";
 import { db } from "@/lib/db";
 import { canAddMemberSeat, PlanLimitError } from "@/modules/platform/limits";
 
+import {
+  type ManagerProjectScopeInput,
+  setMembershipProjectAccess,
+} from "./project-access";
+
 /** Usuarios con membresía activa (selector de responsable en tareas, etc.). */
 export async function listMemberUsersForTenant(tenantId: string) {
   const rows = await db.membership.findMany({
@@ -19,8 +24,10 @@ export async function listMembersByTenant(tenantId: string) {
     where: { tenantId, status: "active" },
     select: {
       id: true,
+      managerAllProjects: true,
       user: {
         select: {
+          id: true,
           email: true,
           name: true,
         },
@@ -29,6 +36,11 @@ export async function listMembersByTenant(tenantId: string) {
         select: {
           key: true,
           name: true,
+        },
+      },
+      projectAccess: {
+        select: {
+          project: { select: { id: true, name: true } },
         },
       },
     },
@@ -40,6 +52,7 @@ export async function assignRoleByEmail(input: {
   tenantId: string;
   email: string;
   roleKey: RoleKey;
+  managerScope?: ManagerProjectScopeInput;
 }) {
   const normalizedEmail = input.email.trim().toLowerCase();
   const user = await db.user.findUnique({
@@ -75,7 +88,7 @@ export async function assignRoleByEmail(input: {
     }
   }
 
-  await db.membership.upsert({
+  const membership = await db.membership.upsert({
     where: {
       tenantId_userId: {
         tenantId: input.tenantId,
@@ -92,5 +105,35 @@ export async function assignRoleByEmail(input: {
       roleId: role.id,
       status: "active",
     },
+    select: { id: true },
   });
+
+  await setMembershipProjectAccess(
+    membership.id,
+    input.tenantId,
+    input.roleKey,
+    input.managerScope ?? { managerAllProjects: false, projectIds: [] },
+  );
+}
+
+export async function updateMemberProjectAccess(input: {
+  tenantId: string;
+  membershipId: string;
+  roleKey: RoleKey;
+  managerScope: ManagerProjectScopeInput;
+}) {
+  const membership = await db.membership.findFirst({
+    where: { id: input.membershipId, tenantId: input.tenantId, status: "active" },
+    select: { id: true },
+  });
+  if (!membership) {
+    throw new Error("Miembro no encontrado.");
+  }
+
+  await setMembershipProjectAccess(
+    membership.id,
+    input.tenantId,
+    input.roleKey,
+    input.managerScope,
+  );
 }

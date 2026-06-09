@@ -4,8 +4,9 @@ import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { quadrantLabelFull } from "@/lib/stakeholder-playbook";
 import { getSemaphoreBadge } from "@/lib/ui";
+import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
+import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { requireTenantId } from "@/lib/tenancy";
-import { listProjectsByTenant } from "@/modules/projects/service";
 import {
   createStakeholder,
   listStakeholdersByTenant,
@@ -42,9 +43,11 @@ export default async function StakeholdersPage({
   const tenantId = await requireTenantId();
   const canEdit = hasPermission(session.role, "tasks.write");
 
+  const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
+
   const [projects, stakeholders] = await Promise.all([
-    listProjectsByTenant(tenantId),
-    listStakeholdersByTenant(tenantId),
+    listProjectsForSession(session, tenantId),
+    listStakeholdersByTenant(tenantId, { restrictToProjectIds: projectIdsFilter }),
   ]);
 
   async function createAction(formData: FormData) {
@@ -64,6 +67,20 @@ export default async function StakeholdersPage({
 
     if (!projectId || !name) {
       redirect("/dashboard/stakeholders?error=Proyecto+y+nombre+son+obligatorios");
+    }
+
+    try {
+      await assertCanAccessProject({
+        tenantId: current.activeTenantId,
+        userId: current.userId,
+        role: current.role,
+        projectId,
+        isPlatformVisit: current.isPlatformVisit,
+      });
+    } catch (e) {
+      redirect(
+        `/dashboard/stakeholders?error=${encodeURIComponent((e as Error).message)}`,
+      );
     }
 
     await createStakeholder({

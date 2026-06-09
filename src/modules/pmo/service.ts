@@ -1,6 +1,19 @@
 import { db } from "@/lib/db";
 
-export async function getPmoSnapshot(tenantId: string) {
+export async function getPmoSnapshot(
+  tenantId: string,
+  options?: { restrictToProjectIds?: string[] },
+) {
+  const restrict = options?.restrictToProjectIds;
+  const projectWhere = {
+    tenantId,
+    ...(restrict !== undefined ? { id: { in: restrict } } : {}),
+  };
+  const childWhere = {
+    tenantId,
+    ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
+  };
+
   const [
     projects,
     deliverables,
@@ -10,12 +23,12 @@ export async function getPmoSnapshot(tenantId: string) {
     criticalRisks,
   ] = await Promise.all([
     db.project.findMany({
-      where: { tenantId },
+      where: projectWhere,
       select: { id: true, name: true, status: true, createdAt: true },
       orderBy: { createdAt: "desc" },
     }),
     db.deliverable.findMany({
-      where: { tenantId },
+      where: childWhere,
       select: {
         id: true,
         projectId: true,
@@ -26,7 +39,7 @@ export async function getPmoSnapshot(tenantId: string) {
       },
     }),
     db.risk.findMany({
-      where: { tenantId },
+      where: childWhere,
       select: {
         id: true,
         projectId: true,
@@ -36,12 +49,12 @@ export async function getPmoSnapshot(tenantId: string) {
       },
     }),
     db.stakeholder.findMany({
-      where: { tenantId },
+      where: childWhere,
       select: { id: true, projectId: true, name: true, influence: true, interest: true },
     }),
     db.deliverable.findMany({
       where: {
-        tenantId,
+        ...childWhere,
         dueDate: { lt: new Date() },
         status: { notIn: ["delivered", "approved"] },
       },
@@ -50,7 +63,7 @@ export async function getPmoSnapshot(tenantId: string) {
       take: 8,
     }),
     db.risk.findMany({
-      where: { tenantId },
+      where: childWhere,
       select: {
         id: true,
         title: true,

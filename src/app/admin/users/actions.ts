@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
 import type { RoleKey } from "@/lib/types";
+import { parseManagerProjectScopeFromForm } from "@/modules/memberships/project-access";
 import { PlanLimitError } from "@/modules/platform";
 import {
   addUserToTenant,
@@ -52,6 +53,7 @@ export async function createUserAction(formData: FormData) {
   const jobTitle = String(formData.get("jobTitle") ?? "").trim();
   const department = String(formData.get("department") ?? "").trim();
   const roleKey = String(formData.get("role")) as RoleKey;
+  const managerScope = parseManagerProjectScopeFromForm(formData);
   const filterQ = String(formData.get("filterQ") ?? "").trim();
   const filterTenant = String(formData.get("filterTenant") ?? "").trim();
 
@@ -75,6 +77,7 @@ export async function createUserAction(formData: FormData) {
       jobTitle: jobTitle || undefined,
       department: department || undefined,
       roleKey,
+      managerScope,
       actorUserId: s.userId,
     });
     revalidatePath("/admin/users");
@@ -142,6 +145,7 @@ export async function addMembershipAction(formData: FormData) {
   const userId = String(formData.get("userId") ?? "").trim();
   const tenantId = String(formData.get("tenantId") ?? "").trim();
   const roleKey = String(formData.get("roleKey")) as RoleKey;
+  const managerScope = parseManagerProjectScopeFromForm(formData);
   const filterQ = String(formData.get("filterQ") ?? "").trim();
   const filterTenant = String(formData.get("filterTenant") ?? "").trim();
 
@@ -154,6 +158,7 @@ export async function addMembershipAction(formData: FormData) {
       userId,
       tenantId,
       roleKey,
+      managerScope,
       actorUserId: s.userId,
     });
     revalidatePath("/admin/users");
@@ -169,6 +174,7 @@ export async function changeMembershipRoleAction(formData: FormData) {
   const userId = String(formData.get("userId") ?? "").trim();
   const tenantId = String(formData.get("tenantId") ?? "").trim();
   const roleKey = String(formData.get("roleKey")) as RoleKey;
+  const managerScope = parseManagerProjectScopeFromForm(formData);
   const filterQ = String(formData.get("filterQ") ?? "").trim();
   const filterTenant = String(formData.get("filterTenant") ?? "").trim();
 
@@ -181,6 +187,7 @@ export async function changeMembershipRoleAction(formData: FormData) {
       userId,
       tenantId,
       roleKey,
+      managerScope,
       actorUserId: s.userId,
     });
     revalidatePath("/admin/users");

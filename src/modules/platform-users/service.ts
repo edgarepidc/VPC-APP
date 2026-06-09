@@ -5,6 +5,16 @@ import { canAddMemberSeat, PlanLimitError } from "@/modules/platform/limits";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 import {
+  type ManagerProjectScopeInput,
+  setMembershipProjectAccess,
+} from "@/modules/memberships/project-access";
+
+import {
+  type ManagerProjectScopeInput,
+  setMembershipProjectAccess,
+} from "@/modules/memberships/project-access";
+
+import {
   logUserAudit,
   USER_AUDIT_ACTIONS,
 } from "./audit";
@@ -63,6 +73,7 @@ async function upsertMembership(input: {
   tenantId: string;
   userId: string;
   roleKey: RoleKey;
+  managerScope?: ManagerProjectScopeInput;
 }) {
   const role = await db.role.findUnique({
     where: {
@@ -83,7 +94,7 @@ async function upsertMembership(input: {
     if (!seat.ok) throw new PlanLimitError(seat.message);
   }
 
-  await db.membership.upsert({
+  const membership = await db.membership.upsert({
     where: {
       tenantId_userId: {
         tenantId: input.tenantId,
@@ -100,7 +111,22 @@ async function upsertMembership(input: {
       roleId: role.id,
       status: "active",
     },
+    select: { id: true },
   });
+
+  if (input.managerScope) {
+    await setMembershipProjectAccess(
+      membership.id,
+      input.tenantId,
+      input.roleKey,
+      input.managerScope,
+    );
+  } else if (input.roleKey !== "manager") {
+    await setMembershipProjectAccess(membership.id, input.tenantId, input.roleKey, {
+      managerAllProjects: false,
+      projectIds: [],
+    });
+  }
 }
 
 function buildAuthMetadata(input: {
@@ -127,6 +153,7 @@ export async function createPlatformUserDirect(input: {
   jobTitle?: string;
   department?: string;
   roleKey: RoleKey;
+  managerScope?: ManagerProjectScopeInput;
   actorUserId?: string;
 }): Promise<CreatePlatformUserResult> {
   const email = normalizeEmail(input.email);
@@ -156,6 +183,7 @@ export async function createPlatformUserDirect(input: {
       tenantId: input.tenantId,
       userId: existing.id,
       roleKey: input.roleKey,
+      managerScope: input.managerScope,
     });
     await logUserAudit({
       userId: existing.id,
@@ -204,6 +232,7 @@ export async function createPlatformUserDirect(input: {
     tenantId: input.tenantId,
     userId: data.user.id,
     roleKey: input.roleKey,
+    managerScope: input.managerScope,
   });
 
   await logUserAudit({
@@ -261,8 +290,12 @@ export async function listPlatformUsers(options?: {
         where: { status: "active" },
         select: {
           id: true,
+          managerAllProjects: true,
           role: { select: { key: true, name: true } },
           tenant: { select: { id: true, name: true, slug: true } },
+          projectAccess: {
+            select: { project: { select: { id: true, name: true } } },
+          },
         },
         orderBy: { tenant: { name: "asc" } },
       },
@@ -394,6 +427,7 @@ export async function addUserToTenant(input: {
   userId: string;
   tenantId: string;
   roleKey: RoleKey;
+  managerScope?: ManagerProjectScopeInput;
   actorUserId?: string;
 }) {
   const tenant = await db.tenant.findUnique({
@@ -416,6 +450,7 @@ export async function changeUserMembershipRole(input: {
   userId: string;
   tenantId: string;
   roleKey: RoleKey;
+  managerScope?: ManagerProjectScopeInput;
   actorUserId?: string;
 }) {
   const tenant = await db.tenant.findUnique({

@@ -1,8 +1,15 @@
 import { db } from "@/lib/db";
 
-export async function listRisksByTenant(tenantId: string) {
+export async function listRisksByTenant(
+  tenantId: string,
+  options?: { restrictToProjectIds?: string[] },
+) {
+  const restrict = options?.restrictToProjectIds;
   return db.risk.findMany({
-    where: { tenantId },
+    where: {
+      tenantId,
+      ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
+    },
     include: {
       project: { select: { id: true, name: true } },
       deliverable: { select: { id: true, title: true } },

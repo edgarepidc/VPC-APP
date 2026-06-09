@@ -22,9 +22,16 @@ export function normalizeProjectStatus(raw: string): ProjectStatusValue {
     : "active";
 }
 
-export async function listProjectsByTenant(tenantId: string) {
+export async function listProjectsByTenant(
+  tenantId: string,
+  options?: { restrictToProjectIds?: string[] },
+) {
+  const restrict = options?.restrictToProjectIds;
   return db.project.findMany({
-    where: { tenantId },
+    where: {
+      tenantId,
+      ...(restrict !== undefined ? { id: { in: restrict } } : {}),
+    },
     orderBy: { createdAt: "desc" },
   });
 }

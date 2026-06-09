@@ -15,7 +15,9 @@ import {
 } from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { hasPermission } from "@/lib/rbac";
+import { listProjectsForSession } from "@/lib/project-scope";
+import { assertCanAccessProject } from "@/modules/memberships/project-access";
+import { canManageProjectsCatalog, hasPermission } from "@/lib/rbac";
 import { requireTenantId } from "@/lib/tenancy";
 import { getProjectStatusBadge } from "@/lib/ui";
 import {
@@ -25,7 +27,6 @@ import {
 import {
   createProject,
   deleteProject,
-  listProjectsByTenant,
   updateProject,
 } from "@/modules/projects/service";
 
@@ -45,9 +46,10 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
 
   const tenantId = await requireTenantId();
   const canWrite = hasPermission(session.role, "projects.write");
+  const canManageCatalog = canManageProjectsCatalog(session.role);
 
   const [items, usage, tenant] = await Promise.all([
-    listProjectsByTenant(tenantId),
+    listProjectsForSession(session, tenantId),
     getTenantUsageSnapshot(tenantId),
     db.tenant.findUnique({
       where: { id: tenantId },
@@ -59,7 +61,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     "use server";
     const s = await getSessionUser();
     if (!s?.activeTenantId) redirect("/login");
-    if (!hasPermission(s.role, "projects.write")) {
+    if (!canManageProjectsCatalog(s.role)) {
       redirect("/dashboard/projects?error=No+tienes+permiso+para+crear+proyectos");
     }
     const name = String(formData.get("name") ?? "").trim();
@@ -95,6 +97,19 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
       redirect("/dashboard/projects?error=No+tienes+permiso+para+editar");
     }
     const projectId = String(formData.get("projectId") ?? "").trim();
+    try {
+      await assertCanAccessProject({
+        tenantId: s.activeTenantId,
+        userId: s.userId,
+        role: s.role,
+        projectId,
+        isPlatformVisit: s.isPlatformVisit,
+      });
+    } catch (e) {
+      redirect(
+        `/dashboard/projects?error=${encodeURIComponent((e as Error).message)}`,
+      );
+    }
     const name = String(formData.get("name") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim();
     const status = String(formData.get("status") ?? "active");
@@ -126,7 +141,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     "use server";
     const s = await getSessionUser();
     if (!s?.activeTenantId) redirect("/login");
-    if (!hasPermission(s.role, "projects.write")) {
+    if (!canManageProjectsCatalog(s.role)) {
       redirect("/dashboard/projects?error=No+tienes+permiso+para+eliminar");
     }
     const projectId = String(formData.get("projectId") ?? "").trim();
@@ -172,7 +187,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
         {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
       </DashboardPageHeader>
 
-      {canWrite ? (
+      {canManageCatalog ? (
         <details className={`${dashCard} group`}>
           <summary className={dashDetailsSummary}>
             Nuevo proyecto
@@ -198,11 +213,11 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
             </div>
           </form>
         </details>
-      ) : (
+      ) : !canWrite ? (
         <p className={dashAlertWarn}>
-          Tu rol solo permite ver proyectos. Necesitas rol de gestor o superior para crear o editar.
+          Tu rol solo permite ver proyectos asignados.
         </p>
-      )}
+      ) : null}
 
       <section className={`${dashCard} overflow-hidden`}>
         <div className="overflow-x-auto p-4">

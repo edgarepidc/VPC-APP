@@ -1,5 +1,10 @@
 import { db } from "@/lib/db";
 import type { RoleKey } from "@/lib/types";
+import {
+  applyInvitationProjectAccessToMembership,
+  type ManagerProjectScopeInput,
+  setInvitationProjectAccess,
+} from "@/modules/memberships/project-access";
 import { canAddMemberSeat, PlanLimitError } from "@/modules/platform/limits";
 import { createAdminClient } from "@/utils/supabase/admin";
 
@@ -113,6 +118,7 @@ export async function inviteAuthUserToTenant(input: {
   email: string;
   roleKey: RoleKey;
   invitedBy: string;
+  managerScope?: ManagerProjectScopeInput;
   /** URL absoluta (ej. `${getAppUrl().value}/login`) para enlaces del correo de Supabase. */
   redirectTo: string;
 }): Promise<InviteAuthResult> {
@@ -127,6 +133,7 @@ export async function inviteAuthUserToTenant(input: {
     email,
     roleKey: input.roleKey,
     invitedBy: input.invitedBy,
+    managerScope: input.managerScope,
   });
 
   const admin = createAdminClient();
@@ -160,6 +167,7 @@ export async function upsertPendingInvitation(input: {
   email: string;
   roleKey: RoleKey;
   invitedBy: string;
+  managerScope?: ManagerProjectScopeInput;
 }) {
   const email = input.email.trim().toLowerCase();
   const existing = await db.invitation.findFirst({
@@ -171,27 +179,44 @@ export async function upsertPendingInvitation(input: {
     select: { id: true },
   });
 
+  let invitationId: string;
+
   if (existing) {
-    return db.invitation.update({
+    const updated = await db.invitation.update({
       where: { id: existing.id },
       data: { roleKey: input.roleKey, invitedBy: input.invitedBy },
+      select: { id: true },
     });
+    invitationId = updated.id;
+  } else {
+    const seat = await canAddMemberSeat(input.tenantId);
+    if (!seat.ok) {
+      throw new PlanLimitError(seat.message);
+    }
+
+    const created = await db.invitation.create({
+      data: {
+        tenantId: input.tenantId,
+        email,
+        roleKey: input.roleKey,
+        invitedBy: input.invitedBy,
+        status: "pending",
+      },
+      select: { id: true },
+    });
+    invitationId = created.id;
   }
 
-  const seat = await canAddMemberSeat(input.tenantId);
-  if (!seat.ok) {
-    throw new PlanLimitError(seat.message);
+  if (input.managerScope) {
+    await setInvitationProjectAccess(
+      invitationId,
+      input.tenantId,
+      input.roleKey,
+      input.managerScope,
+    );
   }
 
-  return db.invitation.create({
-    data: {
-      tenantId: input.tenantId,
-      email,
-      roleKey: input.roleKey,
-      invitedBy: input.invitedBy,
-      status: "pending",
-    },
-  });
+  return db.invitation.findUnique({ where: { id: invitationId } });
 }
 
 export async function acceptPendingInvitationsForUser(input: {
@@ -223,7 +248,7 @@ export async function acceptPendingInvitationsForUser(input: {
 
     if (!role) continue;
 
-    await db.membership.upsert({
+    const membership = await db.membership.upsert({
       where: {
         tenantId_userId: {
           tenantId: invitation.tenantId,
@@ -240,7 +265,14 @@ export async function acceptPendingInvitationsForUser(input: {
         roleId: role.id,
         status: "active",
       },
+      select: { id: true },
     });
+
+    await applyInvitationProjectAccessToMembership(
+      invitation.id,
+      membership.id,
+      invitation.tenantId,
+    );
 
     await db.invitation.update({
       where: { id: invitation.id },

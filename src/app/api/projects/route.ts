@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { listProjectsForSession } from "@/lib/project-scope";
+import { canManageProjectsCatalog, hasPermission } from "@/lib/rbac";
 import { PlanLimitError } from "@/modules/platform/limits";
-import { createProject, listProjectsByTenant } from "@/modules/projects/service";
+import { createProject } from "@/modules/projects/service";
 
 export async function GET() {
   try {
@@ -21,7 +22,7 @@ export async function GET() {
         { status: 400 },
       );
     }
-    return NextResponse.json({ data: await listProjectsByTenant(tenantId) });
+    return NextResponse.json({ data: await listProjectsForSession(session, tenantId) });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
     const session = await getSessionUser({ redirectOnDbFailure: false });
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!hasPermission(session.role, "projects.write")) {
+    if (!canManageProjectsCatalog(session.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

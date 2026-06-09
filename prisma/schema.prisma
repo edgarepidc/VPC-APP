@@ -62,16 +62,29 @@ model UserAuditLog {
 }
 
 model Membership {
-  id        String   @id @default(uuid())
-  tenantId  String
-  userId    String
-  roleId    String
-  status    String   @default("active")
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      Role     @relation(fields: [roleId], references: [id])
+  id                 String              @id @default(uuid())
+  tenantId           String
+  userId             String
+  roleId             String
+  status             String              @default("active")
+  /** PM (manager): true = todos los proyectos del tenant. */
+  managerAllProjects Boolean             @default(false)
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role               Role                @relation(fields: [roleId], references: [id])
+  projectAccess      MembershipProject[]
 
   @@unique([tenantId, userId])
+}
+
+model MembershipProject {
+  membershipId String
+  projectId    String
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([membershipId, projectId])
+  @@index([projectId])
 }
 
 model Role {
@@ -114,6 +127,8 @@ model Project {
   risks       Risk[]
   stakeholders Stakeholder[]
   tasks       Task[]
+  membershipAccess MembershipProject[]
+  invitationAccess InvitationProject[]
   createdAt   DateTime @default(now())
 }
 
@@ -132,18 +147,29 @@ model Task {
 }
 
 model Invitation {
-  id          String   @id @default(uuid())
-  tenantId    String
-  email       String
-  roleKey     String
-  status      String   @default("pending")
-  invitedBy   String
-  acceptedAt  DateTime?
-  createdAt   DateTime @default(now())
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  sender      User     @relation("InvitationSender", fields: [invitedBy], references: [id], onDelete: Cascade)
+  id                 String              @id @default(uuid())
+  tenantId           String
+  email              String
+  roleKey            String
+  status             String              @default("pending")
+  invitedBy          String
+  managerAllProjects Boolean             @default(false)
+  acceptedAt         DateTime?
+  createdAt          DateTime            @default(now())
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sender             User                @relation("InvitationSender", fields: [invitedBy], references: [id], onDelete: Cascade)
+  projectAccess      InvitationProject[]
 
   @@index([tenantId, email, status])
+}
+
+model InvitationProject {
+  invitationId String
+  projectId    String
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([invitationId, projectId])
 }
 
 model Deliverable {

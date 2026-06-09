@@ -11,11 +11,11 @@ import {
 } from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
+import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { normalizeDeliverableStatus } from "@/modules/deliverables/constants";
 import { parseAcuses, parseActivityLog } from "@/modules/deliverables/json";
 import { listDeliverablesByTenant } from "@/modules/deliverables/service";
-import { listProjectsByTenant } from "@/modules/projects/service";
 
 import { DeliverablesTracker, type DeliverableTrackerRow } from "./deliverables-tracker";
 
@@ -45,14 +45,16 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
   const tenantId = await requireTenantId();
   const canEdit = hasPermission(session.role, "tasks.write");
 
+  const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
+
   let deliverables: Awaited<ReturnType<typeof listDeliverablesByTenant>> = [];
-  let projects: Awaited<ReturnType<typeof listProjectsByTenant>> = [];
+  let projects: Awaited<ReturnType<typeof listProjectsForSession>> = [];
   let loadError: string | null = null;
 
   try {
     [deliverables, projects] = await Promise.all([
-      listDeliverablesByTenant(tenantId),
-      listProjectsByTenant(tenantId),
+      listDeliverablesByTenant(tenantId, { restrictToProjectIds: projectIdsFilter }),
+      listProjectsForSession(session, tenantId),
     ]);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

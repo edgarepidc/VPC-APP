@@ -13,3 +13,8 @@ export function hasPermission(role: RoleKey, permission: PermissionKey) {
 export function canManageMembers(role: RoleKey) {
   return role === "admin";
 }
+
+/** Crear o eliminar proyectos del tenant (solo administrador). */
+export function canManageProjectsCatalog(role: RoleKey) {
+  return role === "admin";
+}

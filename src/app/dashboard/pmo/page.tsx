@@ -8,6 +8,7 @@ import {
   dashPage,
 } from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
+import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { getProjectStatusBadge, getSemaphoreBadge } from "@/lib/ui";
 import { getPmoSnapshot } from "@/modules/pmo/service";
@@ -25,7 +26,10 @@ export default async function PmoPage() {
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
 
-  const snapshot = await getPmoSnapshot(tenantId);
+  const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
+  const snapshot = await getPmoSnapshot(tenantId, {
+    restrictToProjectIds: projectIdsFilter,
+  });
 
   return (
     <main className={dashPage}>

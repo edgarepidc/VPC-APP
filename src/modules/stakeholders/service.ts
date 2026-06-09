@@ -1,8 +1,15 @@
 import { db } from "@/lib/db";
 
-export async function listStakeholdersByTenant(tenantId: string) {
+export async function listStakeholdersByTenant(
+  tenantId: string,
+  options?: { restrictToProjectIds?: string[] },
+) {
+  const restrict = options?.restrictToProjectIds;
   return db.stakeholder.findMany({
-    where: { tenantId },
+    where: {
+      tenantId,
+      ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
+    },
     include: {
       project: {
         select: { id: true, name: true },

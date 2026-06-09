@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { getSessionProjectIdsFilter } from "@/lib/project-scope";
+import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { hasPermission } from "@/lib/rbac";
 import { createTask, listTasksByTenant } from "@/modules/tasks/service";
 
@@ -20,7 +22,10 @@ export async function GET() {
         { status: 400 },
       );
     }
-    return NextResponse.json({ data: await listTasksByTenant(tenantId) });
+    const restrictToProjectIds = await getSessionProjectIdsFilter(session, tenantId);
+    return NextResponse.json({
+      data: await listTasksByTenant(tenantId, { restrictToProjectIds }),
+    });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
@@ -67,6 +72,14 @@ export async function POST(req: Request) {
       body.assigneeUserId != null && String(body.assigneeUserId).trim()
         ? String(body.assigneeUserId).trim()
         : undefined;
+
+    await assertCanAccessProject({
+      tenantId,
+      userId: session.userId,
+      role: session.role,
+      projectId: body.projectId,
+      isPlatformVisit: session.isPlatformVisit,
+    });
 
     const task = await createTask({
       tenantId,

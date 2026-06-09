@@ -13,9 +13,16 @@ import {
   type DeliverableLogEntry,
 } from "./json";
 
-export async function listDeliverablesByTenant(tenantId: string) {
+export async function listDeliverablesByTenant(
+  tenantId: string,
+  options?: { restrictToProjectIds?: string[] },
+) {
+  const restrict = options?.restrictToProjectIds;
   return db.deliverable.findMany({
-    where: { tenantId },
+    where: {
+      tenantId,
+      ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
+    },
     include: {
       project: {
         select: { id: true, name: true },

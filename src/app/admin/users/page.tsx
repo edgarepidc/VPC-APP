@@ -38,6 +38,8 @@ import {
   syncUsersLastSignIn,
 } from "@/modules/platform-users/service";
 
+import { AdminManagerProjectScopeFields } from "../_components/manager-project-scope-fields";
+
 import { createUserAction, updateUserAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -103,6 +105,18 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     (tenants.length === 1 ? tenants[0] : undefined);
 
   const tenantOptions = tenants.map((t) => ({ id: t.id, name: t.name, slug: t.slug }));
+  const allProjects = await db.project.findMany({
+    select: { id: true, name: true, tenantId: true },
+    orderBy: { name: "asc" },
+  });
+  const projectsByTenant = allProjects.reduce<Record<string, { id: string; name: string }[]>>(
+    (acc, p) => {
+      if (!acc[p.tenantId]) acc[p.tenantId] = [];
+      acc[p.tenantId].push({ id: p.id, name: p.name });
+      return acc;
+    },
+    {},
+  );
   const exportHref = `/admin/users/export?${new URLSearchParams({
     ...(rawQ ? { q: rawQ } : {}),
     ...(filterTenant ? { tenantId: filterTenant } : {}),
@@ -224,6 +238,12 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                   ))}
                 </select>
               </div>
+              <AdminManagerProjectScopeFields
+                tenantId={createTarget?.id ?? ""}
+                projectsByTenant={projectsByTenant}
+                roleSelectName="role"
+                tenantSelectName="tenantId"
+              />
               <div className="sm:col-span-2">
                 <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
                   Crear usuario
@@ -346,11 +366,14 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                         filterQ={rawQ}
                         filterTenant={filterTenant}
                         tenants={tenantOptions}
+                        projectsByTenant={projectsByTenant}
                         memberships={u.memberships.map((m) => ({
                           tenantId: m.tenant.id,
                           tenantName: m.tenant.name,
                           tenantSlug: m.tenant.slug,
                           roleKey: m.role.key,
+                          managerAllProjects: m.managerAllProjects,
+                          projectIds: m.projectAccess.map((row) => row.project.id),
                         }))}
                       />
                     </td>

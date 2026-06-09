@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
+import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
+import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { requireTenantId } from "@/lib/tenancy";
 import { createRisk, deleteRisk, listRisksByTenant } from "@/modules/risks/service";
 import { listDeliverablesByTenant } from "@/modules/deliverables/service";
-import { listProjectsByTenant } from "@/modules/projects/service";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { dashAlertError, dashAlertOk, dashPage } from "@/lib/ui-classes";
@@ -23,10 +24,12 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
   const tenantId = await requireTenantId();
   const canEdit = hasPermission(session.role, "tasks.write");
 
+  const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
+
   const [projects, deliverables, risks] = await Promise.all([
-    listProjectsByTenant(tenantId),
-    listDeliverablesByTenant(tenantId),
-    listRisksByTenant(tenantId),
+    listProjectsForSession(session, tenantId),
+    listDeliverablesByTenant(tenantId, { restrictToProjectIds: projectIdsFilter }),
+    listRisksByTenant(tenantId, { restrictToProjectIds: projectIdsFilter }),
   ]);
 
   async function createAction(formData: FormData) {
@@ -52,6 +55,18 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
 
     if (!title || !ownerName || !projectId) {
       redirect("/dashboard/risks?error=Proyecto,+descripcion+y+owner+son+obligatorios");
+    }
+
+    try {
+      await assertCanAccessProject({
+        tenantId: current.activeTenantId,
+        userId: current.userId,
+        role: current.role,
+        projectId,
+        isPlatformVisit: current.isPlatformVisit,
+      });
+    } catch (e) {
+      redirect(`/dashboard/risks?error=${encodeURIComponent((e as Error).message)}`);
     }
 
     await createRisk({

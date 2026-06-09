@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
+import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import {
   TASK_KANBAN_STATUSES,
   normalizeTaskStatus,
@@ -85,6 +86,13 @@ export async function createTaskWithContextAction(formData: FormData) {
   }
 
   try {
+    await assertCanAccessProject({
+      tenantId: s.activeTenantId,
+      userId: s.userId,
+      role: s.role,
+      projectId,
+      isPlatformVisit: s.isPlatformVisit,
+    });
     await createTask({
       tenantId: s.activeTenantId,
       projectId,

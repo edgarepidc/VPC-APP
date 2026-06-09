@@ -17,10 +17,10 @@ import {
 } from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
+import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { normalizeTaskStatus } from "@/modules/tasks/constants";
 import { listMemberUsersForTenant } from "@/modules/memberships/service";
-import { listProjectsByTenant } from "@/modules/projects/service";
 import { listTasksByTenant } from "@/modules/tasks/service";
 
 import { createTaskWithContextAction } from "./actions";
@@ -108,12 +108,15 @@ export default async function TasksPage({ searchParams }: PageProps) {
       ? serverNow.getDate()
       : null;
 
+  const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
+
   const [items, projects, memberRows] = await Promise.all([
     listTasksByTenant(tenantId, {
       projectId: projectFilter,
       q: qFilter,
+      restrictToProjectIds: projectIdsFilter,
     }),
-    listProjectsByTenant(tenantId),
+    listProjectsForSession(session, tenantId),
     listMemberUsersForTenant(tenantId),
   ]);
 

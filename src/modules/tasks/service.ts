@@ -8,6 +8,7 @@ export type ListTasksFilter = {
   projectId?: string;
   /** Búsqueda por título */
   q?: string;
+  restrictToProjectIds?: string[];
 };
 
 export async function listTasksByTenant(
@@ -15,9 +16,11 @@ export async function listTasksByTenant(
   filter?: ListTasksFilter,
 ) {
   const q = filter?.q?.trim();
+  const restrict = filter?.restrictToProjectIds;
   return db.task.findMany({
     where: {
       tenantId,
+      ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
       ...(filter?.projectId ? { projectId: filter.projectId } : {}),
       ...(q
         ? {
