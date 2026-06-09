@@ -8,14 +8,14 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #f9f9f8;
+    --bg: #f8fafc;
     --surface: #ffffff;
-    --surface-2: #f4f4f2;
-    --border: rgba(0,0,0,0.08);
-    --border-md: rgba(0,0,0,0.13);
-    --text-primary: #1a1a19;
-    --text-secondary: #6b6b68;
-    --text-muted: #a0a09d;
+    --surface-2: #f1f5f9;
+    --border: #e2e8f0;
+    --border-md: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
     --blue: #1a6fd4;
     --blue-light: #e8f1fc;
     --green: #1d7a4a;
@@ -35,7 +35,7 @@
     background: var(--bg);
     color: var(--text-primary);
     min-height: 100vh;
-    padding: 2rem 1rem 4rem;
+    padding: 1.25rem 1rem 3rem;
     font-size: 14px;
     line-height: 1.6;
   }
@@ -59,9 +59,19 @@
     background: #0f1117;
   }
 
-  body.fullscreen-mode .header-tag,
-  body.fullscreen-mode .header-sub { color: #8888a0; }
-  body.fullscreen-mode .header-title { color: #fff; }
+  body.fullscreen-mode .toolbar-actions {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    margin-bottom: 0;
+  }
+  body.fullscreen-mode .btn {
+    background: rgba(255,255,255,0.08);
+    color: #e2e8f0;
+    border-color: rgba(255,255,255,0.15);
+  }
+  body.fullscreen-mode .btn:hover { background: rgba(255,255,255,0.14); }
   body.fullscreen-mode .card { background: #1a1b25; border-color: rgba(255,255,255,0.07); }
   body.fullscreen-mode .section-label,
   body.fullscreen-mode label { color: #8888a0; }
@@ -79,35 +89,11 @@
     margin: 0 auto;
   }
 
-  .header {
-    margin-bottom: 2rem;
-  }
-
-  .header-tag {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-  }
-
-  .header-title {
-    font-size: 22px;
-    font-weight: 500;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-  }
-
-  .header-sub {
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-
-  .header-actions {
+  .toolbar-actions {
     display: flex;
+    justify-content: flex-end;
     gap: 8px;
-    margin-top: 1rem;
+    margin-bottom: 1.25rem;
   }
 
   .btn {
@@ -467,21 +453,16 @@
 
 <div class="app-wrapper" id="appWrapper">
 
-  <header class="header">
-    <div class="header-tag">Gestión de Proyectos · MXN</div>
-    <h1 class="header-title">Calculadora de ROI de Reuniones</h1>
-    <p class="header-sub">¿Cuánto está costando esta sesión en tiempo real?</p>
-    <div class="header-actions">
-      <button class="btn" onclick="copyReport()">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" stroke-width="1.3"/></svg>
-        Copiar reporte
-      </button>
-      <button class="btn" onclick="toggleFullscreen()">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M5 2H2v3M14 2h-3v3M5 14H2v-3M14 14h-3v-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-        Modo presentación
-      </button>
-    </div>
-  </header>
+  <div class="toolbar-actions">
+    <button class="btn" onclick="copyReport()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" stroke-width="1.3"/></svg>
+      Copiar reporte
+    </button>
+    <button class="btn" onclick="toggleFullscreen()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M5 2H2v3M14 2h-3v3M5 14H2v-3M14 14h-3v-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Modo presentación
+    </button>
+  </div>
 
   <div class="main-grid">
 

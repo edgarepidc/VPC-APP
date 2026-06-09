@@ -9,15 +9,15 @@
      DESIGN TOKENS — ajusta aquí para re-brandear
   ────────────────────────────────────────────── */
   :root {
-    --bg:        #f7f6f3;
+    --bg:        #f8fafc;
     --surface:   #ffffff;
-    --border:    #e8e6e1;
-    --border-md: #d4d0c8;
-    --text-1:    #1a1917;
-    --text-2:    #6b6860;
-    --text-3:    #9d9b96;
-    --accent:    #1d3557;
-    --accent-lt: #e8edf3;
+    --border:    #e2e8f0;
+    --border-md: #cbd5e1;
+    --text-1:    #0f172a;
+    --text-2:    #64748b;
+    --text-3:    #94a3b8;
+    --accent:    #1e293b;
+    --accent-lt: #f1f5f9;
 
     /* estado VERDE */
     --green:     #2d6a4f;
@@ -60,51 +60,8 @@
   .shell {
     max-width: 900px;
     margin: 0 auto;
-    padding: 48px 24px 80px;
+    padding: 20px 24px 48px;
   }
-
-  /* ── HEADER ── */
-  header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 40px;
-    flex-wrap: wrap;
-  }
-  .header-eyebrow {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--text-3);
-    margin-bottom: 6px;
-  }
-  header h1 {
-    font-size: clamp(22px, 4vw, 30px);
-    font-weight: 600;
-    letter-spacing: -.02em;
-    color: var(--text-1);
-    line-height: 1.2;
-  }
-  header p {
-    margin-top: 6px;
-    font-size: 14px;
-    color: var(--text-2);
-    max-width: 480px;
-    line-height: 1.6;
-  }
-  .logo-mark {
-    width: 44px;
-    height: 44px;
-    background: var(--accent);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .logo-mark svg { width: 22px; height: 22px; }
 
   /* ── GRID DE TARJETAS ── */
   .grid {
@@ -391,20 +348,6 @@
     margin: 24px 0;
   }
 
-  /* ── FOOTER ── */
-  footer {
-    margin-top: 60px;
-    font-size: 11.5px;
-    color: var(--text-3);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  footer a { color: var(--text-3); text-decoration: none; }
-  footer a:hover { color: var(--text-2); }
-
   /* ── RESPONSIVE ── */
   @media (max-width: 600px) {
     .shell { padding: 32px 16px 60px; }
@@ -417,20 +360,6 @@
 <body>
 
 <div class="shell">
-
-  <!-- HEADER -->
-  <header>
-    <div>
-      <p class="header-eyebrow">Gobernanza de Proyectos · PMO</p>
-      <h1>Super-Escalómetro</h1>
-      <p>Evalúa el nivel de riesgo de tu proyecto en 6 dimensiones y obtén una recomendación de acción inmediata.</p>
-    </div>
-    <div class="logo-mark" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 20V10M18 20V4M6 20v-4"/>
-      </svg>
-    </div>
-  </header>
 
   <!-- GRID DE INDICADORES -->
   <form id="form" novalidate>
@@ -489,12 +418,6 @@
       </div>
     </div>
   </div>
-
-  <!-- FOOTER -->
-  <footer>
-    <span>Super-Escalómetro de Proyectos · v1.0</span>
-    <span>Herramienta de gobernanza para Project Managers</span>
-  </footer>
 
 </div>
 

@@ -119,8 +119,11 @@ export function DashboardChrome({
           <button
             type="button"
             onClick={() => persistSidebarHidden(true)}
-            className="flex w-full items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           >
+            <span className="text-base leading-none" aria-hidden>
+              ←
+            </span>
             Ocultar menú
           </button>
         </div>
@@ -129,8 +132,11 @@ export function DashboardChrome({
       <form action={signOutAction} className="mt-3">
         <button
           type="submit"
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
         >
+          <span className="text-base leading-none" aria-hidden>
+            🔒
+          </span>
           Cerrar sesión
         </button>
       </form>
