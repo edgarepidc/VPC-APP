@@ -96,26 +96,26 @@ function HeatmapBlock({
   }, [risks, before]);
 
   return (
-    <div>
-      <p className={`mb-3 ${uiLabel}`}>{label}</p>
-      <div className="flex gap-1.5">
+    <div className="mx-auto w-full max-w-[210px]">
+      <p className={`mb-2 ${uiLabel}`}>{label}</p>
+      <div className="flex gap-1">
         <div
-          className="flex items-center pb-5 text-[10px] font-medium text-slate-400"
+          className="flex items-center pb-4 text-[9px] font-medium text-slate-400"
           style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
         >
           Prob.
         </div>
-        <div className="min-w-0 flex-1">
+        <div>
           <div className="flex gap-1">
-            <div className="grid shrink-0 grid-rows-5 gap-1 py-0 pr-1.5 text-[10px] text-slate-400">
+            <div className="grid shrink-0 grid-rows-5 gap-0.5 py-0 pr-1 text-[9px] leading-none text-slate-400">
               {[5, 4, 3, 2, 1].map((n) => (
-                <div key={n} className="flex h-full items-center justify-end">
+                <div key={n} className="flex h-7 w-3 items-center justify-end">
                   {n}
                 </div>
               ))}
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="grid grid-cols-5 gap-1">
+            <div>
+              <div className="grid grid-cols-5 gap-0.5">
                 {rows.flatMap((row) =>
                   row.map(({ pl, il, count, score }) => {
                     const { bg, fg } = heatmapTone(score);
@@ -123,12 +123,12 @@ function HeatmapBlock({
                       <div
                         key={`${pl}-${il}-${before}`}
                         title={`Score ${score} · Prob.${pl} × Imp.${il}${count ? ` · ${count} riesgo(s)` : ""}`}
-                        className="flex aspect-square items-center justify-center rounded-md transition-transform hover:z-[1] hover:scale-110"
+                        className="flex h-7 w-7 items-center justify-center rounded transition-transform hover:z-[1] hover:scale-110"
                         style={{ backgroundColor: bg, color: fg }}
                       >
                         {count > 0 ? (
                           <span
-                            className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-bold"
+                            className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold"
                             style={{ backgroundColor: `${fg}28`, color: fg }}
                           >
                             {count}
@@ -139,12 +139,14 @@ function HeatmapBlock({
                   }),
                 )}
               </div>
-              <div className="mt-1 grid grid-cols-5 gap-1 text-center text-[10px] text-slate-400">
+              <div className="mt-0.5 grid grid-cols-5 gap-0.5 text-center text-[9px] text-slate-400">
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <span key={n}>{n}</span>
+                  <span key={n} className="w-7">
+                    {n}
+                  </span>
                 ))}
               </div>
-              <p className={`mt-1 text-center ${uiLabel}`}>Impacto</p>
+              <p className={`mt-0.5 text-center text-[10px] text-slate-500`}>Impacto</p>
             </div>
           </div>
         </div>
@@ -375,7 +377,7 @@ ${D}`;
             Exportar Risk Memo
           </button>
         </div>
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="flex flex-wrap justify-center gap-x-12 gap-y-6">
           <HeatmapBlock label="Antes de mitigación" before={true} risks={risks} />
           <HeatmapBlock label="Después de mitigación" before={false} risks={risks} />
         </div>
