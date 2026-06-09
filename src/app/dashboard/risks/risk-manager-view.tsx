@@ -96,7 +96,7 @@ function HeatmapBlock({
   }, [risks, before]);
 
   return (
-    <div className="mx-auto w-full max-w-[380px]">
+    <div className="mx-auto w-full max-w-[440px]">
       <p className={`mb-2.5 ${uiLabel}`}>{label}</p>
       <div className="flex gap-1.5">
         <div
@@ -109,7 +109,7 @@ function HeatmapBlock({
           <div className="flex gap-1">
             <div className="grid shrink-0 grid-rows-5 gap-1 py-0 pr-1.5 text-[10px] leading-none text-slate-400">
               {[5, 4, 3, 2, 1].map((n) => (
-                <div key={n} className="flex h-12 w-4 items-center justify-end">
+                <div key={n} className="flex h-14 w-4 items-center justify-end">
                   {n}
                 </div>
               ))}
@@ -123,12 +123,12 @@ function HeatmapBlock({
                       <div
                         key={`${pl}-${il}-${before}`}
                         title={`Score ${score} · Prob.${pl} × Imp.${il}${count ? ` · ${count} riesgo(s)` : ""}`}
-                        className="flex h-12 w-12 items-center justify-center rounded-md transition-transform hover:z-[1] hover:scale-110"
+                        className="flex h-14 w-14 items-center justify-center rounded-md transition-transform hover:z-[1] hover:scale-110"
                         style={{ backgroundColor: bg, color: fg }}
                       >
                         {count > 0 ? (
                           <span
-                            className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold"
+                            className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold"
                             style={{ backgroundColor: `${fg}28`, color: fg }}
                           >
                             {count}
@@ -141,7 +141,7 @@ function HeatmapBlock({
               </div>
               <div className="mt-1 grid grid-cols-5 gap-1 text-center text-[10px] text-slate-400">
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <span key={n} className="w-12">
+                  <span key={n} className="w-14">
                     {n}
                   </span>
                 ))}
