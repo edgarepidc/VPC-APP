@@ -88,18 +88,18 @@ export function DashboardChrome({
   const panelBody = (opts: { onNav?: () => void; showCollapseHint?: boolean }) => (
     <>
       <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
           {personAvatarUrl ? (
             <Image
               src={personAvatarUrl}
               alt=""
-              width={40}
-              height={40}
+              width={48}
+              height={48}
               className="h-full w-full object-cover"
               unoptimized
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-800 text-xs font-semibold text-slate-100">
+            <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-800 text-sm font-semibold text-slate-100">
               {personInitials}
             </div>
           )}

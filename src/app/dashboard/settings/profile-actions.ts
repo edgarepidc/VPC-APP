@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { isNextNavigationError } from "@/lib/server-action-errors";
 import { updatePlatformUserProfile } from "@/modules/platform-users/service";
 
 export async function updateSelfProfileAction(formData: FormData) {
@@ -20,12 +21,14 @@ export async function updateSelfProfileAction(formData: FormData) {
       phone: phone || undefined,
       actorUserId: session.userId,
     });
-    revalidatePath("/dashboard", "layout");
-    revalidatePath("/dashboard/settings");
-    redirect("/dashboard/settings?ok=Perfil+actualizado");
   } catch (e) {
+    if (isNextNavigationError(e)) throw e;
     redirect(
       `/dashboard/settings?error=${encodeURIComponent((e as Error).message)}`,
     );
   }
+
+  revalidatePath("/dashboard", "layout");
+  revalidatePath("/dashboard/settings");
+  redirect("/dashboard/settings?ok=Listo,+datos+guardados");
 }

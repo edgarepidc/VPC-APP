@@ -14,6 +14,7 @@ import {
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { personInitialsFromName } from "@/lib/role-labels";
+import { flashMessageFromParam } from "@/lib/server-action-errors";
 import { requireTenantId } from "@/lib/tenancy";
 
 import { clearUserAvatarAction, uploadUserAvatarAction } from "./avatar-actions";
@@ -48,6 +49,9 @@ export default async function DashboardSettingsPage({
     session.email,
   );
 
+  const okMessage = flashMessageFromParam(params.ok);
+  const errorMessage = flashMessageFromParam(params.error);
+
   return (
     <main className={dashPage}>
       <DashboardPageHeader
@@ -59,16 +63,8 @@ export default async function DashboardSettingsPage({
         }
       />
 
-      {params.error ? (
-        <p className={dashAlertError}>
-          {decodeURIComponent(params.error.replace(/\+/g, " "))}
-        </p>
-      ) : null}
-      {params.ok ? (
-        <p className={dashAlertOk}>
-          {decodeURIComponent(params.ok.replace(/\+/g, " "))}
-        </p>
-      ) : null}
+      {errorMessage ? <p className={dashAlertError}>{errorMessage}</p> : null}
+      {okMessage ? <p className={dashAlertOk}>{okMessage}</p> : null}
 
       <section className={`${dashCard} p-4`}>
         <h2 className="text-base font-semibold text-slate-900">Datos personales</h2>
@@ -116,7 +112,7 @@ export default async function DashboardSettingsPage({
           Aparece en el menú lateral junto a tu nombre.
         </p>
         <div className="mt-4 flex flex-wrap items-start gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-800 text-lg font-semibold text-white">
+          <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-800 text-2xl font-semibold text-white">
             {user?.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

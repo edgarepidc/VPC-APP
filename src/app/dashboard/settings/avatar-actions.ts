@@ -89,7 +89,7 @@ export async function uploadUserAvatarAction(formData: FormData) {
   }
 
   revalidatePath("/dashboard", "layout");
-  redirect("/dashboard/settings?ok=Foto+de+perfil+actualizada");
+  redirect("/dashboard/settings?ok=Listo,+foto+de+perfil+guardada");
 }
 
 export async function clearUserAvatarAction() {
