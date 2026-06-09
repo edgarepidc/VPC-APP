@@ -252,33 +252,26 @@ export async function getSessionUser(
     (!!ownerEmail && ownerEmail === authEmail);
 
   const cookieStore = await cookies();
-  const activeTenantId = cookieStore.get(TENANT_COOKIE)?.value ?? null;
-  const role = activeTenantId
-    ? await getRoleForTenant(authUser.id, activeTenantId, isSuperAdmin)
-    : "member";
+  const cookieTenantId = cookieStore.get(TENANT_COOKIE)?.value ?? null;
+  const tenantContext = await resolveActiveTenantContext(
+    authUser.id,
+    cookieTenantId,
+    isSuperAdmin,
+  );
 
-  let isPlatformVisit = false;
-  if (isSuperAdmin && activeTenantId) {
-    const membership = await db.membership.findFirst({
-      where: {
-        userId: authUser.id,
-        tenantId: activeTenantId,
-        status: "active",
-      },
-      select: { id: true },
-    });
-    isPlatformVisit = !membership;
+  if (tenantContext.clearCookie && cookieTenantId) {
+    cookieStore.delete(TENANT_COOKIE);
   }
 
   return {
     userId: authUser.id,
     email: authEmail,
     name: authUser.user_metadata?.name ?? authEmail ?? "User",
-    role,
-    activeTenantId,
+    role: tenantContext.role,
+    activeTenantId: tenantContext.activeTenantId,
     isSuperAdmin,
     isSuperAdminFromDb: isSuperAdminDb,
-    isPlatformVisit,
+    isPlatformVisit: tenantContext.isPlatformVisit,
   };
 }
 
@@ -333,22 +326,65 @@ export async function clearActiveTenantIfMatches(tenantId: string) {
   }
 }
 
-async function getRoleForTenant(
+type ResolvedTenantContext = {
+  activeTenantId: string | null;
+  role: SessionUser["role"];
+  isPlatformVisit: boolean;
+  /** Cookie pointed at a tenant the user may not use; caller should delete it. */
+  clearCookie?: boolean;
+};
+
+/**
+ * Validates `embus_tenant` on every session read. Without this, a forged cookie could
+ * grant read access via APIs that trust `activeTenantId` + default role "member".
+ */
+async function resolveActiveTenantContext(
   userId: string,
-  tenantId: string,
+  cookieTenantId: string | null,
   isSuperAdmin: boolean,
-): Promise<SessionUser["role"]> {
+): Promise<ResolvedTenantContext> {
+  if (!cookieTenantId) {
+    return { activeTenantId: null, role: "member", isPlatformVisit: false };
+  }
+
+  const tenant = await db.tenant.findUnique({
+    where: { id: cookieTenantId },
+    select: { id: true },
+  });
+  if (!tenant) {
+    return {
+      activeTenantId: null,
+      role: "member",
+      isPlatformVisit: false,
+      clearCookie: true,
+    };
+  }
+
   const membership = await db.membership.findFirst({
-    where: { userId, tenantId, status: "active" },
+    where: { userId, tenantId: cookieTenantId, status: "active" },
     select: { role: { select: { key: true } } },
   });
 
-  const roleKey = membership?.role.key as SessionUser["role"] | undefined;
-  if (roleKey) return roleKey;
-
-  if (isSuperAdmin) {
-    return "owner";
+  if (membership) {
+    return {
+      activeTenantId: cookieTenantId,
+      role: membership.role.key as SessionUser["role"],
+      isPlatformVisit: false,
+    };
   }
 
-  return "member";
+  if (isSuperAdmin) {
+    return {
+      activeTenantId: cookieTenantId,
+      role: "owner",
+      isPlatformVisit: true,
+    };
+  }
+
+  return {
+    activeTenantId: null,
+    role: "member",
+    isPlatformVisit: false,
+    clearCookie: true,
+  };
 }
