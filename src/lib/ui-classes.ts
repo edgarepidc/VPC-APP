@@ -44,4 +44,41 @@ export const uiAlertInfo =
   "rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-700";
 
 export const uiSectionLabel =
-  "mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500";
+  "mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500";
+
+/** Administración global */
+export const adminShell =
+  "app-shell mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-5 px-4 py-5 sm:px-5";
+
+export const adminPage = "space-y-5";
+
+export const adminSectionTitle = "text-base font-semibold text-slate-900";
+
+export const adminSectionSub = "text-sm text-slate-600";
+
+export const adminCard =
+  "rounded-lg border border-slate-200 bg-white shadow-sm";
+
+export const adminStatsBar =
+  "flex flex-wrap items-center gap-x-8 gap-y-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm";
+
+export const adminStatValue = "text-lg font-semibold tabular-nums text-slate-900";
+
+export const adminStatLabel = "text-xs text-slate-500";
+
+export const adminTable =
+  "w-full min-w-[720px] border-collapse text-sm";
+
+export const adminTh =
+  "px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-500";
+
+export const adminTd = "px-3 py-2.5 align-middle text-slate-700";
+
+export const adminAlertError =
+  "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800";
+
+export const adminAlertOk =
+  "rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900";
+
+export const adminAlertWarn =
+  "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950";

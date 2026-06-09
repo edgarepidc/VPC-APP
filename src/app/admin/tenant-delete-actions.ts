@@ -9,7 +9,7 @@ import { deleteTenantFromPlatform } from "@/modules/platform";
 export async function deleteTenantPlatformAction(formData: FormData) {
   const session = await getSessionUser();
   if (!session?.isSuperAdmin) {
-    redirect("/admin/tenants?error=Sin+permiso");
+    redirect("/admin?error=Sin+permiso");
   }
 
   const tenantId = String(formData.get("tenantId") ?? "").trim();
@@ -17,12 +17,12 @@ export async function deleteTenantPlatformAction(formData: FormData) {
   const next = String(formData.get("next") ?? "tenants");
 
   if (!tenantId) {
-    redirect("/admin/tenants?error=Datos+invalidos");
+    redirect("/admin?error=Datos+invalidos");
   }
 
   const result = await deleteTenantFromPlatform({ tenantId, confirmSlug });
   if (!result.ok) {
-    const base = next === "cartera" ? "/admin" : "/admin/tenants";
+    const base = "/admin";
     redirect(`${base}?error=${encodeURIComponent(result.message)}`);
   }
 
@@ -34,5 +34,5 @@ export async function deleteTenantPlatformAction(formData: FormData) {
   if (next === "cartera") {
     redirect(`/admin?ok=${okMsg}`);
   }
-  redirect(`/admin/tenants?ok=${okMsg}`);
+  redirect(`/admin?ok=${okMsg}`);
 }

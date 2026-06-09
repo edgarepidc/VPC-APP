@@ -54,43 +54,43 @@ export async function putTenantLogoFromBuffer(
 export async function platformUploadTenantLogoAction(formData: FormData) {
   const session = await getSessionUser();
   if (!session?.isSuperAdmin) {
-    redirect("/admin/tenants?error=sin_permiso_logo");
+    redirect("/admin?error=sin_permiso_logo");
   }
 
   const tenantId = String(formData.get("tenantId") ?? "").trim();
-  if (!tenantId) redirect("/admin/tenants?error=tenant_logo");
+  if (!tenantId) redirect("/admin?error=tenant_logo");
 
   const exists = await db.tenant.findUnique({
     where: { id: tenantId },
     select: { id: true },
   });
-  if (!exists) redirect("/admin/tenants?error=tenant_no_encontrado");
+  if (!exists) redirect("/admin?error=tenant_no_encontrado");
 
   const file = formData.get("logo");
   if (!(file instanceof File) || file.size === 0) {
-    redirect("/admin/tenants?error=archivo_logo");
+    redirect("/admin?error=archivo_logo");
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
   const put = await putTenantLogoFromBuffer(tenantId, buf, file.type);
   if (!put.ok) {
-    redirect(`/admin/tenants?error=${put.code}`);
+    redirect(`/admin?error=${put.code}`);
   }
 
   revalidatePath("/admin");
   revalidatePath("/admin/tenants");
   revalidatePath("/dashboard", "layout");
-  redirect("/admin/tenants?ok=logo_subido");
+  redirect("/admin?ok=logo_subido");
 }
 
 export async function platformClearTenantLogoAction(formData: FormData) {
   const session = await getSessionUser();
   if (!session?.isSuperAdmin) {
-    redirect("/admin/tenants?error=sin_permiso_logo");
+    redirect("/admin?error=sin_permiso_logo");
   }
 
   const tenantId = String(formData.get("tenantId") ?? "").trim();
-  if (!tenantId) redirect("/admin/tenants?error=tenant_logo");
+  if (!tenantId) redirect("/admin?error=tenant_logo");
 
   const tenant = await db.tenant.findUnique({
     where: { id: tenantId },
@@ -120,5 +120,5 @@ export async function platformClearTenantLogoAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/tenants");
   revalidatePath("/dashboard", "layout");
-  redirect("/admin/tenants?ok=logo_quitado");
+  redirect("/admin?ok=logo_quitado");
 }

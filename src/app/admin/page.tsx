@@ -1,28 +1,70 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { CreateTenantPanel } from "./_components/create-tenant-panel";
+import { DeleteTenantForm } from "./delete-tenant-form";
+import {
+  platformClearTenantLogoAction,
+  platformUploadTenantLogoAction,
+} from "./tenant-logo-actions";
+import { deleteTenantPlatformAction } from "./tenant-delete-actions";
+import {
+  adminAlertError,
+  adminAlertOk,
+  adminCard,
+  adminPage,
+  adminSectionSub,
+  adminSectionTitle,
+  adminStatLabel,
+  adminStatsBar,
+  adminStatValue,
+  adminTable,
+  adminTd,
+  adminTh,
+  uiButtonPrimary,
+} from "@/lib/ui-classes";
 import { getSessionUser, setActiveTenantAsPlatformOwner } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { listAllTenants } from "@/modules/platform";
 
-import {
-  IconOrg,
-  IconPeople,
-  IconProjects,
-  KpiCard,
-  PlanDistributionPanel,
-  TenantProjectShareBar,
-  VpcAdminGradientShell,
-  VpcAdminInsetShell,
-} from "./_components/vpc-visuals";
-import { DeleteTenantForm } from "./delete-tenant-form";
-import { deleteTenantPlatformAction } from "./tenant-delete-actions";
-
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams: Promise<{ error?: string; q?: string; ok?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    q?: string;
+    ok?: string;
+    newTenant?: string;
+    logoWarn?: string;
+  }>;
 };
+
+function resolveError(code: string | undefined) {
+  if (!code) return null;
+  const map: Record<string, string> = {
+    sin_permiso: "No tienes permiso de plataforma.",
+    no_encontrado: "Organización no encontrada.",
+    sin_permiso_logo: "No tienes permiso para cambiar logos.",
+    tenant_logo: "Falta identificar la organización.",
+    tenant_no_encontrado: "Organización no encontrada.",
+    archivo_logo: "Selecciona un archivo de imagen.",
+    tamano_logo: "La imagen supera 2 MB.",
+    tipo_logo: "Formato no permitido (PNG, JPEG o WebP).",
+    storage_logo: "No se pudo guardar el logo.",
+    Sin_permiso: "No tienes permiso.",
+    "Datos+invalidos": "Datos inválidos.",
+  };
+  return map[code] ?? decodeURIComponent(code.replace(/\+/g, " "));
+}
+
+function resolveOk(code: string | undefined) {
+  if (!code) return null;
+  const map: Record<string, string> = {
+    logo_subido: "Logo actualizado.",
+    logo_quitado: "Logo eliminado.",
+  };
+  return map[code] ?? decodeURIComponent(code.replace(/\+/g, " "));
+}
 
 export default async function AdminHomePage({ searchParams }: Props) {
   const params = await searchParams;
@@ -34,29 +76,9 @@ export default async function AdminHomePage({ searchParams }: Props) {
     listAllTenants(rawQ || undefined),
     db.tenant.count(),
   ]);
-  const totalProjectsInView = tenants.reduce(
-    (acc, t) => acc + t._count.projects,
-    0,
-  );
   const isFiltered = rawQ.length > 0;
-
-  const planCounts: Record<string, number> = {};
-  let totalMembershipsInView = 0;
-  for (const t of tenants) {
-    planCounts[t.plan] = (planCounts[t.plan] ?? 0) + 1;
-    totalMembershipsInView += t._count.memberships;
-  }
-  const avgProjects =
-    tenants.length > 0
-      ? (totalProjectsInView / tenants.length).toFixed(1)
-      : "0";
-
-  const tenantProjectRows = tenants.map((t) => ({
-    id: t.id,
-    name: t.name,
-    slug: t.slug,
-    projects: t._count.projects,
-  }));
+  const totalProjects = tenants.reduce((acc, t) => acc + t._count.projects, 0);
+  const totalMembers = tenants.reduce((acc, t) => acc + t._count.memberships, 0);
 
   async function enterWorkspace(formData: FormData) {
     "use server";
@@ -68,222 +90,141 @@ export default async function AdminHomePage({ searchParams }: Props) {
     redirect("/dashboard/projects");
   }
 
+  const errorMsg = resolveError(params.error);
+  const okMsg = resolveOk(params.ok);
+
   return (
-    <div className="space-y-8">
-      {params.error && (
-        <p className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-          {params.error === "sin_permiso"
-            ? "No tienes permiso de plataforma."
-            : params.error === "no_encontrado"
-              ? "Organizacion no encontrada."
-              : params.error}
-        </p>
-      )}
-      {params.ok && (
-        <p className="rounded-md border border-slate-300 bg-white p-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-slate-200">
-          {params.ok}
-        </p>
-      )}
+    <div className={adminPage}>
+      {errorMsg && <p className={adminAlertError}>{errorMsg}</p>}
+      {okMsg && <p className={adminAlertOk}>{okMsg}</p>}
 
-      <VpcAdminGradientShell className="p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-          Value Project Consulting
-        </p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight">
-          Organizaciones cliente y proyectos
-        </h2>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/75">
-          Cada fila es una organizacion (tenant) que atiendes. Pulsa{" "}
-          <strong className="text-white">Entrar al workspace</strong> para
-          operar como owner dentro de ese cliente: proyectos, PMO, riesgos,
-          stakeholders, etc. Tu sesión actual queda en esa organizacion hasta que
-          cambies de tenant.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-6 text-sm">
-          <div>
-            <p className="text-[11px] uppercase tracking-wide text-white/50">
-              {isFiltered ? "Coincidencias" : "Organizaciones"}
-            </p>
-            <p className="text-2xl font-semibold tabular-nums">{tenants.length}</p>
-            {isFiltered && (
-              <p className="mt-1 text-[11px] text-white/55">
-                de {totalOrgCount} en cartera
-              </p>
-            )}
-          </div>
-          <div>
-            <p className="text-[11px] uppercase tracking-wide text-white/50">
-              Proyectos {isFiltered ? "(esta vista)" : "(todos los tenants)"}
-            </p>
-            <p className="text-2xl font-semibold tabular-nums">
-              {totalProjectsInView}
-            </p>
-          </div>
+      <div className={adminStatsBar}>
+        <div>
+          <p className={adminStatLabel}>{isFiltered ? "Resultados" : "Organizaciones"}</p>
+          <p className={adminStatValue}>
+            {tenants.length}
+            {isFiltered ? (
+              <span className="ml-1 text-sm font-normal text-slate-500">/ {totalOrgCount}</span>
+            ) : null}
+          </p>
         </div>
-      </VpcAdminGradientShell>
-
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard
-          label={isFiltered ? "Organizaciones (filtro)" : "Organizaciones en vista"}
-          value={tenants.length}
-          hint={
-            isFiltered
-              ? `De ${totalOrgCount} en cartera total.`
-              : "Clientes activos en cartera."
-          }
-          icon={<IconOrg />}
-        />
-        <KpiCard
-          label="Proyectos acumulados"
-          value={totalProjectsInView}
-          hint={
-            isFiltered
-              ? "Suma de la lista filtrada."
-              : "Todos los proyectos bajo estos tenants."
-          }
-          icon={<IconProjects />}
-          accent="steel"
-        />
-        <KpiCard
-          label="Miembros en organización (vista)"
-          value={totalMembershipsInView}
-          hint={`Promedio de ${avgProjects} proyectos por organización en esta lista.`}
-          icon={<IconPeople />}
-          accent="tan"
-        />
-      </section>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <PlanDistributionPanel counts={planCounts} />
-        <TenantProjectShareBar tenants={tenantProjectRows} />
+        <div>
+          <p className={adminStatLabel}>Proyectos</p>
+          <p className={adminStatValue}>{totalProjects}</p>
+        </div>
+        <div>
+          <p className={adminStatLabel}>Miembros</p>
+          <p className={adminStatValue}>{totalMembers}</p>
+        </div>
       </div>
 
-      <VpcAdminInsetShell innerClassName="p-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+      <CreateTenantPanel
+        newTenantId={params.newTenant?.trim()}
+        logoWarn={params.logoWarn?.trim() ?? null}
+      />
+
+      <section className={`${adminCard} p-4`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-slate-900">
-              Cartera de organizaciones
-            </h3>
-            <p className="mt-1 text-[13px] text-slate-600">
-              Entra al workspace del cliente para ver y editar sus proyectos.
-            </p>
+            <h2 className={adminSectionTitle}>Cartera de clientes</h2>
+            <p className={adminSectionSub}>Entra al workspace o invita miembros por fila.</p>
           </div>
-          <Link
-            href="/admin/tenants"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[13px] font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 transition hover:border-slate-300 hover:shadow-md"
-          >
-            Crear organizacion nueva
-          </Link>
         </div>
 
-        <form
-          method="get"
-          action="/admin"
-          className="mt-5 flex flex-wrap items-center gap-2"
-        >
+        <form method="get" action="/admin" className="mt-4 flex flex-wrap items-center gap-2">
           <label className="sr-only" htmlFor="admin-q">
-            Buscar organizacion
+            Buscar
           </label>
           <input
             id="admin-q"
             name="q"
             type="search"
-            placeholder="Nombre o slug..."
+            placeholder="Nombre o slug…"
             defaultValue={rawQ}
-            className="min-w-[200px] flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            className="min-w-[180px] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100"
           />
-          <button
-            type="submit"
-            className="rounded-lg bg-slate-800 px-4 py-2 text-[13px] font-semibold text-white shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-700 active:scale-[0.99]"
-          >
+          <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
             Buscar
           </button>
           {isFiltered && (
-            <Link
-              href="/admin"
-              className="text-[13px] font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
-            >
-              Limpiar filtro
+            <Link href="/admin" className="text-sm font-medium text-slate-700 underline">
+              Limpiar
             </Link>
           )}
         </form>
 
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse text-[13px]">
+        <div className="mt-4 overflow-x-auto">
+          <table className={adminTable}>
             <thead>
-              <tr className="border-b border-slate-200 text-left">
-                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  Logo
-                </th>
-                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  Organizacion
-                </th>
-                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  Slug
-                </th>
-                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  Plan
-                </th>
-                <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  Proyectos
-                </th>
-                <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  Miembros
-                </th>
-                <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  Acciones
-                </th>
+              <tr className="border-b border-slate-200">
+                <th className={adminTh}>Logo</th>
+                <th className={adminTh}>Organización</th>
+                <th className={adminTh}>Plan</th>
+                <th className={`${adminTh} text-right`}>Proy.</th>
+                <th className={`${adminTh} text-right`}>Miembros</th>
+                <th className={`${adminTh} text-right`}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {tenants.map((t) => (
-                <tr
-                  key={t.id}
-                  className="border-b border-[#f0ebe0] transition hover:bg-slate-50"
-                >
-                  <td className="py-3 pr-3 align-middle">
-                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ring-1 ring-slate-200">
+                <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className={`${adminTd} w-28`}>
+                    <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
                       {t.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- URL pública Supabase Storage
-                        <img
-                          src={t.logoUrl}
-                          alt=""
-                          className="h-full w-full object-contain p-0.5"
-                        />
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={t.logoUrl} alt="" className="h-full w-full object-contain p-0.5" />
                       ) : (
-                        <span className="text-[10px] font-semibold text-slate-600">
-                          —
-                        </span>
+                        <span className="text-xs text-slate-400">—</span>
                       )}
                     </div>
+                    <form action={platformUploadTenantLogoAction} className="mt-1.5 space-y-1">
+                      <input type="hidden" name="tenantId" value={t.id} />
+                      <input
+                        type="file"
+                        name="logo"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="w-full max-w-[7rem] text-xs text-slate-500 file:mr-1 file:rounded file:border-0 file:bg-slate-700 file:px-1.5 file:py-0.5 file:text-[10px] file:text-white"
+                      />
+                      <button
+                        type="submit"
+                        className="text-xs font-medium text-slate-700 underline"
+                      >
+                        Subir
+                      </button>
+                    </form>
+                    {t.logoUrl ? (
+                      <form action={platformClearTenantLogoAction} className="mt-1">
+                        <input type="hidden" name="tenantId" value={t.id} />
+                        <button
+                          type="submit"
+                          className="text-xs text-rose-700 underline"
+                        >
+                          Quitar
+                        </button>
+                      </form>
+                    ) : null}
                   </td>
-                  <td className="py-3 pr-3 font-medium text-slate-900">
-                    {t.name}
+                  <td className={adminTd}>
+                    <p className="font-medium text-slate-900">{t.name}</p>
+                    <p className="font-mono text-xs text-slate-500">{t.slug}</p>
                   </td>
-                  <td className="py-3 pr-3 font-mono text-[12px] text-slate-600">
-                    {t.slug}
-                  </td>
-                  <td className="py-3 pr-3 text-slate-600">{t.plan}</td>
-                  <td className="py-3 pr-3 text-right tabular-nums">
-                    {t._count.projects}
-                  </td>
-                  <td className="py-3 pr-3 text-right tabular-nums">
-                    {t._count.memberships}
-                  </td>
-                  <td className="py-3 text-right align-top">
-                    <div className="flex flex-col items-end gap-2">
+                  <td className={adminTd}>{t.plan}</td>
+                  <td className={`${adminTd} text-right tabular-nums`}>{t._count.projects}</td>
+                  <td className={`${adminTd} text-right tabular-nums`}>{t._count.memberships}</td>
+                  <td className={`${adminTd} text-right`}>
+                    <div className="flex flex-col items-end gap-1.5">
                       <form action={enterWorkspace}>
                         <input type="hidden" name="tenantId" value={t.id} />
                         <button
                           type="submit"
-                          className="rounded-lg bg-slate-800 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-700 active:scale-[0.99]"
+                          className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
                         >
-                          Entrar al workspace
+                          Entrar
                         </button>
                       </form>
                       <Link
                         href={`/admin/invite?tenantId=${encodeURIComponent(t.id)}`}
-                        className="text-center text-[12px] font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
+                        className="text-sm font-medium text-slate-700 underline"
                       >
                         Invitar
                       </Link>
@@ -302,19 +243,12 @@ export default async function AdminHomePage({ searchParams }: Props) {
             </tbody>
           </table>
           {tenants.length === 0 && (
-            <p className="py-10 text-center text-[13px] text-slate-400">
-              Aún no hay organizaciones.{" "}
-              <Link
-                href="/admin/tenants"
-                className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
-              >
-                Crear la primera
-              </Link>
-              .
+            <p className="py-8 text-center text-sm text-slate-500">
+              Sin organizaciones. Usa «Nueva organización» arriba.
             </p>
           )}
         </div>
-      </VpcAdminInsetShell>
+      </section>
     </div>
   );
 }

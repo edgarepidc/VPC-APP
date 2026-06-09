@@ -51,7 +51,7 @@ export default async function DashboardSettingsPage({
           El logo que aparece en el menú lateral lo configura la consultora en{" "}
           {session.isSuperAdmin ? (
             <Link
-              href="/admin/tenants"
+              href="/admin"
               className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
             >
               Administración global → Organizaciones
