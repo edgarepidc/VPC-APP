@@ -6,6 +6,8 @@ import {
   dashAlertOk,
   dashAlertWarn,
   dashCard,
+  dashDetailsBody,
+  dashDetailsSummary,
   dashPage,
   uiButtonPrimary,
   uiInput,
@@ -172,10 +174,10 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
 
       {canWrite ? (
         <details className={`${dashCard} group`}>
-          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden">
+          <summary className={dashDetailsSummary}>
             Nuevo proyecto
           </summary>
-          <form action={createProjectAction} className="grid gap-3 border-t border-slate-200 px-4 py-4 sm:grid-cols-2">
+          <form action={createProjectAction} className={`grid gap-3 sm:grid-cols-2 ${dashDetailsBody}`}>
             <div className="sm:col-span-2">
               <label className={uiLabel}>Nombre</label>
               <input name="name" required maxLength={200} className={`mt-1 ${uiInput}`} />

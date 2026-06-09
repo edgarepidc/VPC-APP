@@ -14,10 +14,10 @@ export function DashboardPageHeader({
   children,
 }: DashboardPageHeaderProps) {
   return (
-    <header>
+    <header className="border-b border-slate-200 pb-4">
       <h1 className={dashPageTitle}>{title}</h1>
       {description ? <p className={`mt-1 ${dashSectionSub}`}>{description}</p> : null}
-      {children}
+      {children ? <div className="mt-3 space-y-2">{children}</div> : null}
     </header>
   );
 }

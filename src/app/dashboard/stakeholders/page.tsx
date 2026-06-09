@@ -11,8 +11,17 @@ import {
   listStakeholdersByTenant,
 } from "@/modules/stakeholders/service";
 
+import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import {
+  dashAlertError,
+  dashAlertOk,
+  dashAlertWarn,
   dashCard,
+  dashCardBody,
+  dashDetailsBody,
+  dashDetailsSummary,
+  dashPage,
+  dashSectionTitle,
   uiButtonPrimary,
   uiInput,
   uiLabel,
@@ -82,29 +91,14 @@ export default async function StakeholdersPage({
   }));
 
   return (
-    <main className="space-y-5">
-      <section className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">
-              Stakeholders
-            </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Matriz de poder e interés por proyecto.
-            </p>
-          </div>
-        </div>
-        {params.error && (
-          <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
-            {params.error}
-          </p>
-        )}
-        {params.ok && (
-          <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-700">
-            {params.ok}
-          </p>
-        )}
-      </section>
+    <main className={dashPage}>
+      <DashboardPageHeader
+        title="Stakeholders"
+        description="Matriz de poder e interés por proyecto."
+      >
+        {params.error && <p className={dashAlertError}>{params.error}</p>}
+        {params.ok && <p className={dashAlertOk}>{params.ok}</p>}
+      </DashboardPageHeader>
 
       <StakeholderMatrixClient
         stakeholders={matrixItems}
@@ -113,10 +107,8 @@ export default async function StakeholdersPage({
 
       {canEdit ? (
         <details className={`${dashCard} group`}>
-          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden">
-            Agregar interesado
-          </summary>
-          <form action={createAction} className="grid gap-3 border-t border-slate-200 px-4 py-4 sm:grid-cols-2">
+          <summary className={dashDetailsSummary}>Agregar interesado</summary>
+          <form action={createAction} className={`grid gap-3 sm:grid-cols-2 ${dashDetailsBody}`}>
             <div className="sm:col-span-2">
               <label className={uiLabel}>Proyecto</label>
               <select name="projectId" required className={`mt-1 ${uiInput}`}>
@@ -156,13 +148,11 @@ export default async function StakeholdersPage({
           </form>
         </details>
       ) : (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Tu rol es solo lectura en este módulo.
-        </p>
+        <p className={dashAlertWarn}>Tu rol es solo lectura en este módulo.</p>
       )}
 
-      <section className={`${dashCard} p-4`}>
-        <h2 className="text-base font-semibold text-slate-900">Registro</h2>
+      <section className={`${dashCard} ${dashCardBody}`}>
+        <h2 className={dashSectionTitle}>Registro</h2>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-sm">
             <thead>

@@ -331,68 +331,28 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
         } as React.CSSProperties
       }
     >
-      <header className="sticky top-0 z-[100] flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-200 bg-white px-5 py-3.5">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-[33px] w-[33px] items-center justify-center rounded-lg"
-            style={{ background: ACCENT_L }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-              <rect
-                x="2"
-                y="2"
-                width="14"
-                height="14"
-                rx="2"
-                stroke={ACCENT}
-                strokeWidth="1.3"
-              />
-              <path
-                d="M5 9l2.5 2.5L13 6"
-                stroke={ACCENT}
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <div>
-            <div className="text-base font-semibold">Tracker de Entregables</div>
-            <div className="text-xs text-slate-500">
-              Avance ponderado por esfuerzo · estados · acuse del cliente
-            </div>
-          </div>
-        </div>
-        <span
-          className="rounded-full px-2.5 py-0.5 text-xs font-medium"
-          style={{ background: ACCENT_L, color: ACCENT_D }}
-        >
-          Tracker
-        </span>
-      </header>
-
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
-        <div className="min-w-0 flex-1 space-y-3.5 overflow-y-auto p-[18px] pb-10">
+        <div className="min-w-0 flex-1 space-y-4 overflow-y-auto p-4 pb-10">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-2">
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">Total entregables</div>
-              <div className="text-xl font-semibold leading-none">{total}</div>
+              <div className="text-lg font-semibold tabular-nums leading-none">{total}</div>
               <div className="mt-0.5 text-xs text-slate-400">registrados</div>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">Completados</div>
-              <div className="text-xl font-semibold leading-none text-[#27500A]">{comp}</div>
+              <div className="text-lg font-semibold tabular-nums leading-none text-[#27500A]">{comp}</div>
               <div className="mt-0.5 text-xs text-slate-400">aprobados / entregados</div>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">En proceso</div>
-              <div className="text-xl font-semibold leading-none">{pend}</div>
+              <div className="text-lg font-semibold tabular-nums leading-none">{pend}</div>
               <div className="mt-0.5 text-xs text-slate-400">pendiente o revisión</div>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">Vencidos</div>
               <div
-                className="text-xl font-semibold leading-none"
+                className="text-lg font-semibold tabular-nums leading-none"
                 style={{ color: venc > 0 ? "#791F1F" : undefined }}
               >
                 {venc}
@@ -402,7 +362,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">Acuses pendientes</div>
               <div
-                className="text-xl font-semibold leading-none"
+                className="text-lg font-semibold tabular-nums leading-none"
                 style={{ color: acPend > 0 ? "#633806" : undefined }}
               >
                 {acPend}
@@ -414,7 +374,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
               style={{ borderColor: ACCENT_L, background: "white" }}
             >
               <div className="mb-0.5 text-xs text-slate-500">Avance ponderado</div>
-              <div className="text-xl font-semibold leading-none" style={{ color: ACCENT }}>
+              <div className="text-lg font-semibold tabular-nums leading-none" style={{ color: ACCENT }}>
                 {pct}%
               </div>
               <div className="mt-0.5 text-xs text-slate-400">
@@ -433,7 +393,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-[26px] font-bold leading-none" style={{ color: barC }}>
+                <div className="text-lg font-semibold tabular-nums leading-none" style={{ color: barC }}>
                   {pct}%
                 </div>
                 <div className="text-xs text-slate-500">

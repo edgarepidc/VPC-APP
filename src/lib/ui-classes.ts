@@ -83,19 +83,22 @@ export const adminAlertOk =
 export const adminAlertWarn =
   "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950";
 
-/** Dashboard workspace */
+/** Dashboard workspace — escala tipográfica y espaciado unificados */
 export const dashShell =
   "dash-shell mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-5 sm:px-5";
 
-export const dashPage = "space-y-5";
+/** Separación vertical entre bloques de página */
+export const dashPage = "space-y-4";
 
 export const dashCard = adminCard;
 
-export const dashPageTitle = "text-lg font-semibold text-slate-900";
+export const dashCardBody = "p-4";
 
-export const dashSectionTitle = adminSectionTitle;
+export const dashPageTitle = "text-lg font-semibold leading-tight text-slate-900";
 
-export const dashSectionSub = adminSectionSub;
+export const dashSectionTitle = "text-base font-semibold text-slate-900";
+
+export const dashSectionSub = "text-sm leading-relaxed text-slate-600";
 
 export const dashTable = adminTable;
 
@@ -109,6 +112,21 @@ export const dashAlertOk = adminAlertOk;
 
 export const dashAlertWarn = adminAlertWarn;
 
-export const dashKpiValue = "text-xl font-semibold tabular-nums text-slate-900";
+export const dashKpiValue = "text-lg font-semibold tabular-nums text-slate-900";
 
 export const dashKpiLabel = "text-xs text-slate-500";
+
+export const dashTabActive =
+  "rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white";
+
+export const dashTabIdle =
+  "rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50";
+
+export const dashDetailsSummary =
+  "cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden";
+
+export const dashDetailsBody = "border-t border-slate-200 px-4 py-4";
+
+export const dashKpiCard = `${dashCard} p-4`;
+
+export const dashKpiGrid = "grid grid-cols-2 gap-3 lg:grid-cols-4";

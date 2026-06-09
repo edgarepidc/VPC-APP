@@ -144,7 +144,7 @@ export function StakeholderMatrixClient({
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-2.5 overflow-hidden p-5 pt-4">
+        <div className="flex flex-1 flex-col gap-2.5 overflow-hidden p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Matriz poder × interés

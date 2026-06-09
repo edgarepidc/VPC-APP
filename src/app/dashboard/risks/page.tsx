@@ -7,6 +7,9 @@ import { createRisk, deleteRisk, listRisksByTenant } from "@/modules/risks/servi
 import { listDeliverablesByTenant } from "@/modules/deliverables/service";
 import { listProjectsByTenant } from "@/modules/projects/service";
 
+import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { dashAlertError, dashAlertOk, dashPage } from "@/lib/ui-classes";
+
 import { RiskManagerView, type RiskClientRow } from "./risk-manager-view";
 
 type RisksPageProps = {
@@ -100,7 +103,15 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
   }));
 
   return (
-    <main>
+    <main className={dashPage}>
+      <DashboardPageHeader
+        title="Riesgos"
+        description="Matriz, exposición y registro de riesgos."
+      >
+        {params.error && <p className={dashAlertError}>{params.error}</p>}
+        {params.ok && <p className={dashAlertOk}>{params.ok}</p>}
+      </DashboardPageHeader>
+
       <RiskManagerView
         risks={risksClient}
         projects={projects}
@@ -108,8 +119,6 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
         canEdit={canEdit}
         createAction={createAction}
         deleteAction={deleteAction}
-        flashError={params.error}
-        flashOk={params.ok}
       />
     </main>
   );

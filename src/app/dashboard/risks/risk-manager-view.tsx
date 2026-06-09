@@ -3,6 +3,16 @@
 import { useMemo, useState } from "react";
 
 import {
+  dashAlertWarn,
+  dashCard,
+  dashCardBody,
+  dashKpiGrid,
+  dashKpiLabel,
+  dashKpiValue,
+  dashSectionTitle,
+} from "@/lib/ui-classes";
+
+import {
   fmtMoneyUSD,
   grossScore,
   heatmapTone,
@@ -39,8 +49,6 @@ type RiskManagerViewProps = {
   canEdit: boolean;
   createAction: (formData: FormData) => void | Promise<void>;
   deleteAction: (formData: FormData) => void | Promise<void>;
-  flashError?: string;
-  flashOk?: string;
 };
 
 function startOfToday() {
@@ -142,8 +150,6 @@ export function RiskManagerView({
   canEdit,
   createAction,
   deleteAction,
-  flashError,
-  flashOk,
 }: RiskManagerViewProps) {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [memoOpen, setMemoOpen] = useState(false);
@@ -248,76 +254,49 @@ ${D}`;
   }, [risks, activeRisks, today]);
 
   return (
-    <div className="space-y-5 text-slate-900">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-900">Riesgos</h1>
-          <p className="text-sm text-slate-600">Matriz, exposición y registro de riesgos.</p>
-        </div>
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-          {new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
-        </span>
-      </header>
-
-      {flashError && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{flashError}</p>
-      )}
-      {flashOk && (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{flashOk}</p>
-      )}
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-lg border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
-          <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">
-            Exposición total VME
-          </p>
-          <p className="text-[26px] font-semibold leading-none tracking-tight text-red-600">{fmtMoneyUSD(kpis.grossV)}</p>
-          <p className="mt-2 text-xs text-slate-500">
+    <div className="space-y-4 text-slate-900">
+      <div className={dashKpiGrid}>
+        <div className={`${dashCard} p-4`}>
+          <p className={`mb-2 ${dashKpiLabel}`}>Exposición total VME</p>
+          <p className={`${dashKpiValue} text-red-600`}>{fmtMoneyUSD(kpis.grossV)}</p>
+          <p className={`mt-2 ${dashKpiLabel}`}>
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" />
             {kpis.activeCount} riesgos activos
           </p>
         </div>
-        <div className="rounded-lg border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
-          <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">VME residual</p>
-          <p className="text-[26px] font-semibold leading-none tracking-tight text-blue-600">{fmtMoneyUSD(kpis.resV)}</p>
-          <p className="mt-2 text-xs text-slate-500">
+        <div className={`${dashCard} p-4`}>
+          <p className={`mb-2 ${dashKpiLabel}`}>VME residual</p>
+          <p className={`${dashKpiValue} text-blue-600`}>{fmtMoneyUSD(kpis.resV)}</p>
+          <p className={`mt-2 ${dashKpiLabel}`}>
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500 align-middle" />
             tras mitigación
           </p>
         </div>
-        <div className="rounded-lg border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
-          <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">Riesgos críticos</p>
-          <p className="text-[26px] font-semibold leading-none tracking-tight text-amber-600">{kpis.critical}</p>
-          <p className="mt-2 text-xs text-slate-500">
+        <div className={`${dashCard} p-4`}>
+          <p className={`mb-2 ${dashKpiLabel}`}>Riesgos críticos</p>
+          <p className={`${dashKpiValue} text-amber-600`}>{kpis.critical}</p>
+          <p className={`mt-2 ${dashKpiLabel}`}>
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle" />
             score residual &gt; 10
           </p>
         </div>
-        <div className="rounded-lg border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
-          <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">
-            Efectividad mitigación
-          </p>
-          <p className="text-[26px] font-semibold leading-none tracking-tight text-emerald-600">
+        <div className={`${dashCard} p-4`}>
+          <p className={`mb-2 ${dashKpiLabel}`}>Efectividad mitigación</p>
+          <p className={`${dashKpiValue} text-emerald-600`}>
             {kpis.eff !== null ? `${kpis.eff}%` : "—"}
           </p>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className={`mt-2 ${dashKpiLabel}`}>
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 align-middle" />
             reducción de exposición
           </p>
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_22rem] lg:items-start">
-        {/* Formulario */}
-        <section className="rounded-lg border border-[#e4e2dc] bg-white p-6 shadow-sm">
-          <p className="mb-4 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">
-            Registrar riesgo
-          </p>
+      <div className="grid gap-4 lg:grid-cols-[1fr_22rem] lg:items-start">
+        <section className={`${dashCard} p-4`}>
+          <h2 className={`mb-4 ${dashSectionTitle}`}>Registrar riesgo</h2>
           {!canEdit ? (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-              Tu rol es solo lectura para este módulo.
-            </p>
+            <p className={dashAlertWarn}>Tu rol es solo lectura para este módulo.</p>
           ) : (
             <form
               action={createAction}
@@ -550,8 +529,8 @@ ${D}`;
         </section>
 
         {/* Heatmaps */}
-        <section className="rounded-lg border border-[#e4e2dc] bg-white p-6 shadow-sm">
-          <p className="mb-4 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">Mapa de calor</p>
+        <section className={`${dashCard} p-4`}>
+          <h2 className={`mb-4 ${dashSectionTitle}`}>Mapa de calor</h2>
           <div className="flex flex-col gap-8">
             <HeatmapBlock label="Antes de mitigación" before={true} risks={risks} />
             <HeatmapBlock label="Después de mitigación" before={false} risks={risks} />
@@ -560,8 +539,8 @@ ${D}`;
       </div>
 
       {/* Tabla */}
-      <section className="rounded-lg border border-[#e4e2dc] bg-white p-6 shadow-sm">
-        <p className="mb-4 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">Registro de riesgos</p>
+      <section className={`${dashCard} p-4`}>
+        <h2 className={`mb-4 ${dashSectionTitle}`}>Registro de riesgos</h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[960px] border-collapse text-sm">
             <thead>

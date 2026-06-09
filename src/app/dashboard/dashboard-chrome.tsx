@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
 import { signOutAction } from "./sign-out";
 import { SidebarNav } from "./sidebar-nav";
@@ -35,7 +35,6 @@ export function DashboardChrome({
 }: DashboardChromeProps) {
   const pathname = usePathname();
   const sheetTitleId = useId();
-  const pathOnMountRef = useRef<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopSidebarHidden, setDesktopSidebarHidden] = useState(false);
 
@@ -62,17 +61,6 @@ export function DashboardChrome({
   }, []);
 
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
-
-  useEffect(() => {
-    if (pathOnMountRef.current === null) {
-      pathOnMountRef.current = pathname;
-      return;
-    }
-    if (pathOnMountRef.current !== pathname) {
-      pathOnMountRef.current = pathname;
-      persistSidebarHidden(true);
-    }
-  }, [pathname, persistSidebarHidden]);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -102,13 +90,13 @@ export function DashboardChrome({
   const panelBody = (opts: { onNav?: () => void; showCollapseHint?: boolean }) => (
     <>
       <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
-        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
           {tenantLogoUrl ? (
             <Image
               src={tenantLogoUrl}
               alt=""
-              width={40}
-              height={40}
+              width={36}
+              height={36}
               className="max-h-full max-w-full object-contain"
               unoptimized
             />
@@ -135,7 +123,7 @@ export function DashboardChrome({
           <button
             type="button"
             onClick={() => persistSidebarHidden(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="flex w-full items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           >
             Ocultar menú
           </button>
@@ -154,16 +142,32 @@ export function DashboardChrome({
   );
 
   return (
-    <div className="relative z-[1] flex flex-1 flex-col gap-4 md:flex-row">
-      <aside
-        className={[
-          "dash-nav-panel hidden w-full shrink-0 p-4 md:block md:w-60",
-          desktopSidebarHidden ? "md:hidden" : "",
-        ].join(" ")}
-        aria-label="Navegación principal"
-      >
-        {panelBody({ showCollapseHint: true })}
-      </aside>
+    <div className="flex flex-1 gap-4 md:gap-5">
+      {desktopSidebarHidden ? (
+        <aside
+          className="dash-nav-panel hidden w-12 shrink-0 p-2 md:block"
+          aria-label="Mostrar menú"
+        >
+          <button
+            type="button"
+            onClick={() => persistSidebarHidden(false)}
+            className="flex h-full min-h-[8rem] w-full flex-col items-center justify-start gap-2 rounded-lg py-3 text-sm text-slate-700 hover:bg-slate-50"
+            aria-label="Mostrar menú de navegación"
+          >
+            <span aria-hidden className="text-base">
+              ☰
+            </span>
+            <span className="text-xs font-medium [writing-mode:vertical-rl]">Menú</span>
+          </button>
+        </aside>
+      ) : (
+        <aside
+          className="dash-nav-panel hidden w-56 shrink-0 p-4 md:sticky md:top-5 md:block md:max-h-[calc(100vh-2.5rem)] md:self-start md:overflow-y-auto"
+          aria-label="Navegación principal"
+        >
+          {panelBody({ showCollapseHint: true })}
+        </aside>
+      )}
 
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden" role="presentation">
@@ -188,31 +192,22 @@ export function DashboardChrome({
         </div>
       )}
 
-      <button
-        type="button"
-        className={[
-          "dash-menu-fab inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium shadow-md",
-          "left-3 top-[max(0.75rem,env(safe-area-inset-top))] md:top-[5.5rem]",
-          mobileMenuOpen ? "max-md:hidden" : "max-md:inline-flex",
-          desktopSidebarHidden ? "md:inline-flex" : "md:hidden",
-        ].join(" ")}
-        onClick={() => {
-          if (typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches) {
-            persistSidebarHidden(false);
-          } else {
-            setMobileMenuOpen(true);
-          }
-        }}
-        aria-label="Abrir menú de navegación"
-      >
-        <span aria-hidden>☰</span>
-        Menú
-      </button>
+      <div className="min-w-0 flex-1">
+        <div className="mb-4 flex items-center border-b border-slate-200 pb-3 md:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+            aria-label="Abrir menú de navegación"
+          >
+            <span aria-hidden>☰</span>
+            Menú
+          </button>
+        </div>
 
-      <section className="dash-content-shell min-h-0 flex-1 overflow-hidden px-3 py-3 max-md:pt-14 sm:px-4 sm:py-4">
         {mainBanner}
         {children}
-      </section>
+      </div>
     </div>
   );
 }

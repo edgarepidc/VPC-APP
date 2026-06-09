@@ -1,6 +1,20 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import {
+  dashAlertError,
+  dashAlertOk,
+  dashAlertWarn,
+  dashCard,
+  dashCardBody,
+  dashDetailsBody,
+  dashDetailsSummary,
+  dashPage,
+  dashTabActive,
+  dashTabIdle,
+  uiLabel,
+} from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { requireTenantId } from "@/lib/tenancy";
@@ -128,29 +142,17 @@ export default async function TasksPage({ searchParams }: PageProps) {
   const hasProjects = projects.length > 0;
 
   return (
-    <main className="space-y-5">
-      <section className="pmo-card p-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">Tareas</h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Kanban, tabla, calendario y Gantt. Filtra por proyecto o texto.
-            </p>
-          </div>
-        </div>
+    <main className={dashPage}>
+      <DashboardPageHeader
+        title="Tareas"
+        description="Kanban, tabla, calendario y Gantt. Filtra por proyecto o texto."
+      >
+        {params.error && <p className={dashAlertError}>{params.error}</p>}
+        {params.ok && <p className={dashAlertOk}>{params.ok}</p>}
+      </DashboardPageHeader>
 
-        {params.error && (
-          <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-800">
-            {params.error}
-          </p>
-        )}
-        {params.ok && (
-          <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-800">
-            {params.ok}
-          </p>
-        )}
-
-        <nav className="mt-5 flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+      <section className={`${dashCard} ${dashCardBody}`}>
+        <nav className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
           {(
             [
               ["kanban", "Kanban"],
@@ -162,11 +164,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
             <Link
               key={v}
               href={tasksHref(v, pf, qf, v === "calendar" ? monthQueryValue : undefined)}
-              className={
-                view === v
-                  ? "rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white"
-                  : "rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              }
+              className={view === v ? dashTabActive : dashTabIdle}
             >
               {label}
             </Link>
@@ -183,7 +181,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
             <input type="hidden" name="month" value={monthQueryValue} />
           ) : null}
           <div>
-            <label className="text-xs font-medium text-slate-600">Proyecto</label>
+            <label className={uiLabel}>Proyecto</label>
             <select
               name="project"
               defaultValue={pf}
@@ -198,7 +196,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
             </select>
           </div>
           <div className="min-w-[200px] flex-1">
-            <label className="text-xs font-medium text-slate-600">Buscar</label>
+            <label className={uiLabel}>Buscar</label>
             <input
               name="q"
               type="search"
@@ -229,11 +227,9 @@ export default async function TasksPage({ searchParams }: PageProps) {
         </form>
 
         {canWrite && hasProjects && (
-          <details className="mt-4 rounded-lg border border-slate-200 bg-white">
-            <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden">
-              Nueva tarea
-            </summary>
-            <form action={createTaskWithContextAction} className="grid gap-3 border-t border-slate-200 px-4 py-4 sm:grid-cols-2">
+          <details className={`${dashCard} mt-4`}>
+            <summary className={dashDetailsSummary}>Nueva tarea</summary>
+            <form action={createTaskWithContextAction} className={`grid gap-3 sm:grid-cols-2 ${dashDetailsBody}`}>
               <input type="hidden" name="view" value={view} />
               <input type="hidden" name="project" value={pf} />
               <input type="hidden" name="q" value={qf} />
@@ -241,7 +237,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 <input type="hidden" name="month" value={monthQueryValue} />
               ) : null}
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-slate-600">Proyecto</label>
+                <label className={uiLabel}>Proyecto</label>
                 <select
                   name="projectId"
                   required
@@ -260,7 +256,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-slate-600">Título</label>
+                <label className={uiLabel}>Título</label>
                 <input
                   name="title"
                   required
@@ -270,9 +266,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-slate-600">
-                  Fecha límite (opcional)
-                </label>
+                <label className={uiLabel}>Fecha límite (opcional)</label>
                 <input
                   type="date"
                   name="dueDate"
@@ -280,9 +274,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-slate-600">
-                  Responsable (opcional)
-                </label>
+                <label className={uiLabel}>Responsable (opcional)</label>
                 <select
                   name="assigneeUserId"
                   className="mt-1 w-full max-w-md rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -308,7 +300,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
         )}
 
         {canWrite && !hasProjects && (
-          <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <p className={`mt-4 ${dashAlertWarn}`}>
             No hay proyectos.{" "}
             <Link href="/dashboard/projects" className="font-medium underline">
               Crea un proyecto
@@ -318,13 +310,13 @@ export default async function TasksPage({ searchParams }: PageProps) {
         )}
 
         {!canWrite && (
-          <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <p className={`mt-4 ${dashAlertWarn}`}>
             Tu rol solo permite ver tareas.
           </p>
         )}
       </section>
 
-      <section className="pmo-card overflow-hidden p-4">
+      <section className={`${dashCard} overflow-hidden ${dashCardBody}`}>
         {view === "kanban" && (
           <KanbanBoard
             tasks={taskCards}
