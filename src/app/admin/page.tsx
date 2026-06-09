@@ -32,6 +32,7 @@ import {
   adminTh,
   uiButtonPrimary,
 } from "@/lib/ui-classes";
+import { PMO_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser, setActiveTenantAsPlatformOwner } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { listAllTenants } from "@/modules/platform";
@@ -78,7 +79,7 @@ function resolveOk(code: string | undefined) {
 export default async function AdminHomePage({ searchParams }: Props) {
   const params = await searchParams;
   const session = await getSessionUser();
-  if (!session?.isSuperAdmin) redirect("/dashboard/projects");
+  if (!session?.isSuperAdmin) redirect(PMO_HUB);
 
   const rawQ = params.q?.trim() ?? "";
   const [tenants, totalOrgCount] = await Promise.all([
@@ -109,7 +110,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
     const tenantId = String(formData.get("tenantId") ?? "");
     const ok = await setActiveTenantAsPlatformOwner(tenantId);
     if (!ok) redirect("/admin?error=no_encontrado");
-    redirect("/dashboard/projects");
+    redirect(PMO_HUB);
   }
 
   const errorMsg = resolveError(params.error);

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { PMO_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser, setActiveTenant } from "@/lib/auth/session";
 import { listTenantsForUser } from "@/modules/tenancy/service";
 
@@ -23,7 +24,7 @@ export async function GET() {
 
   if (tenants.length === 1) {
     await setActiveTenant(tenants[0].id);
-    return NextResponse.json({ path: "/dashboard/projects" });
+    return NextResponse.json({ path: PMO_HUB });
   }
 
   return NextResponse.json({ path: "/select-tenant" });

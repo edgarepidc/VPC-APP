@@ -15,6 +15,7 @@ import {
   dashTabIdle,
   uiLabel,
 } from "@/lib/ui-classes";
+import { PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
@@ -305,7 +306,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
         {canWrite && !hasProjects && (
           <p className={`mt-4 ${dashAlertWarn}`}>
             No hay proyectos.{" "}
-            <Link href="/dashboard/projects" className="font-medium underline">
+            <Link href={PMO_PROJECTS} className="font-medium underline">
               Crea un proyecto
             </Link>{" "}
             primero.

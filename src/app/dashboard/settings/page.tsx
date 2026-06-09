@@ -15,6 +15,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { personInitialsFromName } from "@/lib/role-labels";
 import { flashMessageFromParam } from "@/lib/server-action-errors";
+import { PMO_TEAM } from "@/lib/dashboard-paths";
 import { requireTenantId } from "@/lib/tenancy";
 
 import { clearUserAvatarAction, uploadUserAvatarAction } from "./avatar-actions";
@@ -166,8 +167,8 @@ export default async function DashboardSettingsPage({
             <span className="font-medium text-slate-900">Administración global</span>
           )}
           . Para invitar al equipo, usa{" "}
-          <Link href="/dashboard/members" className="font-medium text-slate-900 underline">
-            Miembros
+          <Link href={PMO_TEAM} className="font-medium text-slate-900 underline">
+            Equipo
           </Link>
           .
         </p>

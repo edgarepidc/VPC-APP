@@ -9,6 +9,7 @@ import {
   dashCard,
   dashPage,
 } from "@/lib/ui-classes";
+import { PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
@@ -127,7 +128,7 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
         <section className={`${dashCard} p-4`}>
           <p className="text-sm text-slate-700">
             No hay proyectos.{" "}
-            <Link href="/dashboard/projects" className="font-medium underline">
+            <Link href={PMO_PROJECTS} className="font-medium underline">
               Crea un proyecto
             </Link>{" "}
             para registrar entregables.

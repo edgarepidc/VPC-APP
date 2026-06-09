@@ -34,8 +34,8 @@ export default async function PmoPage() {
   return (
     <main className={dashPage}>
       <DashboardPageHeader
-        title="PMO Dashboard"
-        description="Vista ejecutiva de proyectos, entregables, riesgos y stakeholders."
+        title="PMO"
+        description="Resumen ejecutivo de la organización: proyectos, entregables, riesgos y equipo."
       />
 
       <section className="flex flex-wrap gap-6 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm">

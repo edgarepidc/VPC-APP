@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { adminShell, uiButtonSecondary } from "@/lib/ui-classes";
+import { PMO_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 
 import { AdminNav } from "./admin-nav";
@@ -14,7 +15,7 @@ export default async function AdminLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await getSessionUser();
   if (!session) redirect("/login");
-  if (!session.isSuperAdmin) redirect("/dashboard/projects");
+  if (!session.isSuperAdmin) redirect(PMO_HUB);
 
   return (
     <div className={adminShell}>
@@ -40,7 +41,7 @@ export default async function AdminLayout({
               </p>
             </div>
           </div>
-          <Link className={uiButtonSecondary} href="/dashboard/projects">
+          <Link className={uiButtonSecondary} href={PMO_HUB}>
             Volver al tablero
           </Link>
         </div>

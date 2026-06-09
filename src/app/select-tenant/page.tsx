@@ -9,6 +9,7 @@ import {
   uiInput,
   uiLabel,
 } from "@/lib/ui-classes";
+import { PMO_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser, setActiveTenant } from "@/lib/auth/session";
 import { createFirstOrganizationAsAdmin } from "@/modules/tenancy/first-tenant";
 import { listTenantsForUser } from "@/modules/tenancy/service";
@@ -34,7 +35,7 @@ export default async function SelectTenantPage({
 
   if (!session.isSuperAdmin && tenants.length === 1) {
     await setActiveTenant(tenants[0].id);
-    redirect("/dashboard/projects");
+    redirect(PMO_HUB);
   }
 
   async function selectTenantAction(formData: FormData) {
@@ -42,7 +43,7 @@ export default async function SelectTenantPage({
     const tenantId = String(formData.get("tenantId") ?? "");
     if (!tenantId) return;
     await setActiveTenant(tenantId);
-    redirect("/dashboard/projects");
+    redirect(PMO_HUB);
   }
 
   async function createFirstTenantAction(formData: FormData) {
@@ -60,7 +61,7 @@ export default async function SelectTenantPage({
       redirect(`/select-tenant?error=${encodeURIComponent(result.message)}`);
     }
     await setActiveTenant(result.tenantId);
-    redirect("/dashboard/projects");
+    redirect(PMO_HUB);
   }
 
   return (

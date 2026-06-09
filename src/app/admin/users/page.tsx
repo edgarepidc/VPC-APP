@@ -25,6 +25,7 @@ import {
   uiInput,
   uiLabel,
 } from "@/lib/ui-classes";
+import { PMO_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { ROLE_LABELS } from "@/lib/role-labels";
@@ -64,7 +65,7 @@ function formatShortDate(d: Date | null | undefined) {
 export default async function AdminUsersPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const session = await getSessionUser();
-  if (!session?.isSuperAdmin) redirect("/dashboard/projects");
+  if (!session?.isSuperAdmin) redirect(PMO_HUB);
 
   const rawQ = params.q?.trim() ?? "";
   const filterTenant = params.tenantId?.trim() ?? "";

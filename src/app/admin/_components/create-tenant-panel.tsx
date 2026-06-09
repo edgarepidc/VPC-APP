@@ -9,6 +9,7 @@ import {
   uiInput,
   uiLabel,
 } from "@/lib/ui-classes";
+import { PMO_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser, setActiveTenantAsPlatformOwner } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import {
@@ -79,7 +80,7 @@ export async function CreateTenantPanel({
     const tenantId = String(formData.get("tenantId") ?? "");
     const ok = await setActiveTenantAsPlatformOwner(tenantId);
     if (!ok) redirect("/admin?error=Organizacion+no+encontrada");
-    redirect("/dashboard/projects");
+    redirect(PMO_HUB);
   }
 
   const logoWarnMessage = (() => {

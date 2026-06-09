@@ -12,6 +12,13 @@ type SidebarNavProps = {
   onLinkClick?: () => void;
 };
 
+function isNavItemActive(pathname: string, href: string): boolean {
+  if (href === "/dashboard/pmo") {
+    return pathname === href || pathname.startsWith("/dashboard/pmo/");
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) {
   const pathname = usePathname();
 
@@ -19,7 +26,7 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
     <nav className="mt-6 space-y-1.5 text-sm">
       <p className={uiSectionLabel}>Acceso rápido</p>
       {DASHBOARD_NAV_ITEMS.map((item) => {
-        const active = pathname === item.href;
+        const active = isNavItemActive(pathname, item.href);
         return (
           <Link
             key={item.href}
