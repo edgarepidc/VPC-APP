@@ -59,7 +59,7 @@ export default async function EscalometroPage({ searchParams }: EscalometroPageP
           href={PMO_ESCALATIONS}
           className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
         >
-          Ver historial PMO de escalamientos
+          Ver resumen PMO de escalamientos
         </Link>
       </DashboardPageHeader>
 

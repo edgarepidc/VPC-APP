@@ -22,7 +22,7 @@ const TABS = [
   { href: PMO_RISKS, label: "Riesgos", exact: false },
   { href: PMO_ESCALATIONS, label: "Escalamientos", exact: false },
   { href: PMO_MEETINGS, label: "Reuniones", exact: false },
-  { href: PMO_STAKEHOLDERS, label: "Stakeholders", exact: false },
+  { href: PMO_STAKEHOLDERS, label: "Interesados", exact: false },
   { href: PMO_TEAM, label: "Equipo", exact: false },
 ] as const;
 

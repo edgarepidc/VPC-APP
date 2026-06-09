@@ -15,7 +15,7 @@ import {
   dashTabIdle,
   uiLabel,
 } from "@/lib/ui-classes";
-import { PMO_PROJECTS } from "@/lib/dashboard-paths";
+import { PMO_HUB, PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
@@ -151,6 +151,12 @@ export default async function TasksPage({ searchParams }: PageProps) {
         title="Tareas"
         description="Kanban, tabla, calendario y Gantt. Filtra por proyecto o texto."
       >
+        <Link
+          href={PMO_HUB}
+          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
+        >
+          Ver resumen PMO
+        </Link>
         {params.error && <p className={dashAlertError}>{params.error}</p>}
         {params.ok && <p className={dashAlertOk}>{params.ok}</p>}
       </DashboardPageHeader>

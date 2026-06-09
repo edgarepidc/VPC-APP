@@ -66,13 +66,13 @@ export default async function PmoMeetingsPage({ searchParams }: PmoMeetingsPageP
     <main className={dashPage}>
       <DashboardPageHeader
         title="Reuniones"
-        description="Historial de sesiones registradas con la calculadora ROI por proyecto."
+        description="Historial de sesiones registradas con la calculadora de reuniones por proyecto."
       >
         <Link
           href={ROI_MEETINGS_HUB}
           className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
         >
-          Registrar nueva sesión
+          Abrir calculadora de reuniones
         </Link>
       </DashboardPageHeader>
 

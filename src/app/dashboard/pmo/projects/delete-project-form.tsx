@@ -31,7 +31,7 @@ export function DeleteProjectForm({
     <div className="rounded border border-rose-200 bg-rose-50 p-2 text-left">
       <p className="text-[11px] text-rose-950">
         ¿Eliminar <span className="font-semibold">{projectName}</span>? Se
-        borran tareas, entregables, riesgos y stakeholders de este proyecto.
+        borran tareas, entregables, riesgos e interesados de este proyecto.
       </p>
       <form action={deleteAction} className="mt-2 flex flex-wrap gap-2">
         <input type="hidden" name="projectId" value={projectId} />

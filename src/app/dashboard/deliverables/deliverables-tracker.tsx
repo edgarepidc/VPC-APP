@@ -1049,7 +1049,7 @@ function DetailPanel({
       ) : null}
 
       <div className="mb-3.5 rounded-lg border border-slate-200 p-3">
-        <div className="mb-2.5 text-xs font-semibold">Acuse del cliente / stakeholders</div>
+        <div className="mb-2.5 text-xs font-semibold">Acuse del cliente / interesados</div>
         {row.acuses.length === 0 ? (
           <div className="py-1 text-xs text-slate-400">Sin acuses registrados</div>
         ) : (

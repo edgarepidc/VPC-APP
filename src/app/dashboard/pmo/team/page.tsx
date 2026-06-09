@@ -215,7 +215,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
                     <td className="py-2 text-slate-700">
                       {roleKey === "manager" && canManage ? (
                         <details className="text-sm">
-                          <summary className="cursor-pointer text-blue-700 hover:underline">
+                          <summary className="cursor-pointer text-slate-700 underline hover:text-slate-900">
                             {scopeLabel}
                           </summary>
                           <form

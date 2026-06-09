@@ -39,6 +39,7 @@ export const STAKEHOLDERS_QUADRANT = (quadrant: string, projectId?: string) => {
 
 export const ESCALOMETRO_HUB = "/dashboard/escalometro";
 export const ROI_MEETINGS_HUB = "/dashboard/roi-meetings";
+export const TASKS_HUB = "/dashboard/tasks";
 
 export const PMO_ESCALATIONS_PROJECT = (projectId: string) =>
   `${PMO_ESCALATIONS}?projectId=${encodeURIComponent(projectId)}`;

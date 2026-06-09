@@ -59,7 +59,7 @@ export default async function RoiMeetingsPage({ searchParams }: RoiMeetingsPageP
           href={PMO_MEETINGS}
           className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
         >
-          Ver historial PMO de reuniones
+          Ver resumen PMO de reuniones
         </Link>
       </DashboardPageHeader>
 

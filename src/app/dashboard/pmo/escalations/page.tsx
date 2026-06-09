@@ -68,7 +68,7 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
           href={ESCALOMETRO_HUB}
           className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
         >
-          Nueva evaluación
+          Abrir Escalómetro
         </Link>
       </DashboardPageHeader>
 

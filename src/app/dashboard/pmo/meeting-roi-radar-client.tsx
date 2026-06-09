@@ -144,7 +144,7 @@ export function MeetingRoiRadarClient({
 
         {sorted.length === 0 && (
           <p className="mt-4 rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-            Sin sesiones registradas. Usa la calculadora ROI para documentar el costo de tus reuniones.
+            Sin sesiones registradas. Usa la calculadora de reuniones para documentar el costo de tus sesiones.
           </p>
         )}
       </section>

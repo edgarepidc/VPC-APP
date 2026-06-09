@@ -194,7 +194,7 @@ export function StakeholderManagerView({
 
       <section className={`${dashCard} p-4`}>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className={dashSectionTitle}>Matriz de stakeholders</h2>
+          <h2 className={dashSectionTitle}>Matriz de interesados</h2>
           <div className="flex flex-wrap items-center gap-2">
             <label className="flex items-center gap-2">
               <span className={uiLabel}>Buscar</span>

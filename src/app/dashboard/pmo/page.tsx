@@ -19,6 +19,7 @@ import {
   PMO_TEAM,
   RISK_DETAIL_IN_PROJECT,
   STAKEHOLDERS_HUB,
+  STAKEHOLDERS_QUADRANT,
 } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
@@ -89,7 +90,9 @@ export default async function PmoPage() {
         </div>
         <div>
           <p className={dashKpiLabel}>Entregables</p>
-          <p className={dashKpiValue}>{snapshot.kpis.deliverables}</p>
+          <Link href={PMO_DELIVERABLES} className={`${dashKpiValue} hover:underline`}>
+            {snapshot.kpis.deliverables}
+          </Link>
           {snapshot.kpis.overdueDeliverables > 0 ? (
             <Link
               href={PMO_DELIVERABLES}
@@ -152,7 +155,7 @@ export default async function PmoPage() {
           <p className="text-xs text-slate-500">{mxn(snapshot.kpis.totalMeetingCostMxn)} · 30 días</p>
         </div>
         <div>
-          <p className={dashKpiLabel}>Stakeholders</p>
+          <p className={dashKpiLabel}>Interesados</p>
           <Link href={PMO_STAKEHOLDERS} className={`${dashKpiValue} hover:underline`}>
             {snapshot.kpis.stakeholders}
           </Link>
@@ -188,7 +191,7 @@ export default async function PmoPage() {
 
         <div className={`${dashCard} p-4`}>
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-base font-semibold text-slate-900">Stakeholders</h2>
+            <h2 className="text-base font-semibold text-slate-900">Interesados</h2>
             <Link href={STAKEHOLDERS_HUB} className="text-xs font-medium text-slate-600 underline">
               Abrir mapa
             </Link>
@@ -196,15 +199,15 @@ export default async function PmoPage() {
           <div className="mt-3 space-y-2 text-sm">
             {(
               [
-                ["Promotores", snapshot.stakeholdersByQuadrant.promotores],
-                ["Latentes", snapshot.stakeholdersByQuadrant.latentes],
-                ["Defensores", snapshot.stakeholdersByQuadrant.defensores],
-                ["Espectadores", snapshot.stakeholdersByQuadrant.espectadores],
+                ["Promotores", snapshot.stakeholdersByQuadrant.promotores, "q1"],
+                ["Latentes", snapshot.stakeholdersByQuadrant.latentes, "q2"],
+                ["Defensores", snapshot.stakeholdersByQuadrant.defensores, "q3"],
+                ["Espectadores", snapshot.stakeholdersByQuadrant.espectadores, "q4"],
               ] as const
-            ).map(([label, n]) => (
+            ).map(([label, n, q]) => (
               <Link
                 key={label}
-                href={STAKEHOLDERS_HUB}
+                href={STAKEHOLDERS_QUADRANT(q)}
                 className="flex justify-between rounded-lg border border-slate-200 px-3 py-2 transition hover:border-slate-300 hover:bg-slate-50"
               >
                 <span className="text-slate-600">{label}</span>

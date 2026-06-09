@@ -9,7 +9,7 @@ import {
   dashCard,
   dashPage,
 } from "@/lib/ui-classes";
-import { PMO_PROJECTS } from "@/lib/dashboard-paths";
+import { PMO_DELIVERABLES, PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
@@ -151,6 +151,12 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
         title="Entregables"
         description="Tracker de compromisos, estados y acuses por proyecto."
       >
+        <Link
+          href={PMO_DELIVERABLES}
+          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
+        >
+          Ver resumen PMO de entregables
+        </Link>
         {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
         {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
       </DashboardPageHeader>
