@@ -11,6 +11,14 @@ import {
   type DeliverableStatus,
 } from "@/modules/deliverables/constants";
 import type { DeliverableAcuse, DeliverableLogEntry } from "@/modules/deliverables/json";
+import {
+  clampWeight,
+  computeProjectProgress,
+  projectWeightBudget,
+  redistributeWeightChange,
+  TARGET_SUM,
+} from "@/lib/deliverable-weight-utils";
+import { uiInput, uiLabel } from "@/lib/ui-classes";
 
 import {
   addDeliverableAcuseAction,
@@ -40,6 +48,7 @@ export type DeliverableTrackerRow = {
   dueDate: string | null;
   status: string;
   weight: number;
+  weightManual: boolean;
   description: string | null;
   acceptanceCriteria: string | null;
   notes: string | null;
@@ -156,18 +165,36 @@ function acuseMini(acuses: DeliverableAcuse[]) {
   );
 }
 
-function calcWeighted(rows: DeliverableTrackerRow[]) {
-  const totalPeso = rows.reduce((a, d) => a + (d.weight > 0 ? d.weight : 1), 0);
-  const donePeso = rows
-    .filter((d) => isDeliverableDoneStatus(d.status))
-    .reduce((a, d) => a + (d.weight > 0 ? d.weight : 1), 0);
-  const inProgPeso = rows
-    .filter((d) => normalizeDeliverableStatus(d.status) === "review")
-    .reduce((a, d) => a + (d.weight > 0 ? d.weight : 1), 0);
-  const pct = totalPeso ? Math.round((donePeso / totalPeso) * 100) : 0;
-  const pctInProg = totalPeso ? Math.round((inProgPeso / totalPeso) * 100) : 0;
-  const maxPeso = Math.max(...rows.map((d) => (d.weight > 0 ? d.weight : 1)), 1);
-  return { totalPeso, donePeso, inProgPeso, pct, pctInProg, maxPeso };
+function calcPortfolioProgress(rows: DeliverableTrackerRow[]) {
+  const byProject = new Map<string, DeliverableTrackerRow[]>();
+  for (const row of rows) {
+    const list = byProject.get(row.projectId) ?? [];
+    list.push(row);
+    byProject.set(row.projectId, list);
+  }
+
+  if (byProject.size === 0) {
+    return { pct: 0, pctInProg: 0, doneWeight: 0, totalWeight: 0, projectCount: 0 };
+  }
+
+  let pctSum = 0;
+  let inProgSum = 0;
+  let doneSum = 0;
+  for (const [, projectRows] of byProject) {
+    const stats = computeProjectProgress(projectRows);
+    pctSum += stats.pct;
+    inProgSum += stats.pctInProg;
+    doneSum += stats.doneWeight;
+  }
+
+  const projectCount = byProject.size;
+  return {
+    pct: Math.round(pctSum / projectCount),
+    pctInProg: Math.round(inProgSum / projectCount),
+    doneWeight: doneSum,
+    totalWeight: projectCount * TARGET_SUM,
+    projectCount,
+  };
 }
 
 function progressBarColor(pct: number): string {
@@ -226,8 +253,8 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
     return list;
   }, [rows, q, st, phase, sort]);
 
-  const { totalPeso, donePeso, pct, pctInProg, maxPeso } = useMemo(
-    () => calcWeighted(rows),
+  const { pct, pctInProg, doneWeight, totalWeight, projectCount } = useMemo(
+    () => calcPortfolioProgress(rows),
     [rows],
   );
   const remPct = Math.max(0, 100 - pct - pctInProg);
@@ -278,8 +305,8 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
       "Cliente",
       "Fecha compromiso",
       "Estado",
-      "Peso",
-      "% del total",
+      "Peso %",
+      "% avance",
       "Acuses OK",
       "Total acuses",
       "Criterios",
@@ -287,9 +314,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
     ];
     const lines = [hdr.join(",")];
     for (const d of rows) {
-      const share = totalPeso
-        ? Math.round(((d.weight > 0 ? d.weight : 1) / totalPeso) * 100)
-        : 0;
+      const share = d.weight;
       const ok = d.acuses.filter((a) => a.ok).length;
       lines.push(
         [
@@ -301,7 +326,6 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
           d.clientName ?? "",
           toDateInput(d.dueDate),
           DELIVERABLE_STATUS_LABEL[normalizeDeliverableStatus(d.status)],
-          d.weight,
           `${share}%`,
           ok,
           d.acuses.length,
@@ -378,7 +402,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                 {pct}%
               </div>
               <div className="mt-0.5 text-xs text-slate-400">
-                {donePeso} de {totalPeso} pts completados
+                {projectCount} proyecto{projectCount !== 1 ? "s" : ""} · media ponderada
               </div>
             </div>
           </div>
@@ -388,8 +412,8 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
               <div>
                 <div className="text-xs font-semibold">Avance ponderado por esfuerzo</div>
                 <div className="mt-0.5 text-xs text-slate-500">
-                  El porcentaje refleja el <strong className="text-slate-900">peso relativo</strong>{" "}
-                  de cada entregable, no el conteo simple.
+                  Cada proyecto reparte <strong className="text-slate-900">100%</strong> entre sus
+                  entregables según complejidad.
                 </div>
               </div>
               <div className="text-right">
@@ -397,7 +421,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                   {pct}%
                 </div>
                 <div className="text-xs text-slate-500">
-                  {donePeso} / {totalPeso} pts completados
+                  Media de avance por proyecto ({doneWeight}% completado en total)
                 </div>
               </div>
             </div>
@@ -433,7 +457,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                 Pendiente ({remPct}%)
               </div>
               <span className="ml-auto text-xs text-slate-400">
-                Peso: días, story points u otra unidad consistente
+                {totalWeight > 0 ? `${totalWeight}% asignado en cartera` : "Sin entregables"}
               </span>
             </div>
           </div>
@@ -476,7 +500,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
               className="h-[34px] rounded-lg border border-black/[0.17] bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
             >
               <option value="fecha">Fecha compromiso</option>
-              <option value="peso">Mayor peso / esfuerzo</option>
+              <option value="peso">Mayor % de avance</option>
               <option value="estado">Estado</option>
               <option value="fase">Fase</option>
             </select>
@@ -514,8 +538,8 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                     <th className="w-[108px] whitespace-nowrap px-3 py-2">Responsable</th>
                     <th className="w-[140px] whitespace-nowrap px-3 py-2">Fecha compromiso</th>
                     <th className="w-[100px] whitespace-nowrap px-3 py-2">Estado</th>
-                    <th className="w-[110px] whitespace-nowrap px-3 py-2" title="Peso relativo">
-                      Peso
+                    <th className="w-[110px] whitespace-nowrap px-3 py-2" title="% del avance del proyecto">
+                      % avance
                     </th>
                     <th className="w-[108px] whitespace-nowrap px-3 py-2">Acuse cliente</th>
                   </tr>
@@ -523,7 +547,6 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                 <tbody>
                   {filtered.map((d) => {
                     const stKey = normalizeDeliverableStatus(d.status);
-                    const wp = Math.round(((d.weight > 0 ? d.weight : 1) / maxPeso) * 100);
                     return (
                       <tr
                         key={d.id}
@@ -559,11 +582,16 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                             <div className="inline-block h-[5px] w-[60px] overflow-hidden rounded-sm bg-[#f7f5f1]">
                               <div
                                 className="h-full rounded-sm bg-[#AFA9EC]"
-                                style={{ width: `${wp}%` }}
+                                style={{ width: `${clampWeight(d.weight)}%` }}
                               />
                             </div>
-                            <span className="text-xs font-medium text-slate-500">
-                              {d.weight > 0 ? d.weight : 1}
+                            <span className="text-xs font-medium text-slate-700">
+                              {clampWeight(d.weight)}%
+                              {d.weightManual ? (
+                                <span className="ml-0.5 text-slate-400" title="Ajustado manualmente">
+                                  ●
+                                </span>
+                              ) : null}
                             </span>
                           </div>
                         </td>
@@ -592,10 +620,10 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
           {panel === "detail" && selected ? (
             <DetailPanel
               row={selected}
+              allRows={rows}
               projects={projects}
               phaseOptions={phases}
               canEdit={canEdit}
-              totalPeso={totalPeso}
               onClose={() => {
                 setPanel("closed");
                 setSelectedId(null);
@@ -605,6 +633,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
           ) : null}
           {panel === "create" && canEdit ? (
             <CreatePanel
+              allRows={rows}
               projects={projects}
               phaseOptions={phases}
               onClose={() => setPanel("closed")}
@@ -617,27 +646,112 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
   );
 }
 
+function WeightShareField({
+  value,
+  onChange,
+  projectRows,
+  currentId,
+}: {
+  value: number;
+  onChange: (next: number) => void;
+  projectRows: DeliverableTrackerRow[];
+  currentId?: string;
+}) {
+  const safeValue = clampWeight(value);
+  const budget = projectWeightBudget(
+    projectRows.map((r) => ({
+      id: r.id,
+      weight: r.id === currentId ? safeValue : r.weight,
+      weightManual: r.weightManual,
+    })),
+    currentId,
+  );
+
+  const preview = useMemo(() => {
+    if (!currentId) return null;
+    const base = projectRows.map((r) => ({
+      id: r.id,
+      weight: r.weight,
+      weightManual: r.weightManual,
+    }));
+    return redistributeWeightChange(base, currentId, safeValue).filter((r) => r.id !== currentId);
+  }, [currentId, projectRows, safeValue]);
+
+  return (
+    <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className={uiLabel}>% del avance del proyecto</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Los entregables sin ajuste manual absorben el resto hasta completar 100%.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={safeValue}
+            onChange={(e) => onChange(clampWeight(Number(e.target.value) || 1))}
+            className={`${uiInput} h-9 w-16 text-center text-base font-semibold tabular-nums`}
+          />
+          <span className="text-sm font-medium text-slate-600">%</span>
+        </div>
+      </div>
+      <input
+        type="range"
+        min={1}
+        max={100}
+        value={safeValue}
+        onChange={(e) => onChange(clampWeight(Number(e.target.value)))}
+        className="mt-3 w-full accent-slate-800"
+        aria-label="Porcentaje del avance del proyecto"
+      />
+      <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
+        <span>Asignado en proyecto: {budget.assigned + (currentId ? 0 : safeValue)}%</span>
+        <span>Disponible: {budget.available}%</span>
+      </div>
+      {preview && preview.some((r) => r.weightManual === false) ? (
+        <ul className="mt-2 space-y-0.5 border-t border-slate-200 pt-2 text-xs text-slate-600">
+          {preview
+            .filter((r) => {
+              const prev = projectRows.find((row) => row.id === r.id);
+              return prev && prev.weight !== r.weight;
+            })
+            .map((r) => {
+              const prev = projectRows.find((row) => row.id === r.id);
+              return (
+                <li key={r.id}>
+                  {prev?.title ?? "Entregable"}: {prev?.weight}% → {r.weight}%
+                  {r.weightManual ? "" : " (auto)"}
+                </li>
+              );
+            })}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 function DetailPanel({
   row,
+  allRows,
   projects,
   phaseOptions,
   canEdit,
-  totalPeso,
   onClose,
   run,
 }: {
   row: DeliverableTrackerRow;
+  allRows: DeliverableTrackerRow[];
   projects: DeliverableTrackerProject[];
   phaseOptions: string[];
   canEdit: boolean;
-  totalPeso: number;
   onClose: () => void;
   run: (fn: () => Promise<void>) => void;
 }) {
   const stKey = normalizeDeliverableStatus(row.status);
-  const myPct = totalPeso
-    ? Math.round(((row.weight > 0 ? row.weight : 1) / totalPeso) * 100)
-    : 0;
+  const projectRows = allRows.filter((r) => r.projectId === row.projectId);
   const [acName, setAcName] = useState("");
   const [acRole, setAcRole] = useState("");
 
@@ -672,13 +786,14 @@ function DetailPanel({
         <DetailEditForm
           key={row.id}
           row={row}
+          projectRows={projectRows}
+          allRows={allRows}
           projects={projects}
           phaseOptions={phaseOptions}
-          myPct={myPct}
           run={run}
         />
       ) : (
-        <ReadOnlyDetail row={row} myPct={myPct} />
+        <ReadOnlyDetail row={row} />
       )}
 
       {canEdit ? (
@@ -843,24 +958,14 @@ function DetailPanel({
   );
 }
 
-function ReadOnlyDetail({ row, myPct }: { row: DeliverableTrackerRow; myPct: number }) {
+function ReadOnlyDetail({ row }: { row: DeliverableTrackerRow }) {
   return (
     <>
-      <div
-        className="mb-3.5 flex items-center gap-2 rounded-lg px-3 py-2.5"
-        style={{ background: ACCENT_L }}
-      >
-        <div className="min-w-0 flex-1">
-          <div className="text-xs font-semibold" style={{ color: ACCENT_D }}>
-            Peso / esfuerzo
-          </div>
-          <div className="text-xs opacity-80" style={{ color: ACCENT_D }}>
-            Representa el <strong>{myPct}%</strong> del avance total
-          </div>
-        </div>
-        <span className="text-lg font-bold tabular-nums" style={{ color: ACCENT_D }}>
-          {row.weight}
-        </span>
+      <div className="mb-3.5 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Participación en el avance
+        </p>
+        <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{row.weight}%</p>
       </div>
       <Field label="Descripción" value={row.description} />
       <Field label="Criterios de aceptación" value={row.acceptanceCriteria} />
@@ -883,15 +988,17 @@ function Field({ label, value }: { label: string; value: string | null }) {
 
 function DetailEditForm({
   row,
+  projectRows,
+  allRows,
   projects,
   phaseOptions,
-  myPct,
   run,
 }: {
   row: DeliverableTrackerRow;
+  projectRows: DeliverableTrackerRow[];
+  allRows: DeliverableTrackerRow[];
   projects: DeliverableTrackerProject[];
   phaseOptions: string[];
-  myPct: number;
   run: (fn: () => Promise<void>) => void;
 }) {
   const [projectId, setProjectId] = useState(row.projectId);
@@ -900,45 +1007,35 @@ function DetailEditForm({
   const [ownerName, setOwnerName] = useState(row.ownerName ?? "");
   const [clientName, setClientName] = useState(row.clientName ?? "");
   const [dueDate, setDueDate] = useState(toDateInput(row.dueDate) || "");
-  const [weight, setWeight] = useState(String(row.weight));
+  const [weight, setWeight] = useState(row.weight);
   const [description, setDescription] = useState(row.description ?? "");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState(row.acceptanceCriteria ?? "");
   const [notes, setNotes] = useState(row.notes ?? "");
 
+  const rowsForWeight =
+    projectId === row.projectId
+      ? projectRows
+      : [
+          ...allRows.filter((r) => r.projectId === projectId && r.id !== row.id),
+          { ...row, projectId, weight, weightManual: true },
+        ];
+
   return (
     <>
-      <div
-        className="mb-3.5 flex items-center gap-2 rounded-lg px-3 py-2.5"
-        style={{ background: ACCENT_L }}
-      >
-        <div className="min-w-0 flex-1">
-          <div className="text-xs font-semibold" style={{ color: ACCENT_D }}>
-            Peso / esfuerzo de este entregable
-          </div>
-          <div className="text-xs opacity-80" style={{ color: ACCENT_D }}>
-            Representa el <strong>{myPct}%</strong> del avance total del proyecto
-          </div>
-        </div>
-        <input
-          type="number"
-          min={1}
-          max={999}
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-          className="h-9 w-[72px] rounded-lg border text-center text-base font-bold outline-none"
-          style={{ borderColor: ACCENT, color: ACCENT_D, background: "white" }}
-        />
-      </div>
+      <WeightShareField
+        value={weight}
+        onChange={setWeight}
+        projectRows={rowsForWeight}
+        currentId={row.id}
+      />
 
-      <div className="mb-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Proyecto
-          </label>
+          <label className={uiLabel}>Proyecto</label>
           <select
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
-            className="h-9 w-full rounded-lg border border-black/[0.17] bg-white px-2 text-sm"
+            className={`${uiInput} mt-1`}
           >
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
@@ -948,23 +1045,19 @@ function DetailEditForm({
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Nombre del entregable
-          </label>
+          <label className={uiLabel}>Nombre del entregable</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Fase
-          </label>
+          <label className={uiLabel}>Fase</label>
           <input
             value={phase}
             onChange={(e) => setPhase(e.target.value)}
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
             list="phase-dl-edit"
           />
           <datalist id="phase-dl-edit">
@@ -974,67 +1067,55 @@ function DetailEditForm({
           </datalist>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Responsable
-          </label>
+          <label className={uiLabel}>Responsable</label>
           <input
             value={ownerName}
             onChange={(e) => setOwnerName(e.target.value)}
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Cliente / destinatario
-          </label>
+          <label className={uiLabel}>Cliente / destinatario</label>
           <input
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Fecha compromiso
-          </label>
+          <label className={uiLabel}>Fecha compromiso</label>
           <input
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Descripción
-          </label>
+          <label className={uiLabel}>Descripción</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            className="w-full resize-y rounded-lg border border-black/[0.17] px-2 py-2 text-sm"
+            className={`${uiInput} mt-1 resize-y`}
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Criterios de aceptación
-          </label>
+          <label className={uiLabel}>Criterios de aceptación</label>
           <textarea
             value={acceptanceCriteria}
             onChange={(e) => setAcceptanceCriteria(e.target.value)}
             rows={3}
-            className="w-full resize-y rounded-lg border border-black/[0.17] px-2 py-2 text-sm"
+            className={`${uiInput} mt-1 resize-y`}
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Notas
-          </label>
+          <label className={uiLabel}>Notas</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="w-full resize-y rounded-lg border border-black/[0.17] px-2 py-2 text-sm"
+            className={`${uiInput} mt-1 resize-y`}
           />
         </div>
       </div>
@@ -1043,7 +1124,6 @@ function DetailEditForm({
         type="button"
         onClick={() =>
           run(async () => {
-            const w = Math.max(1, Math.min(999, Math.round(Number(weight) || 1)));
             await updateDeliverableDetailAction({
               id: row.id,
               projectId,
@@ -1052,7 +1132,7 @@ function DetailEditForm({
               ownerName,
               clientName,
               dueDate,
-              weight: w,
+              weight: clampWeight(weight),
               description,
               acceptanceCriteria,
               notes,
@@ -1068,11 +1148,13 @@ function DetailEditForm({
 }
 
 function CreatePanel({
+  allRows,
   projects,
   phaseOptions,
   onClose,
   run,
 }: {
+  allRows: DeliverableTrackerRow[];
   projects: DeliverableTrackerProject[];
   phaseOptions: string[];
   onClose: () => void;
@@ -1085,93 +1167,89 @@ function CreatePanel({
   const [clientName, setClientName] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [status, setStatus] = useState<DeliverableStatus>("pending");
-  const [weight, setWeight] = useState("5");
   const [description, setDescription] = useState("");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
+
+  const projectRows = allRows.filter((r) => r.projectId === projectId);
+  const defaultWeight = Math.max(
+    1,
+    projectRows.length === 0 ? TARGET_SUM : Math.floor(TARGET_SUM / (projectRows.length + 1)),
+  );
+  const [weight, setWeight] = useState(defaultWeight);
+
+  const selectedProject = projects.find((p) => p.id === projectId);
 
   return (
     <div className="w-full min-w-[min(100vw,430px)] max-w-full p-[18px] lg:w-[430px]">
       <div className="mb-4 flex items-start justify-between gap-2 border-b border-slate-200 pb-3">
         <div>
-          <div className="text-xs text-slate-500">Gestión del alcance · PMBOK</div>
-          <div className="text-sm font-semibold">Nuevo entregable</div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Contexto de registro
+          </p>
+          <div className="mt-1 text-sm font-semibold">Nuevo entregable</div>
+          {selectedProject ? (
+            <p className="mt-0.5 text-xs text-slate-500">{selectedProject.name}</p>
+          ) : null}
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-black/[0.17] text-xs hover:bg-[#f7f5f1]"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-xs hover:bg-slate-50"
         >
           ✕
         </button>
       </div>
 
-      <div className="mb-3.5 rounded-lg border border-slate-200 bg-[#f7f5f1] p-2.5 text-xs leading-relaxed text-slate-500">
-        El <strong className="text-slate-900">peso / esfuerzo</strong> define cuánto contribuye este
-        entregable al avance global. Usa días, story points u otra unidad — lo que importa es la
-        proporción entre entregables.
+      <div className="mb-3">
+        <label className={uiLabel}>Proyecto *</label>
+        <select
+          value={projectId}
+          onChange={(e) => {
+            setProjectId(e.target.value);
+            const siblings = allRows.filter((r) => r.projectId === e.target.value);
+            setWeight(
+              Math.max(
+                1,
+                siblings.length === 0
+                  ? TARGET_SUM
+                  : Math.floor(TARGET_SUM / (siblings.length + 1)),
+              ),
+            );
+          }}
+          className={`${uiInput} mt-1`}
+        >
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div
-        className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2.5"
-        style={{ background: ACCENT_L }}
-      >
-        <div className="min-w-0 flex-1">
-          <div className="text-xs font-semibold" style={{ color: ACCENT_D }}>
-            Peso / esfuerzo
-          </div>
-          <div className="text-xs opacity-80" style={{ color: ACCENT_D }}>
-            Unidad de medida consistente con el resto
-          </div>
-        </div>
-        <input
-          type="number"
-          min={1}
-          max={999}
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-          className="h-9 w-[72px] rounded-lg border text-center text-base font-bold outline-none"
-          style={{ borderColor: ACCENT, color: ACCENT_D, background: "white" }}
-        />
-      </div>
+      <WeightShareField
+        value={weight}
+        onChange={setWeight}
+        projectRows={projectRows}
+      />
 
-      <div className="mb-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Proyecto
-          </label>
-          <select
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-            className="h-9 w-full rounded-lg border border-black/[0.17] bg-white px-2 text-sm"
-          >
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Nombre del entregable
-          </label>
+          <label className={uiLabel}>Nombre del entregable *</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ej. Informe de pruebas"
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Fase del proyecto
-          </label>
+          <label className={uiLabel}>Fase del proyecto</label>
           <input
             value={phase}
             onChange={(e) => setPhase(e.target.value)}
             placeholder="Ej. Desarrollo"
             list="phase-dl-create"
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
           />
           <datalist id="phase-dl-create">
             {phaseOptions.map((f) => (
@@ -1180,46 +1258,38 @@ function CreatePanel({
           </datalist>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Responsable
-          </label>
+          <label className={uiLabel}>Responsable *</label>
           <input
             value={ownerName}
             onChange={(e) => setOwnerName(e.target.value)}
             placeholder="Nombre o equipo"
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Cliente / destinatario
-          </label>
+          <label className={uiLabel}>Cliente / destinatario</label>
           <input
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
             placeholder="Quien aprueba"
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Fecha compromiso
-          </label>
+          <label className={uiLabel}>Fecha compromiso *</label>
           <input
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="h-9 w-full rounded-lg border border-black/[0.17] px-2 text-sm"
+            className={`${uiInput} mt-1`}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Estado inicial
-          </label>
+          <label className={uiLabel}>Estado inicial</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as DeliverableStatus)}
-            className="h-9 w-full rounded-lg border border-black/[0.17] bg-white px-2 text-sm"
+            className={`${uiInput} mt-1`}
           >
             {DELIVERABLE_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -1229,27 +1299,23 @@ function CreatePanel({
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Descripción
-          </label>
+          <label className={uiLabel}>Descripción</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder="¿Qué incluye este entregable?"
-            className="w-full resize-y rounded-lg border border-black/[0.17] px-2 py-2 text-sm"
+            className={`${uiInput} mt-1 resize-y`}
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Criterios de aceptación
-          </label>
+          <label className={uiLabel}>Criterios de aceptación</label>
           <textarea
             value={acceptanceCriteria}
             onChange={(e) => setAcceptanceCriteria(e.target.value)}
             rows={3}
             placeholder="Condiciones para aprobarlo"
-            className="w-full resize-y rounded-lg border border-black/[0.17] px-2 py-2 text-sm"
+            className={`${uiInput} mt-1 resize-y`}
           />
         </div>
       </div>
@@ -1263,7 +1329,6 @@ function CreatePanel({
                 alert("Nombre, responsable y fecha compromiso son obligatorios.");
                 return;
               }
-              const w = Math.max(1, Math.min(999, Math.round(Number(weight) || 5)));
               await createDeliverableAction({
                 projectId,
                 title: title.trim(),
@@ -1272,7 +1337,7 @@ function CreatePanel({
                 clientName: clientName.trim(),
                 dueDate,
                 status,
-                weight: w,
+                weight: clampWeight(weight),
                 description: description.trim(),
                 acceptanceCriteria: acceptanceCriteria.trim(),
               });
@@ -1286,7 +1351,7 @@ function CreatePanel({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-black/[0.17] bg-white px-3 py-2 text-sm hover:bg-[#f7f5f1]"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50"
         >
           Cancelar
         </button>

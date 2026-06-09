@@ -105,6 +105,7 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
     dueDate: dueToYmd(d.dueDate),
     status: normalizeDeliverableStatus(d.status),
     weight: d.weight,
+    weightManual: d.weightManual,
     description: d.description,
     acceptanceCriteria: d.acceptanceCriteria,
     notes: d.notes,

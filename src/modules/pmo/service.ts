@@ -116,10 +116,25 @@ export async function getPmoSnapshot(
   const delivered = deliverables.filter((d) =>
     ["delivered", "approved"].includes(d.status),
   );
-  const weightedDone = delivered.reduce((sum, d) => sum + d.weight, 0);
-  const weightedTotal = deliverables.reduce((sum, d) => sum + d.weight, 0);
-  const portfolioProgressPct =
-    weightedTotal > 0 ? Math.round((weightedDone / weightedTotal) * 100) : 0;
+  const portfolioProgressPct = (() => {
+    const byProject = new Map<string, typeof deliverables>();
+    for (const d of deliverables) {
+      const list = byProject.get(d.projectId) ?? [];
+      list.push(d);
+      byProject.set(d.projectId, list);
+    }
+    if (byProject.size === 0) return 0;
+    let sumPct = 0;
+    for (const [, projectDeliverables] of byProject) {
+      const sum = projectDeliverables.reduce((acc, row) => acc + row.weight, 0);
+      const scale = sum > 0 ? 100 / sum : 1;
+      const done = projectDeliverables
+        .filter((row) => ["delivered", "approved"].includes(row.status))
+        .reduce((acc, row) => acc + row.weight * scale, 0);
+      sumPct += Math.round(done);
+    }
+    return Math.round(sumPct / byProject.size);
+  })();
 
   const totalResidualVme = risks.reduce(
     (sum, risk) => sum + (risk.residualProb / 100) * risk.impactAmount,

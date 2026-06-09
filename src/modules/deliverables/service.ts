@@ -1,6 +1,14 @@
 import type { Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
+import {
+  clampWeight,
+  normalizeWeightsTo100,
+  rebalanceAfterRemoval,
+  redistributeWeightChange,
+  TARGET_SUM,
+  type WeightRow,
+} from "@/lib/deliverable-weight-utils";
 
 import { DELIVERABLE_STATUS_LABEL, normalizeDeliverableStatus } from "./constants";
 import {
@@ -13,12 +21,75 @@ import {
   type DeliverableLogEntry,
 } from "./json";
 
+async function applyWeightPlan(
+  tenantId: string,
+  plan: Array<{ id: string; weight: number; weightManual: boolean }>,
+) {
+  if (plan.length === 0) return;
+  await db.$transaction(
+    plan.map((row) =>
+      db.deliverable.updateMany({
+        where: { id: row.id, tenantId },
+        data: { weight: clampWeight(row.weight), weightManual: row.weightManual },
+      }),
+    ),
+  );
+}
+
+async function listProjectWeightRows(tenantId: string, projectId: string): Promise<WeightRow[]> {
+  const rows = await db.deliverable.findMany({
+    where: { tenantId, projectId },
+    select: { id: true, weight: true, weightManual: true },
+    orderBy: { createdAt: "asc" },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    weight: r.weight,
+    weightManual: r.weightManual,
+  }));
+}
+
+/** Convierte pesos legacy (puntos) a % que suman 100 por proyecto. */
+export async function normalizeLegacyWeightsForTenant(tenantId: string) {
+  const rows = await db.deliverable.findMany({
+    where: { tenantId },
+    select: { id: true, projectId: true, weight: true, weightManual: true },
+  });
+  const byProject = new Map<string, WeightRow[]>();
+  for (const row of rows) {
+    const list = byProject.get(row.projectId) ?? [];
+    list.push({
+      id: row.id,
+      weight: row.weight,
+      weightManual: row.weightManual,
+    });
+    byProject.set(row.projectId, list);
+  }
+
+  const updates: Array<{ id: string; weight: number; weightManual: boolean }> = [];
+  for (const [, projectRows] of byProject) {
+    const sum = projectRows.reduce((s, r) => s + r.weight, 0);
+    if (sum === TARGET_SUM) continue;
+    const normalized = normalizeWeightsTo100(
+      projectRows.map((r) => ({ ...r, weightManual: false })),
+    );
+    for (const row of normalized) {
+      updates.push({
+        id: row.id,
+        weight: row.weight,
+        weightManual: row.weightManual ?? false,
+      });
+    }
+  }
+  await applyWeightPlan(tenantId, updates);
+}
+
 export async function listDeliverablesByTenant(
   tenantId: string,
   options?: { restrictToProjectIds?: string[] },
 ) {
   const restrict = options?.restrictToProjectIds;
-  return db.deliverable.findMany({
+  const rows = await db.deliverable.findMany({
     where: {
       tenantId,
       ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
@@ -30,6 +101,35 @@ export async function listDeliverablesByTenant(
     },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
   });
+
+  const needsNormalize = (() => {
+    const sums = new Map<string, number>();
+    for (const row of rows) {
+      sums.set(row.projectId, (sums.get(row.projectId) ?? 0) + row.weight);
+    }
+    for (const sum of sums.values()) {
+      if (sum !== TARGET_SUM) return true;
+    }
+    return false;
+  })();
+
+  if (needsNormalize) {
+    await normalizeLegacyWeightsForTenant(tenantId);
+    return db.deliverable.findMany({
+      where: {
+        tenantId,
+        ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
+      },
+      include: {
+        project: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
+    });
+  }
+
+  return rows;
 }
 
 export async function getDeliverableById(tenantId: string, id: string) {
@@ -67,10 +167,15 @@ export async function createDeliverable(input: {
   }
 
   const st = normalizeDeliverableStatus(input.status ?? "pending");
-  const weight =
-    input.weight != null && !Number.isNaN(input.weight)
-      ? Math.max(1, Math.min(999, Math.round(input.weight)))
-      : 5;
+  const existing = await listProjectWeightRows(input.tenantId, input.projectId);
+  const initialWeight =
+    existing.length === 0
+      ? TARGET_SUM
+      : clampWeight(
+          input.weight != null && !Number.isNaN(input.weight)
+            ? input.weight
+            : Math.max(1, Math.floor(TARGET_SUM / (existing.length + 1))),
+        );
 
   const initialLog: DeliverableLogEntry[] = [
     {
@@ -80,7 +185,7 @@ export async function createDeliverable(input: {
     },
   ];
 
-  return db.deliverable.create({
+  const created = await db.deliverable.create({
     data: {
       tenantId: input.tenantId,
       projectId: input.projectId,
@@ -90,7 +195,8 @@ export async function createDeliverable(input: {
       clientName: input.clientName?.trim() || null,
       status: st,
       dueDate: input.dueDate ?? null,
-      weight,
+      weight: initialWeight,
+      weightManual: existing.length > 0,
       description: input.description?.trim() || null,
       acceptanceCriteria: input.acceptanceCriteria?.trim() || null,
       notes: input.notes?.trim() || null,
@@ -98,6 +204,24 @@ export async function createDeliverable(input: {
       activityLog: toJsonActivityLog(initialLog) as Prisma.InputJsonValue,
     },
   });
+
+  if (existing.length > 0) {
+    const plan = redistributeWeightChange(
+      [...existing, { id: created.id, weight: initialWeight, weightManual: true }],
+      created.id,
+      initialWeight,
+    );
+    await applyWeightPlan(
+      input.tenantId,
+      plan.map((r) => ({
+        id: r.id,
+        weight: r.weight,
+        weightManual: r.weightManual ?? false,
+      })),
+    );
+  }
+
+  return created;
 }
 
 export async function updateDeliverable(input: {
@@ -119,7 +243,7 @@ export async function updateDeliverable(input: {
 }) {
   const existing = await db.deliverable.findFirst({
     where: { id: input.id, tenantId: input.tenantId },
-    select: { id: true },
+    select: { id: true, projectId: true, weight: true, weightManual: true },
   });
   if (!existing) {
     throw new Error("Entregable no encontrado.");
@@ -151,7 +275,8 @@ export async function updateDeliverable(input: {
   }
   if (input.dueDate !== undefined) data.dueDate = input.dueDate;
   if (input.weight !== undefined) {
-    data.weight = Math.max(1, Math.min(999, Math.round(input.weight)));
+    data.weight = clampWeight(input.weight);
+    data.weightManual = true;
   }
   if (input.description !== undefined) data.description = input.description?.trim() || null;
   if (input.acceptanceCriteria !== undefined) {
@@ -169,6 +294,50 @@ export async function updateDeliverable(input: {
     where: { id: input.id },
     data,
   });
+
+  const nextProjectId =
+    input.projectId !== undefined ? input.projectId : existing.projectId;
+
+  if (input.weight !== undefined) {
+    const projectRows = await listProjectWeightRows(input.tenantId, nextProjectId);
+    const plan = redistributeWeightChange(projectRows, input.id, clampWeight(input.weight));
+    await applyWeightPlan(
+      input.tenantId,
+      plan.map((r) => ({
+        id: r.id,
+        weight: r.weight,
+        weightManual: r.weightManual ?? false,
+      })),
+    );
+  } else if (input.projectId !== undefined && input.projectId !== existing.projectId) {
+    const oldRows = await listProjectWeightRows(input.tenantId, existing.projectId);
+    const remaining = oldRows.filter((r) => r.id !== input.id);
+    if (remaining.length > 0) {
+      const oldPlan = rebalanceAfterRemoval(remaining);
+      await applyWeightPlan(
+        input.tenantId,
+        oldPlan.map((r) => ({
+          id: r.id,
+          weight: r.weight,
+          weightManual: r.weightManual ?? false,
+        })),
+      );
+    }
+    const newRows = await listProjectWeightRows(input.tenantId, input.projectId);
+    const plan = redistributeWeightChange(
+      [...newRows, { id: input.id, weight: existing.weight, weightManual: true }],
+      input.id,
+      existing.weight,
+    );
+    await applyWeightPlan(
+      input.tenantId,
+      plan.map((r) => ({
+        id: r.id,
+        weight: r.weight,
+        weightManual: r.weightManual ?? false,
+      })),
+    );
+  }
 }
 
 export async function updateDeliverableStatus(input: {
@@ -211,12 +380,28 @@ export async function updateDeliverableStatus(input: {
 }
 
 export async function deleteDeliverable(input: { tenantId: string; id: string }) {
-  const r = await db.deliverable.deleteMany({
+  const row = await db.deliverable.findFirst({
+    where: { id: input.id, tenantId: input.tenantId },
+    select: { id: true, projectId: true },
+  });
+  if (!row) throw new Error("Entregable no encontrado.");
+
+  await db.deliverable.deleteMany({
     where: { id: input.id, tenantId: input.tenantId },
   });
-  if (r.count === 0) {
-    throw new Error("Entregable no encontrado.");
-  }
+
+  const remaining = await listProjectWeightRows(input.tenantId, row.projectId);
+  if (remaining.length === 0) return;
+
+  const plan = rebalanceAfterRemoval(remaining);
+  await applyWeightPlan(
+    input.tenantId,
+    plan.map((r) => ({
+      id: r.id,
+      weight: r.weight,
+      weightManual: r.weightManual ?? false,
+    })),
+  );
 }
 
 export async function toggleDeliverableAcuse(input: {

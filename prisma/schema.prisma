@@ -190,8 +190,10 @@ model Deliverable {
   clientName          String?
   status              String    @default("pending")
   dueDate             DateTime?
-  /** Peso / esfuerzo relativo (puntos, días, etc.) para avance ponderado. */
-  weight              Int       @default(5)
+  /** Porcentaje de participación en el avance del proyecto (1–100; suma 100 por proyecto). */
+  weight              Int       @default(100)
+  /** true = el usuario fijó el % manualmente; no se auto-ajusta al editar otros. */
+  weightManual        Boolean   @default(false)
   description         String?
   acceptanceCriteria  String?
   notes               String?
