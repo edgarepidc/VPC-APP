@@ -411,13 +411,15 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
             </div>
           </div>
 
-          <DeliverablesTimeline
-            rows={filtered}
-            onSelect={(id) => {
-              setSelectedId(id);
-              setPanel("detail");
-            }}
-          />
+          <div className="min-w-0 overflow-x-auto overflow-y-visible">
+            <DeliverablesTimeline
+              rows={filtered}
+              onSelect={(id) => {
+                setSelectedId(id);
+                setPanel("detail");
+              }}
+            />
+          </div>
 
           <div className="rounded-lg border border-slate-200 bg-white px-[18px] py-3.5">
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
