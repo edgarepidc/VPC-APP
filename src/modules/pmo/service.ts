@@ -147,6 +147,14 @@ export async function getPmoSnapshot(
     { promotores: 0, latentes: 0, defensores: 0, espectadores: 0 },
   );
 
+  const escalationTrends = buildEscalationTrendsByProject(
+    recentEscalations.map((row) => ({
+      projectId: row.projectId,
+      tier: row.tier,
+      createdAt: row.createdAt,
+    })),
+  );
+
   const projectHealth = projects.map((project) => {
     const projectDeliverables = deliverables.filter((d) => d.projectId === project.id);
     const projectRisks = risks.filter((r) => r.projectId === project.id);
@@ -174,13 +182,6 @@ export async function getPmoSnapshot(
   });
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const escalationTrends = buildEscalationTrendsByProject(
-    recentEscalations.map((row) => ({
-      projectId: row.projectId,
-      tier: row.tier,
-      createdAt: row.createdAt,
-    })),
-  );
   const escalationCounts = recentEscalations
     .filter((row) => row.createdAt >= thirtyDaysAgo)
     .reduce(
