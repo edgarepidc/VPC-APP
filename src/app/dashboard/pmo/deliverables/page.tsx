@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { getSessionUser } from "@/lib/auth/session";
-import { DELIVERABLES_HUB } from "@/lib/dashboard-paths";
+import { DELIVERABLES_HUB, DELIVERABLE_DETAIL_IN_PROJECT } from "@/lib/dashboard-paths";
 import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { dashCard, dashKpiLabel, dashKpiValue, dashPage } from "@/lib/ui-classes";
@@ -83,7 +83,7 @@ export default async function PmoDeliverablesPage() {
             {snapshot.overdueDeliverables.map((d) => (
               <li key={d.id} className="rounded-lg border border-rose-100 bg-rose-50/40 p-3">
                 <Link
-                  href={`/dashboard/deliverables?id=${d.id}`}
+                  href={DELIVERABLE_DETAIL_IN_PROJECT(d.id, d.project.id)}
                   className="font-medium text-slate-900 hover:underline"
                 >
                   {d.title}

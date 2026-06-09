@@ -1,6 +1,9 @@
+import Link from "next/link";
+
 import type { MeetingCostTrendDirection } from "@/lib/meeting-roi-utils";
 import type { EscalationTrendDirection } from "@/lib/escalation-utils";
 import { getEscalationTierBadge } from "@/lib/escalation-utils";
+import { DELIVERABLES_HUB, DELIVERABLES_PROJECT } from "@/lib/dashboard-paths";
 import { getProjectStatusBadge, getSemaphoreBadge } from "@/lib/ui";
 import { getCostLevelBadge, formatMxn } from "@/lib/meeting-roi-utils";
 import { dashCard } from "@/lib/ui-classes";
@@ -34,7 +37,12 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
     <div className={`${dashCard} p-4 lg:col-span-2`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-slate-900">Salud por proyecto</h2>
-        <span className="text-sm text-slate-600">Avance: {portfolioProgressPct}%</span>
+        <Link
+          href={DELIVERABLES_HUB}
+          className="text-sm text-slate-600 hover:text-slate-900 hover:underline"
+        >
+          Avance: {portfolioProgressPct}%
+        </Link>
       </div>
 
       {/* Vista móvil: tarjetas */}
@@ -62,9 +70,13 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 <span className={statusBadge.className}>{statusBadge.label}</span>
-                <span className="rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-600">
+                <Link
+                  href={DELIVERABLES_PROJECT(project.id)}
+                  className="rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+                  title="Ver entregables del proyecto"
+                >
                   {project.deliverables} entregables · {project.donePct}%
-                </span>
+                </Link>
                 <span className="rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-600">
                   {project.risks} riesgos
                 </span>
@@ -159,8 +171,24 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
                   <td className="py-2">
                     <span className={statusBadge.className}>{statusBadge.label}</span>
                   </td>
-                  <td className="py-2">{project.deliverables}</td>
-                  <td className="py-2">{project.donePct}%</td>
+                  <td className="py-2">
+                    <Link
+                      href={DELIVERABLES_PROJECT(project.id)}
+                      className="font-medium text-slate-900 hover:underline"
+                      title="Ver entregables del proyecto"
+                    >
+                      {project.deliverables}
+                    </Link>
+                  </td>
+                  <td className="py-2">
+                    <Link
+                      href={DELIVERABLES_PROJECT(project.id)}
+                      className="text-slate-900 hover:underline"
+                      title="Ver avance en tracker"
+                    >
+                      {project.donePct}%
+                    </Link>
+                  </td>
                   <td className="py-2">{project.risks}</td>
                   <td className="py-2">
                     {escalationBadge ? (

@@ -86,7 +86,7 @@ export async function getPmoSnapshot(
         dueDate: { lt: new Date() },
         status: { notIn: ["delivered", "approved"] },
       },
-      select: { id: true, title: true, dueDate: true, project: { select: { name: true } } },
+      select: { id: true, title: true, dueDate: true, project: { select: { id: true, name: true } } },
       orderBy: { dueDate: "asc" },
       take: 8,
     }),

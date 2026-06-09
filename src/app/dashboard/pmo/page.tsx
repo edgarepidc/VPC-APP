@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
@@ -7,6 +8,10 @@ import {
   dashKpiValue,
   dashPage,
 } from "@/lib/ui-classes";
+import {
+  DELIVERABLE_DETAIL_IN_PROJECT,
+  PMO_DELIVERABLES,
+} from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter } from "@/lib/project-scope";
@@ -83,7 +88,34 @@ export default async function PmoPage() {
         <div>
           <p className={dashKpiLabel}>Entregables</p>
           <p className={dashKpiValue}>{snapshot.kpis.deliverables}</p>
-          <p className="text-xs text-slate-500">{snapshot.kpis.overdueDeliverables} vencidos</p>
+          {snapshot.kpis.overdueDeliverables > 0 ? (
+            <Link
+              href={PMO_DELIVERABLES}
+              className="text-xs text-rose-700 hover:underline"
+            >
+              {snapshot.kpis.overdueDeliverables} vencidos
+            </Link>
+          ) : (
+            <p className="text-xs text-slate-500">0 vencidos</p>
+          )}
+        </div>
+        <div>
+          <p className={dashKpiLabel}>A tiempo</p>
+          <p className={dashKpiValue}>
+            {snapshot.kpis.deliverableOnTimePct !== null
+              ? `${snapshot.kpis.deliverableOnTimePct}%`
+              : "—"}
+          </p>
+          <p className="text-xs text-slate-500">cierres con fecha</p>
+        </div>
+        <div>
+          <p className={dashKpiLabel}>Lead time</p>
+          <p className={dashKpiValue}>
+            {snapshot.kpis.deliverableAvgLeadDays !== null
+              ? `${snapshot.kpis.deliverableAvgLeadDays}d`
+              : "—"}
+          </p>
+          <p className="text-xs text-slate-500">registro → entrega</p>
         </div>
         <div>
           <p className={dashKpiLabel}>Riesgos</p>
@@ -176,7 +208,12 @@ export default async function PmoPage() {
           <ul className="mt-3 space-y-2 text-sm">
             {snapshot.overdueDeliverables.map((deliverable) => (
               <li key={deliverable.id} className="rounded-lg border border-slate-200 p-3">
-                <p className="font-medium text-slate-900">{deliverable.title}</p>
+                <Link
+                  href={DELIVERABLE_DETAIL_IN_PROJECT(deliverable.id, deliverable.project.id)}
+                  className="font-medium text-slate-900 hover:underline"
+                >
+                  {deliverable.title}
+                </Link>
                 <p className="text-slate-600">{deliverable.project.name}</p>
                 <p className="text-xs text-slate-500">
                   Vencía: {deliverable.dueDate?.toLocaleDateString("es-MX")}
