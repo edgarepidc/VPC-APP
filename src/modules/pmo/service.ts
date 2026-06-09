@@ -7,6 +7,7 @@ import {
   type DeliverableMetricRow,
 } from "@/lib/deliverable-pmo-utils";
 import { residualScore } from "@/app/dashboard/risks/risk-utils";
+import { getQuadrantId } from "@/lib/stakeholder-playbook";
 import { buildEscalationTrendsByProject } from "@/lib/escalation-utils";
 import { buildMeetingCostTrendsByProject } from "@/lib/meeting-roi-utils";
 import {
@@ -80,7 +81,16 @@ export async function getPmoSnapshot(
     }),
     db.stakeholder.findMany({
       where: childWhere,
-      select: { id: true, projectId: true, name: true, influence: true, interest: true },
+      select: {
+        id: true,
+        projectId: true,
+        name: true,
+        role: true,
+        influence: true,
+        interest: true,
+        observation: true,
+        project: { select: { id: true, name: true } },
+      },
     }),
     db.deliverable.findMany({
       where: {
@@ -166,6 +176,61 @@ export async function getPmoSnapshot(
     },
     { promotores: 0, latentes: 0, defensores: 0, espectadores: 0 },
   );
+
+  const keyStakeholderRows = stakeholders
+    .filter((s) => getQuadrantId(s.influence, s.interest) === "q1")
+    .sort((a, b) => b.influence - a.influence || b.interest - a.interest)
+    .slice(0, 8);
+
+  const stakeholderAlerts = (() => {
+    const alerts: {
+      kind: "promoter_no_obs" | "project_no_promoters" | "project_empty";
+      label: string;
+      sublabel: string;
+      stakeholderId: string | null;
+      projectId: string;
+    }[] = [];
+
+    for (const s of stakeholders) {
+      if (getQuadrantId(s.influence, s.interest) === "q1" && !s.observation?.trim()) {
+        alerts.push({
+          kind: "promoter_no_obs",
+          label: s.name,
+          sublabel: `${s.project.name} · promotor sin observación`,
+          stakeholderId: s.id,
+          projectId: s.projectId,
+        });
+      }
+    }
+
+    for (const project of projects) {
+      const projectRows = stakeholders.filter((s) => s.projectId === project.id);
+      if (projectRows.length === 0) {
+        alerts.push({
+          kind: "project_empty",
+          label: project.name,
+          sublabel: "Proyecto sin interesados registrados",
+          stakeholderId: null,
+          projectId: project.id,
+        });
+        continue;
+      }
+      const hasPromoter = projectRows.some(
+        (s) => getQuadrantId(s.influence, s.interest) === "q1",
+      );
+      if (!hasPromoter) {
+        alerts.push({
+          kind: "project_no_promoters",
+          label: project.name,
+          sublabel: "Sin jugadores clave (Q1) identificados",
+          stakeholderId: null,
+          projectId: project.id,
+        });
+      }
+    }
+
+    return alerts.slice(0, 10);
+  })();
 
   const escalationTrends = buildEscalationTrendsByProject(
     recentEscalations.map((row) => ({
@@ -256,6 +321,8 @@ export async function getPmoSnapshot(
     overdueDeliverables,
     criticalRiskRows,
     stakeholdersByQuadrant,
+    keyStakeholderRows,
+    stakeholderAlerts,
     projectHealth,
     escalationRadar: {
       rows: recentEscalations.slice(0, 12),

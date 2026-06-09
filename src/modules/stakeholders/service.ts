@@ -19,6 +19,13 @@ export async function listStakeholdersByTenant(
   });
 }
 
+export async function getStakeholder(tenantId: string, stakeholderId: string) {
+  return db.stakeholder.findFirst({
+    where: { id: stakeholderId, tenantId },
+    include: { project: { select: { id: true, name: true } } },
+  });
+}
+
 export async function createStakeholder(input: {
   tenantId: string;
   projectId: string;
@@ -39,4 +46,35 @@ export async function createStakeholder(input: {
       observation: input.observation || null,
     },
   });
+}
+
+export async function updateStakeholder(input: {
+  tenantId: string;
+  id: string;
+  projectId: string;
+  name: string;
+  role?: string;
+  influence: number;
+  interest: number;
+  observation?: string;
+}) {
+  const result = await db.stakeholder.updateMany({
+    where: { id: input.id, tenantId: input.tenantId },
+    data: {
+      projectId: input.projectId,
+      name: input.name,
+      role: input.role || null,
+      influence: input.influence,
+      interest: input.interest,
+      observation: input.observation || null,
+    },
+  });
+  return result.count;
+}
+
+export async function deleteStakeholder(tenantId: string, stakeholderId: string) {
+  const result = await db.stakeholder.deleteMany({
+    where: { id: stakeholderId, tenantId },
+  });
+  return result.count;
 }

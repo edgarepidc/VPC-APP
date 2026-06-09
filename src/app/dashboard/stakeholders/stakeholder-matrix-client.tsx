@@ -22,7 +22,13 @@ export type MatrixStakeholder = {
 type Props = {
   stakeholders: MatrixStakeholder[];
   projectNames: { id: string; name: string }[];
-  initialProjectId?: string;
+  projectFilter: string;
+  onProjectFilterChange: (value: string) => void;
+  selectedId: string | null;
+  onSelectId: (id: string | null) => void;
+  canEdit?: boolean;
+  onEdit?: (s: MatrixStakeholder) => void;
+  onDelete?: (s: MatrixStakeholder) => void;
 };
 
 const qBg: Record<QuadrantId, string> = {
@@ -54,14 +60,14 @@ function initials(name: string) {
 export function StakeholderMatrixClient({
   stakeholders,
   projectNames,
-  initialProjectId,
+  projectFilter,
+  onProjectFilterChange,
+  selectedId,
+  onSelectId,
+  canEdit = false,
+  onEdit,
+  onDelete,
 }: Props) {
-  const [projectFilter, setProjectFilter] = useState<string>(
-    initialProjectId && projectNames.some((p) => p.id === initialProjectId)
-      ? initialProjectId
-      : "all",
-  );
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [exportNote, setExportNote] = useState<string | null>(null);
 
   const visible = useMemo(() => {
@@ -76,7 +82,7 @@ export function StakeholderMatrixClient({
 
   function exportMarkdown() {
     const lines = [
-      "# Plan de comunicaciones — Stakeholders",
+      "# Plan de comunicaciones — Interesados",
       "",
       ...visible.map((s) => {
         const q = QUADRANT_PLAYBOOK[getQuadrantId(s.influence, s.interest)];
@@ -100,7 +106,6 @@ export function StakeholderMatrixClient({
 
   return (
     <div className="sh-matrix-app flex min-h-[min(720px,calc(100vh-12rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:flex-row">
-      {/* Canvas + toolbar */}
       <div className="flex min-h-0 flex-1 flex-col bg-slate-50">
         <header className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -118,9 +123,7 @@ export function StakeholderMatrixClient({
                   <circle cx="11" cy="11" r="2" />
                 </svg>
               </div>
-              <span className="text-sm font-semibold tracking-tight text-slate-900">
-                Matriz
-              </span>
+              <span className="text-sm font-semibold tracking-tight text-slate-900">Matriz</span>
             </div>
             <div className="hidden h-[18px] w-px bg-[#e8e6e1] sm:block" />
             <div>
@@ -128,8 +131,8 @@ export function StakeholderMatrixClient({
               <select
                 value={projectFilter}
                 onChange={(e) => {
-                  setProjectFilter(e.target.value);
-                  setSelectedId(null);
+                  onProjectFilterChange(e.target.value);
+                  onSelectId(null);
                 }}
                 className="mt-0.5 max-w-[220px] border-0 bg-transparent text-sm font-medium text-slate-900 outline-none focus:ring-0"
               >
@@ -163,9 +166,7 @@ export function StakeholderMatrixClient({
             </span>
             <span className="rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-[12px] text-slate-400">
               Interesados:{" "}
-              <strong className="font-semibold text-slate-500">
-                {visible.length}
-              </strong>
+              <strong className="font-semibold text-slate-500">{visible.length}</strong>
             </span>
           </div>
 
@@ -180,14 +181,10 @@ export function StakeholderMatrixClient({
             </div>
             <div className="flex min-w-0 flex-1 flex-col">
               <div className="relative flex-1 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.07)]">
-                {/* Quadrants */}
-                <div className="pointer-events-none absolute inset-0 grid grid-rows-2 grid-cols-2">
+                <div className="pointer-events-none absolute inset-0 grid grid-cols-2 grid-rows-2">
                   <div
-                    className="flex items-center justify-center border-r border-dashed border-b p-2 text-center"
-                    style={{
-                      background: qBg.q1,
-                      borderColor: qBorder.q1,
-                    }}
+                    className="flex items-center justify-center border-b border-r border-dashed p-2 text-center"
+                    style={{ background: qBg.q1, borderColor: qBorder.q1 }}
                   >
                     <span className="text-xs font-semibold uppercase leading-tight text-green-800 opacity-[0.18]">
                       Promotores
@@ -197,10 +194,7 @@ export function StakeholderMatrixClient({
                   </div>
                   <div
                     className="flex items-center justify-center border-b border-dashed p-2 text-center"
-                    style={{
-                      background: qBg.q2,
-                      borderColor: qBorder.q2,
-                    }}
+                    style={{ background: qBg.q2, borderColor: qBorder.q2 }}
                   >
                     <span className="text-xs font-semibold uppercase leading-tight text-amber-800 opacity-[0.18]">
                       Latentes
@@ -210,10 +204,7 @@ export function StakeholderMatrixClient({
                   </div>
                   <div
                     className="flex items-center justify-center border-r border-dashed p-2 text-center"
-                    style={{
-                      background: qBg.q3,
-                      borderColor: qBorder.q3,
-                    }}
+                    style={{ background: qBg.q3, borderColor: qBorder.q3 }}
                   >
                     <span className="text-xs font-semibold uppercase leading-tight text-blue-800 opacity-[0.18]">
                       Defensores
@@ -223,10 +214,7 @@ export function StakeholderMatrixClient({
                   </div>
                   <div
                     className="flex items-center justify-center p-2 text-center"
-                    style={{
-                      background: qBg.q4,
-                      borderColor: qBorder.q4,
-                    }}
+                    style={{ background: qBg.q4, borderColor: qBorder.q4 }}
                   >
                     <span className="text-xs font-semibold uppercase leading-tight text-gray-600 opacity-[0.18]">
                       Espectadores
@@ -234,7 +222,6 @@ export function StakeholderMatrixClient({
                   </div>
                 </div>
 
-                {/* Markers */}
                 {visible.map((s) => {
                   const qid = getQuadrantId(s.influence, s.interest);
                   const left = `${(s.interest / 10) * 100}%`;
@@ -244,9 +231,7 @@ export function StakeholderMatrixClient({
                     <button
                       key={s.id}
                       type="button"
-                      onClick={() =>
-                        setSelectedId((id) => (id === s.id ? null : s.id))
-                      }
+                      onClick={() => onSelectId(isSel ? null : s.id)}
                       className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:z-20 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                       style={{ left, top }}
                       title={s.name}
@@ -270,10 +255,7 @@ export function StakeholderMatrixClient({
 
               <div className="mt-1 flex justify-between px-0.5">
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                  <span
-                    key={n}
-                    className="font-mono text-[10px] text-slate-400"
-                  >
+                  <span key={n} className="font-mono text-[10px] text-slate-400">
                     {n}
                   </span>
                 ))}
@@ -286,11 +268,10 @@ export function StakeholderMatrixClient({
         </div>
       </div>
 
-      {/* Sidebar playbook */}
       <aside className="flex w-full flex-shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[320px] lg:border-l lg:border-t-0">
         <div className="border-b border-[#f0ede8] px-5 py-4">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-slate-400">
-            Playbook tactico
+            Playbook táctico
           </p>
           <p className="mt-0.5 text-sm font-medium text-slate-900">
             {selected ? selected.name : "Selecciona un interesado"}
@@ -312,10 +293,8 @@ export function StakeholderMatrixClient({
                 </svg>
               </div>
               <p className="max-w-[200px] text-sm leading-snug">
-                <strong className="font-medium text-slate-500">
-                  Pulsa un punto
-                </strong>{" "}
-                en la matriz para ver estrategia y tacticas sugeridas.
+                <strong className="font-medium text-slate-500">Pulsa un punto</strong> en la matriz
+                para ver estrategia y tácticas sugeridas.
               </p>
             </div>
           )}
@@ -328,15 +307,9 @@ export function StakeholderMatrixClient({
                   borderColor: qBorder[playbook.id],
                 }}
               >
-                <p className="text-[15px] font-semibold text-slate-900">
-                  {selected.name}
-                </p>
-                <p className="mt-0.5 text-[12px] text-slate-500">
-                  {selected.role || "Sin cargo"}
-                </p>
-                <p className="mt-2 text-xs text-slate-500">
-                  Proyecto: {selected.projectName}
-                </p>
+                <p className="text-[15px] font-semibold text-slate-900">{selected.name}</p>
+                <p className="mt-0.5 text-[12px] text-slate-500">{selected.role || "Sin cargo"}</p>
+                <p className="mt-2 text-xs text-slate-500">Proyecto: {selected.projectName}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <span className="inline-flex rounded-full bg-[#f2f1ee] px-2 py-0.5 font-mono text-[10.5px] text-slate-500">
                     Inf {selected.influence} · Int {selected.interest}
@@ -359,7 +332,7 @@ export function StakeholderMatrixClient({
 
               <div>
                 <p className="mb-1.5 flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-wide text-slate-400">
-                  Tacticas
+                  Tácticas
                   <span className="h-px flex-1 bg-[#f0ede8]" />
                 </p>
                 <ul className="flex flex-col gap-1.5">
@@ -381,16 +354,38 @@ export function StakeholderMatrixClient({
               <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-[#f2f1ee] px-3 py-2">
                 <span aria-hidden>{playbook.freqIcon}</span>
                 <span className="text-[12px] text-slate-600">
-                  Comunicacion:{" "}
-                  <strong className="text-slate-900">{playbook.freq}</strong>
+                  Comunicación: <strong className="text-slate-900">{playbook.freq}</strong>
                 </span>
               </div>
 
-              {selected.observation && (
+              {selected.observation ? (
                 <div className="rounded-md border border-slate-200 bg-[#f2f1ee] px-2.5 py-2 text-[12px] italic leading-relaxed text-slate-600">
                   {selected.observation}
                 </div>
+              ) : (
+                <p className="rounded-md border border-dashed border-amber-200 bg-amber-50/50 px-2.5 py-2 text-[12px] text-amber-800">
+                  Sin observación registrada. Documenta acuerdos de comunicación aquí.
+                </p>
               )}
+
+              {canEdit && onEdit && onDelete ? (
+                <div className="flex flex-wrap gap-2 border-t border-[#f0ede8] pt-3">
+                  <button
+                    type="button"
+                    onClick={() => onEdit(selected)}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(selected)}
+                    className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ) : null}
             </div>
           )}
         </div>

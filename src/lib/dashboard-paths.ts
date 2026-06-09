@@ -25,8 +25,17 @@ export const RISKS_PROJECT = (projectId: string) =>
   `/dashboard/risks?project=${encodeURIComponent(projectId)}`;
 
 export const STAKEHOLDERS_HUB = "/dashboard/stakeholders";
+export const STAKEHOLDER_DETAIL = (id: string) =>
+  `/dashboard/stakeholders?id=${encodeURIComponent(id)}`;
+export const STAKEHOLDER_DETAIL_IN_PROJECT = (id: string, projectId: string) =>
+  `/dashboard/stakeholders?id=${encodeURIComponent(id)}&project=${encodeURIComponent(projectId)}`;
 export const STAKEHOLDERS_PROJECT = (projectId: string) =>
-  `/dashboard/stakeholders?projectId=${encodeURIComponent(projectId)}`;
+  `/dashboard/stakeholders?project=${encodeURIComponent(projectId)}`;
+export const STAKEHOLDERS_QUADRANT = (quadrant: string, projectId?: string) => {
+  const p = new URLSearchParams({ q: quadrant });
+  if (projectId) p.set("project", projectId);
+  return `/dashboard/stakeholders?${p.toString()}`;
+};
 
 export const ESCALOMETRO_HUB = "/dashboard/escalometro";
 export const ROI_MEETINGS_HUB = "/dashboard/roi-meetings";

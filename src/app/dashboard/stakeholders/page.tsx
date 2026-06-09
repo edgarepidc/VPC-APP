@@ -4,41 +4,44 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { PMO_STAKEHOLDERS } from "@/lib/dashboard-paths";
 import { hasPermission } from "@/lib/rbac";
-import { quadrantLabelFull } from "@/lib/stakeholder-playbook";
-import { getSemaphoreBadge } from "@/lib/ui";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { requireTenantId } from "@/lib/tenancy";
 import {
   createStakeholder,
+  deleteStakeholder,
   listStakeholdersByTenant,
+  updateStakeholder,
 } from "@/modules/stakeholders/service";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
-import {
-  dashAlertError,
-  dashAlertOk,
-  dashAlertWarn,
-  dashCard,
-  dashCardBody,
-  dashDetailsBody,
-  dashDetailsSummary,
-  dashPage,
-  dashSectionTitle,
-  uiButtonPrimary,
-  uiInput,
-  uiLabel,
-} from "@/lib/ui-classes";
+import { dashAlertError, dashAlertOk, dashPage } from "@/lib/ui-classes";
 
-import { StakeholderMatrixClient } from "./stakeholder-matrix-client";
+import { StakeholderManagerView } from "./stakeholder-manager-view";
 
 type StakeholdersPageProps = {
-  searchParams: Promise<{ error?: string; ok?: string; projectId?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    ok?: string;
+    id?: string;
+    project?: string;
+    projectId?: string;
+    q?: string;
+  }>;
 };
 
-export default async function StakeholdersPage({
-  searchParams,
-}: StakeholdersPageProps) {
+function parseStakeholderForm(formData: FormData) {
+  return {
+    projectId: String(formData.get("projectId") ?? ""),
+    name: String(formData.get("name") ?? "").trim(),
+    role: String(formData.get("role") ?? "").trim(),
+    influence: Math.max(0, Math.min(10, Number(formData.get("influence") ?? 5))),
+    interest: Math.max(0, Math.min(10, Number(formData.get("interest") ?? 5))),
+    observation: String(formData.get("observation") ?? "").trim(),
+  };
+}
+
+export default async function StakeholdersPage({ searchParams }: StakeholdersPageProps) {
   const params = await searchParams;
   const session = await getSessionUser();
   if (!session) redirect("/login");
@@ -52,28 +55,12 @@ export default async function StakeholdersPage({
     listStakeholdersByTenant(tenantId, { restrictToProjectIds: projectIdsFilter }),
   ]);
 
-  async function createAction(formData: FormData) {
-    "use server";
+  async function assertProjectAccess(projectId: string, tenantIdActive: string) {
     const current = await getSessionUser();
     if (!current?.activeTenantId) redirect("/login");
-    if (!hasPermission(current.role, "tasks.write")) {
-      redirect("/dashboard/stakeholders?error=No+tienes+permiso+para+crear+interesados");
-    }
-
-    const projectId = String(formData.get("projectId") ?? "");
-    const name = String(formData.get("name") ?? "").trim();
-    const role = String(formData.get("role") ?? "").trim();
-    const influence = Number(formData.get("influence") ?? 5);
-    const interest = Number(formData.get("interest") ?? 5);
-    const observation = String(formData.get("observation") ?? "").trim();
-
-    if (!projectId || !name) {
-      redirect("/dashboard/stakeholders?error=Proyecto+y+nombre+son+obligatorios");
-    }
-
     try {
       await assertCanAccessProject({
-        tenantId: current.activeTenantId,
+        tenantId: tenantIdActive,
         userId: current.userId,
         role: current.role,
         projectId,
@@ -84,18 +71,74 @@ export default async function StakeholdersPage({
         `/dashboard/stakeholders?error=${encodeURIComponent((e as Error).message)}`,
       );
     }
+  }
+
+  async function createAction(formData: FormData) {
+    "use server";
+    const current = await getSessionUser();
+    if (!current?.activeTenantId) redirect("/login");
+    if (!hasPermission(current.role, "tasks.write")) {
+      redirect("/dashboard/stakeholders?error=No+tienes+permiso+para+crear+interesados");
+    }
+
+    const parsed = parseStakeholderForm(formData);
+    if (!parsed.projectId || !parsed.name) {
+      redirect("/dashboard/stakeholders?error=Proyecto+y+nombre+son+obligatorios");
+    }
+
+    await assertProjectAccess(parsed.projectId, current.activeTenantId);
 
     await createStakeholder({
       tenantId: current.activeTenantId,
-      projectId,
-      name,
-      role,
-      influence: Math.max(0, Math.min(10, influence)),
-      interest: Math.max(0, Math.min(10, interest)),
-      observation,
+      ...parsed,
     });
 
     redirect("/dashboard/stakeholders?ok=Interesado+registrado");
+  }
+
+  async function updateAction(formData: FormData) {
+    "use server";
+    const current = await getSessionUser();
+    if (!current?.activeTenantId) redirect("/login");
+    if (!hasPermission(current.role, "tasks.write")) {
+      redirect("/dashboard/stakeholders?error=No+tienes+permiso+para+editar+interesados");
+    }
+
+    const stakeholderId = String(formData.get("stakeholderId") ?? "").trim();
+    const parsed = parseStakeholderForm(formData);
+    if (!stakeholderId || !parsed.projectId || !parsed.name) {
+      redirect("/dashboard/stakeholders?error=Datos+incompletos+para+actualizar");
+    }
+
+    await assertProjectAccess(parsed.projectId, current.activeTenantId);
+
+    const updated = await updateStakeholder({
+      tenantId: current.activeTenantId,
+      id: stakeholderId,
+      ...parsed,
+    });
+    if (updated === 0) {
+      redirect("/dashboard/stakeholders?error=Interesado+no+encontrado");
+    }
+
+    redirect(
+      `/dashboard/stakeholders?id=${encodeURIComponent(stakeholderId)}&ok=Interesado+actualizado`,
+    );
+  }
+
+  async function deleteAction(formData: FormData) {
+    "use server";
+    const current = await getSessionUser();
+    if (!current?.activeTenantId) redirect("/login");
+    if (!hasPermission(current.role, "tasks.write")) {
+      redirect("/dashboard/stakeholders?error=No+tienes+permiso+para+eliminar");
+    }
+
+    const stakeholderId = String(formData.get("stakeholderId") ?? "").trim();
+    if (!stakeholderId) redirect("/dashboard/stakeholders?error=Interesado+invalido");
+
+    await deleteStakeholder(current.activeTenantId, stakeholderId);
+    redirect("/dashboard/stakeholders?ok=Interesado+eliminado");
   }
 
   const matrixItems = stakeholders.map((item) => ({
@@ -109,156 +152,37 @@ export default async function StakeholdersPage({
     projectName: item.project.name,
   }));
 
+  const initialProject = params.project ?? params.projectId;
+
   return (
     <main className={dashPage}>
       <DashboardPageHeader
-        title="Stakeholders"
+        title="Interesados"
         description="Matriz de poder e interés por proyecto."
       >
         <Link
           href={PMO_STAKEHOLDERS}
           className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
         >
-          Ver resumen PMO de stakeholders
+          Ver resumen PMO de interesados
         </Link>
         {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
         {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
       </DashboardPageHeader>
 
-      <StakeholderMatrixClient
+      <StakeholderManagerView
         stakeholders={matrixItems}
-        projectNames={projects.map((p) => ({ id: p.id, name: p.name }))}
-        initialProjectId={params.projectId}
+        projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+        canEdit={canEdit}
+        initial={{
+          id: params.id,
+          project: initialProject,
+          q: params.q,
+        }}
+        createAction={createAction}
+        updateAction={updateAction}
+        deleteAction={deleteAction}
       />
-
-      {canEdit ? (
-        <details className={`${dashCard} group`}>
-          <summary className={dashDetailsSummary}>Agregar interesado</summary>
-          <form action={createAction} className={`grid gap-3 sm:grid-cols-2 ${dashDetailsBody}`}>
-            <div className="sm:col-span-2">
-              <label className={uiLabel}>Proyecto</label>
-              <select name="projectId" required className={`mt-1 ${uiInput}`}>
-                <option value="">Seleccionar…</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={uiLabel}>Nombre</label>
-              <input name="name" required placeholder="Ej. María González" className={`mt-1 ${uiInput}`} />
-            </div>
-            <div>
-              <label className={uiLabel}>Cargo / rol</label>
-              <input name="role" placeholder="Ej. Directora de TI" className={`mt-1 ${uiInput}`} />
-            </div>
-            <div>
-              <label className={uiLabel}>Influencia (0–10)</label>
-              <input name="influence" type="number" min={0} max={10} defaultValue={5} className={`mt-1 ${uiInput}`} />
-            </div>
-            <div>
-              <label className={uiLabel}>Interés (0–10)</label>
-              <input name="interest" type="number" min={0} max={10} defaultValue={5} className={`mt-1 ${uiInput}`} />
-            </div>
-            <div className="sm:col-span-2">
-              <label className={uiLabel}>Observación (opcional)</label>
-              <textarea name="observation" rows={3} className={`mt-1 ${uiInput}`} />
-            </div>
-            <div className="sm:col-span-2">
-              <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
-                Agregar al mapa
-              </button>
-            </div>
-          </form>
-        </details>
-      ) : (
-        <p className={dashAlertWarn}>Tu rol es solo lectura en este módulo.</p>
-      )}
-
-      <section className={`${dashCard} ${dashCardBody}`}>
-        <h2 className={dashSectionTitle}>Registro</h2>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left">
-                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
-                  Proyecto
-                </th>
-                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
-                  Nombre
-                </th>
-                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
-                  Rol
-                </th>
-                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
-                  Inf.
-                </th>
-                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
-                  Int.
-                </th>
-                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
-                  Cuadrante
-                </th>
-                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
-                  Semáforo
-                </th>
-                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
-                  Observación
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {stakeholders.map((item) => {
-                const influenceInterestAvg =
-                  ((item.influence + item.interest) / 20) * 100;
-                const semaphore = getSemaphoreBadge(influenceInterestAvg);
-                return (
-                  <tr
-                    key={item.id}
-                    className="border-b border-[#f0ede8] transition hover:bg-[#f7f6f3]"
-                  >
-                    <td className="py-3 pr-2">{item.project.name}</td>
-                    <td className="py-3 pr-2 font-medium text-slate-900">
-                      {item.name}
-                    </td>
-                    <td className="py-3 pr-2 text-slate-600">
-                      {item.role ?? "—"}
-                    </td>
-                    <td className="py-3 pr-2 font-mono text-[12px]">
-                      {item.influence}
-                    </td>
-                    <td className="py-3 pr-2 font-mono text-[12px]">
-                      {item.interest}
-                    </td>
-                    <td className="py-3 pr-2 text-slate-600">
-                      {quadrantLabelFull(item.influence, item.interest)}
-                    </td>
-                    <td className="py-3 pr-2">
-                      <span className={semaphore.className}>{semaphore.label}</span>
-                    </td>
-                    <td className="max-w-xs py-3 text-slate-600">
-                      {item.observation ?? "—"}
-                    </td>
-                  </tr>
-                );
-              })}
-              {stakeholders.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="py-10 text-center font-mono text-[12px] text-slate-400"
-                  >
-                    Aún no hay interesados. Usa el formulario para agregar el
-                    primero.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
     </main>
   );
 }
