@@ -57,8 +57,8 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
       /column|does not exist|P2022|no such column/i.test(loadError) ||
       /Unknown arg|Unknown field/i.test(loadError);
     return (
-      <main className="space-y-4">
-        <section className="pmo-card p-6">
+      <main className="space-y-5">
+        <section className="pmo-card p-4">
           <h1 className="text-lg font-semibold text-slate-900">No se pudieron cargar los entregables</h1>
           <p className="mt-2 text-sm text-slate-600">
             La app ya está desplegada, pero la consulta a la base de datos falló. Suele pasar cuando{" "}
@@ -149,7 +149,7 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
       )}
 
       {projects.length === 0 ? (
-        <section className="pmo-card p-6">
+        <section className="pmo-card p-4">
           <p className="text-sm text-slate-700">
             No hay proyectos.{" "}
             <Link href="/dashboard/projects" className="font-medium underline">

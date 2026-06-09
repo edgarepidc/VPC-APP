@@ -1,5 +1,16 @@
 import { redirect } from "next/navigation";
 
+import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import {
+  dashAlertError,
+  dashAlertOk,
+  dashAlertWarn,
+  dashCard,
+  dashPage,
+  uiButtonPrimary,
+  uiInput,
+  uiLabel,
+} from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
 import { getAppUrl } from "@/lib/env";
 import { ROLE_LABELS } from "@/lib/role-labels";
@@ -99,54 +110,41 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   }
 
   return (
-    <main className="space-y-6">
-      <section className="pmo-hero p-6">
-        <h1 className="pmo-title">Miembros del tenant</h1>
-        <p className="mt-1 text-sm text-slate-200">
-          Gestiona acceso por email para la organizacion activa.
-        </p>
-        {usage && (
-          <p className="mt-3 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-xs text-slate-100">
+    <main className={dashPage}>
+      <DashboardPageHeader
+        title="Miembros"
+        description="Equipo con acceso a este workspace."
+      >
+        {usage ? (
+          <p className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
             Plan <span className="font-semibold uppercase">{usage.plan}</span>:{" "}
-            <span className="tabular-nums">
-              {usage.seatsUsed}/{usage.limits.maxMemberSeats}
-            </span>{" "}
-            puestos (miembros + invitaciones pendientes). Proyectos:{" "}
-            <span className="tabular-nums">
-              {usage.projectCount}/{usage.limits.maxProjects}
-            </span>
-            .
+            {usage.seatsUsed}/{usage.limits.maxMemberSeats} puestos ·{" "}
+            {usage.projectCount}/{usage.limits.maxProjects} proyectos
           </p>
-        )}
-        {params.error && (
-          <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
-            {params.error}
-          </p>
-        )}
-        {params.ok && (
-          <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-700">
-            {params.ok}
-          </p>
-        )}
-      </section>
+        ) : null}
+        {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
+        {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
+      </DashboardPageHeader>
 
-      <section className="pmo-card p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Miembros actuales</h2>
-        <div className="mt-4 overflow-x-auto">
-          <table className="pmo-table pmo-row-hover w-full min-w-[640px] text-sm">
+      <section className={`${dashCard} p-4`}>
+        <h2 className="text-base font-semibold text-slate-900">Listado</h2>
+        <div className="mt-3 overflow-x-auto">
+          <table className="pmo-table pmo-row-hover w-full min-w-[520px] text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Rol</th>
+              <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase text-slate-500">
+                <th className="py-2">Nombre</th>
+                <th className="py-2">Email</th>
+                <th className="py-2">Rol</th>
               </tr>
             </thead>
             <tbody>
               {members.map((member) => (
-                <tr key={member.id}>
-                  <td className="font-medium text-slate-900">{member.user.name ?? "-"}</td>
-                  <td>{member.user.email}</td>
-                  <td>
+                <tr key={member.id} className="border-b border-slate-100">
+                  <td className="py-2 font-medium text-slate-900">
+                    {member.user.name ?? "—"}
+                  </td>
+                  <td className="py-2 text-slate-700">{member.user.email}</td>
+                  <td className="py-2">
                     <span className="pmo-badge pmo-badge--blue">
                       {ROLE_LABELS[member.role.key as RoleKey] ?? member.role.name}
                     </span>
@@ -155,8 +153,8 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
               ))}
               {members.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="py-8 text-center text-slate-500">
-                    Aun no hay miembros en este tenant.
+                  <td colSpan={3} className="py-6 text-center text-slate-500">
+                    Sin miembros en este workspace.
                   </td>
                 </tr>
               )}
@@ -165,56 +163,42 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
         </div>
       </section>
 
-      <section className="pmo-card p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Invitar o actualizar rol</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Si el usuario no existe, se envia invitacion por email y se asigna al aceptar.
-        </p>
-        {appUrl.needsAttention && (
-          <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Configura `NEXT_PUBLIC_APP_URL` con HTTPS y subdominio real antes de produccion.
+      {canManage ? (
+        <section className={`${dashCard} p-4`}>
+          <h2 className="text-base font-semibold text-slate-900">Invitar o cambiar rol</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Si el correo no existe, se envía invitación por email.
           </p>
-        )}
-        {appUrl.isSupabaseProjectHost && (
-          <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
-            `NEXT_PUBLIC_APP_URL` no puede ser `*.supabase.co`. Debe ser la URL publica de esta app
-            (Vercel); si no, las invitaciones por correo fallan con errores de Auth.
-          </p>
-        )}
-        {!canManage ? (
-          <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Solo Admin del tenant o Administrador pueden invitar y asignar PM /
-            Consultante.
-          </p>
-        ) : (
-          <form action={assignRoleAction} className="mt-4 grid gap-3 sm:grid-cols-3">
-            <input
-              required
-              type="email"
-              name="email"
-              placeholder="usuario@empresa.com"
-              className="pmo-input sm:col-span-2"
-            />
-            <select
-              name="role"
-              defaultValue="member"
-              className="pmo-select"
-            >
-              {(Object.keys(ROLE_LABELS) as RoleKey[]).map((key) => (
-                <option key={key} value={key}>
-                  {ROLE_LABELS[key]}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 sm:col-span-3"
-            >
-              Guardar acceso
+          {appUrl.isSupabaseProjectHost && (
+            <p className={`mt-3 ${dashAlertError}`}>
+              Configura <code className="text-xs">NEXT_PUBLIC_APP_URL</code> con la URL pública de la app.
+            </p>
+          )}
+          <form action={assignRoleAction} className="mt-4 grid max-w-md gap-3">
+            <div>
+              <label className={uiLabel}>Correo</label>
+              <input name="email" type="email" required className={`mt-1 ${uiInput}`} />
+            </div>
+            <div>
+              <label className={uiLabel}>Rol</label>
+              <select name="role" defaultValue="member" className={`mt-1 ${uiInput}`}>
+                {(Object.keys(ROLE_LABELS) as RoleKey[]).map((key) => (
+                  <option key={key} value={key}>
+                    {ROLE_LABELS[key]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
+              Guardar / invitar
             </button>
           </form>
-        )}
-      </section>
+        </section>
+      ) : (
+        <p className={dashAlertWarn}>
+          Tu rol solo permite ver miembros. Necesitas rol de administrador para invitar.
+        </p>
+      )}
     </main>
   );
 }

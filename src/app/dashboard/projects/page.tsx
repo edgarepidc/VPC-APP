@@ -1,5 +1,16 @@
 import { redirect } from "next/navigation";
 
+import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import {
+  dashAlertError,
+  dashAlertOk,
+  dashAlertWarn,
+  dashCard,
+  dashPage,
+  uiButtonPrimary,
+  uiInput,
+  uiLabel,
+} from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { hasPermission } from "@/lib/rbac";
@@ -138,117 +149,84 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
   const colCount = canWrite ? 4 : 3;
 
   return (
-    <main className="space-y-6">
-      <section className="pmo-card p-6">
-        <h1 className="pmo-title text-slate-900">Proyectos</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Organización:{" "}
-          <span className="font-medium text-slate-800">
+    <main className={dashPage}>
+      <DashboardPageHeader
+        title="Proyectos"
+        description={
+          <>
             {tenant?.name ?? "—"}
-          </span>
-          {tenant?.slug ? (
-            <span className="text-slate-500"> ({tenant.slug})</span>
-          ) : null}
+            {tenant?.slug ? (
+              <span className="text-slate-500"> ({tenant.slug})</span>
+            ) : null}
+          </>
+        }
+      >
+        {usage ? (
+          <p className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            Plan {usage.plan}: {usage.projectCount}/{usage.limits.maxProjects} proyectos
+          </p>
+        ) : null}
+        {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
+        {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
+      </DashboardPageHeader>
+
+      {canWrite ? (
+        <details className={`${dashCard} group`}>
+          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden">
+            Nuevo proyecto
+          </summary>
+          <form action={createProjectAction} className="grid gap-3 border-t border-slate-200 px-4 py-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className={uiLabel}>Nombre</label>
+              <input name="name" required maxLength={200} className={`mt-1 ${uiInput}`} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={uiLabel}>Descripción (opcional)</label>
+              <textarea
+                name="description"
+                rows={2}
+                maxLength={2000}
+                className={`mt-1 ${uiInput}`}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
+                Crear proyecto
+              </button>
+            </div>
+          </form>
+        </details>
+      ) : (
+        <p className={dashAlertWarn}>
+          Tu rol solo permite ver proyectos. Necesitas rol de gestor o superior para crear o editar.
         </p>
-        {usage && (
-          <p className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-            Plan <span className="font-semibold uppercase">{usage.plan}</span>:{" "}
-            <span className="tabular-nums">
-              {usage.projectCount}/{usage.limits.maxProjects}
-            </span>{" "}
-            proyectos usados.
-          </p>
-        )}
+      )}
 
-        {params.error && (
-          <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-800">
-            {params.error}
-          </p>
-        )}
-        {params.ok && (
-          <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-800">
-            {params.ok}
-          </p>
-        )}
-
-        {canWrite && (
-          <section className="mt-6 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
-            <h2 className="text-sm font-semibold text-slate-900">
-              Nuevo proyecto
-            </h2>
-            <form action={createProjectAction} className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-slate-600">Nombre</label>
-                <input
-                  name="name"
-                  required
-                  maxLength={200}
-                  placeholder="Ej. Implementación PMO"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-slate-600">
-                  Descripción (opcional)
-                </label>
-                <textarea
-                  name="description"
-                  rows={2}
-                  maxLength={2000}
-                  placeholder="Objetivo o alcance breve"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <button
-                  type="submit"
-                  className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                >
-                  Crear proyecto
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
-
-        {!canWrite && (
-          <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Tu rol solo permite ver proyectos. Para crear, editar o eliminar
-            necesitas rol de manager o superior.
-          </p>
-        )}
-      </section>
-
-      <section className="pmo-card overflow-hidden p-0">
-        <div className="overflow-x-auto p-6 pt-4">
-          <h2 className="text-sm font-semibold text-slate-800">Listado</h2>
-          <table className="pmo-table pmo-row-hover mt-3 w-full min-w-[680px] text-sm">
+      <section className={`${dashCard} overflow-hidden`}>
+        <div className="overflow-x-auto p-4">
+          <table className="pmo-table pmo-row-hover w-full min-w-[600px] text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
-                <th>Proyecto</th>
-                <th>Estado</th>
-                <th>Descripción</th>
-                {canWrite ? (
-                  <th className="text-right">Acciones</th>
-                ) : null}
+              <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase text-slate-500">
+                <th className="py-2">Proyecto</th>
+                <th className="py-2">Estado</th>
+                <th className="py-2">Descripción</th>
+                {canWrite ? <th className="py-2 text-right">Acciones</th> : null}
               </tr>
             </thead>
             <tbody>
               {items.map((project) => {
                 const statusBadge = getProjectStatusBadge(project.status);
                 return (
-                  <tr key={project.id}>
-                    <td className="font-medium text-slate-900">{project.name}</td>
-                    <td>
-                      <span className={statusBadge.className}>
-                        {statusBadge.label}
-                      </span>
+                  <tr key={project.id} className="border-b border-slate-100">
+                    <td className="py-2 font-medium text-slate-900">{project.name}</td>
+                    <td className="py-2">
+                      <span className={statusBadge.className}>{statusBadge.label}</span>
                     </td>
-                    <td className="text-slate-600">
+                    <td className="py-2 text-slate-600">
                       {project.description?.trim() ? project.description : "—"}
                     </td>
                     {canWrite ? (
-                      <td className="text-right align-top">
+                      <td className="py-2 text-right align-top">
                         <div className="flex flex-col items-end gap-2">
                           <EditProjectForm
                             updateAction={updateProjectAction}
@@ -270,14 +248,9 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
               })}
               {items.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={colCount}
-                    className="py-8 text-center text-slate-500"
-                  >
-                    Aún no hay proyectos.{" "}
-                    {canWrite
-                      ? "Usa el formulario de arriba para crear el primero."
-                      : "Pide a un administrador que cree proyectos."}
+                  <td colSpan={colCount} className="py-6 text-center text-slate-500">
+                    Sin proyectos.
+                    {canWrite ? " Usa «Nuevo proyecto» arriba." : null}
                   </td>
                 </tr>
               )}

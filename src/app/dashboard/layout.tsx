@@ -5,6 +5,8 @@ import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import type { RoleKey } from "@/lib/types";
 
+import { dashShell } from "@/lib/ui-classes";
+
 import { DashboardChrome } from "./dashboard-chrome";
 
 export const dynamic = "force-dynamic";
@@ -62,7 +64,7 @@ export default async function DashboardLayout({
   const tenantInitials = tenantInitialsFromName(tenant?.name ?? "Org");
 
   return (
-    <div className="dash-shell mx-auto flex w-full max-w-[1680px] flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+    <div className={dashShell}>
       <DashboardChrome
         personDisplayName={personDisplayName}
         roleLabel={roleLabelEs(session.role)}
@@ -74,7 +76,7 @@ export default async function DashboardLayout({
         showPlatformAdmin={session.isSuperAdmin}
         mainBanner={
           session.isPlatformVisit ? (
-            <div className="mb-5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-[13px] leading-relaxed text-slate-700">
+            <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
               <p className="font-semibold text-slate-900">
                 Modo consultora (sin membresía en este cliente)
               </p>

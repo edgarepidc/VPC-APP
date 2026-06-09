@@ -82,3 +82,33 @@ export const adminAlertOk =
 
 export const adminAlertWarn =
   "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950";
+
+/** Dashboard workspace */
+export const dashShell =
+  "dash-shell mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-5 sm:px-5";
+
+export const dashPage = "space-y-5";
+
+export const dashCard = adminCard;
+
+export const dashPageTitle = "text-lg font-semibold text-slate-900";
+
+export const dashSectionTitle = adminSectionTitle;
+
+export const dashSectionSub = adminSectionSub;
+
+export const dashTable = adminTable;
+
+export const dashTh = adminTh;
+
+export const dashTd = adminTd;
+
+export const dashAlertError = adminAlertError;
+
+export const dashAlertOk = adminAlertOk;
+
+export const dashAlertWarn = adminAlertWarn;
+
+export const dashKpiValue = "text-xl font-semibold tabular-nums text-slate-900";
+
+export const dashKpiLabel = "text-xs text-slate-500";

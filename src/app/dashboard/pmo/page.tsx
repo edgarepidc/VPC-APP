@@ -1,5 +1,12 @@
 import { redirect } from "next/navigation";
 
+import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import {
+  dashCard,
+  dashKpiLabel,
+  dashKpiValue,
+  dashPage,
+} from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
 import { requireTenantId } from "@/lib/tenancy";
 import { getProjectStatusBadge, getSemaphoreBadge } from "@/lib/ui";
@@ -21,71 +28,51 @@ export default async function PmoPage() {
   const snapshot = await getPmoSnapshot(tenantId);
 
   return (
-    <main className="space-y-6">
-      <section className="pmo-hero p-6">
-        <h1 className="pmo-title">
-          PMO Intelligence Platform
-        </h1>
-        <p className="mt-1 text-sm text-slate-200">
-          Vista ejecutiva consolidada de proyectos, entregables, riesgos y stakeholders.
-        </p>
-      </section>
+    <main className={dashPage}>
+      <DashboardPageHeader
+        title="PMO Dashboard"
+        description="Vista ejecutiva de proyectos, entregables, riesgos y stakeholders."
+      />
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="pmo-card p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Proyectos</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {snapshot.kpis.projects}
-          </p>
+      <section className="flex flex-wrap gap-6 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm">
+        <div>
+          <p className={dashKpiLabel}>Proyectos</p>
+          <p className={dashKpiValue}>{snapshot.kpis.projects}</p>
         </div>
-        <div className="pmo-card p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Entregables</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {snapshot.kpis.deliverables}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            {snapshot.kpis.overdueDeliverables} vencidos pendientes
-          </p>
+        <div>
+          <p className={dashKpiLabel}>Entregables</p>
+          <p className={dashKpiValue}>{snapshot.kpis.deliverables}</p>
+          <p className="text-xs text-slate-500">{snapshot.kpis.overdueDeliverables} vencidos</p>
         </div>
-        <div className="pmo-card p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Riesgos</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {snapshot.kpis.risks}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            {snapshot.kpis.criticalRisks} criticos
-          </p>
+        <div>
+          <p className={dashKpiLabel}>Riesgos</p>
+          <p className={dashKpiValue}>{snapshot.kpis.risks}</p>
+          <p className="text-xs text-slate-500">{snapshot.kpis.criticalRisks} críticos</p>
         </div>
-        <div className="pmo-card p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">
-            Exposicion residual
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">
-            {money(snapshot.kpis.totalResidualVme)}
-          </p>
+        <div>
+          <p className={dashKpiLabel}>Exposición residual</p>
+          <p className={dashKpiValue}>{money(snapshot.kpis.totalResidualVme)}</p>
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="pmo-card p-6 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">
-              Salud por proyecto
-            </h2>
+      <section className="grid gap-4 lg:grid-cols-3">
+        <div className={`${dashCard} p-4 lg:col-span-2`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-slate-900">Salud por proyecto</h2>
             <span className="text-sm text-slate-600">
-              Avance cartera: {snapshot.kpis.portfolioProgressPct}%
+              Avance: {snapshot.kpis.portfolioProgressPct}%
             </span>
           </div>
-          <div className="mt-4 overflow-x-auto">
-            <table className="pmo-table pmo-row-hover w-full min-w-[680px] text-sm">
+          <div className="mt-3 overflow-x-auto">
+            <table className="pmo-table pmo-row-hover w-full min-w-[640px] text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-500">
-                  <th>Proyecto</th>
-                  <th>Semaforo</th>
-                  <th>Estado</th>
-                  <th>Entregables</th>
-                  <th>Avance</th>
-                  <th>Riesgos</th>
+                <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase text-slate-500">
+                  <th className="py-2">Proyecto</th>
+                  <th className="py-2">Semáforo</th>
+                  <th className="py-2">Estado</th>
+                  <th className="py-2">Entregables</th>
+                  <th className="py-2">Avance</th>
+                  <th className="py-2">Riesgos</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,24 +82,24 @@ export default async function PmoPage() {
                     Math.max(0, project.donePct - Math.min(40, project.risks * 8)),
                   );
                   return (
-                    <tr key={project.id}>
-                      <td className="font-medium text-slate-900">{project.name}</td>
-                      <td>
+                    <tr key={project.id} className="border-b border-slate-100">
+                      <td className="py-2 font-medium text-slate-900">{project.name}</td>
+                      <td className="py-2">
                         <span className={semaphore.className}>{semaphore.label}</span>
                       </td>
-                      <td>
+                      <td className="py-2">
                         <span className={statusBadge.className}>{statusBadge.label}</span>
                       </td>
-                      <td>{project.deliverables}</td>
-                      <td>{project.donePct}%</td>
-                      <td>{project.risks}</td>
+                      <td className="py-2">{project.deliverables}</td>
+                      <td className="py-2">{project.donePct}%</td>
+                      <td className="py-2">{project.risks}</td>
                     </tr>
                   );
                 })}
                 {snapshot.projectHealth.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-500">
-                      Sin proyectos para este tenant.
+                    <td colSpan={6} className="py-6 text-center text-sm text-slate-500">
+                      Sin proyectos en este workspace.
                     </td>
                   </tr>
                 )}
@@ -121,70 +108,65 @@ export default async function PmoPage() {
           </div>
         </div>
 
-        <div className="pmo-card p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Stakeholders</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Distribucion por cuadrante.
-          </p>
-          <div className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between rounded border border-slate-200 p-2">
-              <span>Promotores</span>
-              <span className="font-semibold">{snapshot.stakeholdersByQuadrant.promotores}</span>
-            </div>
-            <div className="flex justify-between rounded border border-slate-200 p-2">
-              <span>Latentes</span>
-              <span className="font-semibold">{snapshot.stakeholdersByQuadrant.latentes}</span>
-            </div>
-            <div className="flex justify-between rounded border border-slate-200 p-2">
-              <span>Defensores</span>
-              <span className="font-semibold">{snapshot.stakeholdersByQuadrant.defensores}</span>
-            </div>
-            <div className="flex justify-between rounded border border-slate-200 p-2">
-              <span>Espectadores</span>
-              <span className="font-semibold">{snapshot.stakeholdersByQuadrant.espectadores}</span>
-            </div>
+        <div className={`${dashCard} p-4`}>
+          <h2 className="text-base font-semibold text-slate-900">Stakeholders</h2>
+          <div className="mt-3 space-y-2 text-sm">
+            {(
+              [
+                ["Promotores", snapshot.stakeholdersByQuadrant.promotores],
+                ["Latentes", snapshot.stakeholdersByQuadrant.latentes],
+                ["Defensores", snapshot.stakeholdersByQuadrant.defensores],
+                ["Espectadores", snapshot.stakeholdersByQuadrant.espectadores],
+              ] as const
+            ).map(([label, n]) => (
+              <div
+                key={label}
+                className="flex justify-between rounded-lg border border-slate-200 px-3 py-2"
+              >
+                <span className="text-slate-600">{label}</span>
+                <span className="font-semibold text-slate-900">{n}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="pmo-card p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Riesgos criticos</h2>
-          <ul className="mt-4 space-y-2 text-sm">
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className={`${dashCard} p-4`}>
+          <h2 className="text-base font-semibold text-slate-900">Riesgos críticos</h2>
+          <ul className="mt-3 space-y-2 text-sm">
             {snapshot.criticalRiskRows.map((risk) => (
-              <li key={risk.id} className="rounded border border-slate-200 p-3">
+              <li key={risk.id} className="rounded-lg border border-slate-200 p-3">
                 <p className="font-medium text-slate-900">{risk.title}</p>
                 <p className="text-slate-600">
-                  {risk.project.name} · {risk.ownerName} · Score {risk.residualScore}/25
+                  {risk.project.name} · {risk.ownerName} · {risk.residualScore}/25
                 </p>
-                <p className="text-slate-500">VME residual: {money(risk.residualVme)}</p>
+                <p className="text-xs text-slate-500">VME: {money(risk.residualVme)}</p>
               </li>
             ))}
             {snapshot.criticalRiskRows.length === 0 && (
-              <li className="rounded border border-slate-200 p-3 text-slate-500">
-                Sin riesgos criticos detectados.
+              <li className="rounded-lg border border-slate-200 p-3 text-slate-500">
+                Sin riesgos críticos.
               </li>
             )}
           </ul>
         </div>
 
-        <div className="pmo-card p-6">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Entregables vencidos
-          </h2>
-          <ul className="mt-4 space-y-2 text-sm">
+        <div className={`${dashCard} p-4`}>
+          <h2 className="text-base font-semibold text-slate-900">Entregables vencidos</h2>
+          <ul className="mt-3 space-y-2 text-sm">
             {snapshot.overdueDeliverables.map((deliverable) => (
-              <li key={deliverable.id} className="rounded border border-slate-200 p-3">
+              <li key={deliverable.id} className="rounded-lg border border-slate-200 p-3">
                 <p className="font-medium text-slate-900">{deliverable.title}</p>
                 <p className="text-slate-600">{deliverable.project.name}</p>
-                <p className="text-slate-500">
-                  Vencia: {deliverable.dueDate?.toLocaleDateString("es-MX")}
+                <p className="text-xs text-slate-500">
+                  Vencía: {deliverable.dueDate?.toLocaleDateString("es-MX")}
                 </p>
               </li>
             ))}
             {snapshot.overdueDeliverables.length === 0 && (
-              <li className="rounded border border-slate-200 p-3 text-slate-500">
-                No hay entregables vencidos.
+              <li className="rounded-lg border border-slate-200 p-3 text-slate-500">
+                Sin entregables vencidos.
               </li>
             )}
           </ul>

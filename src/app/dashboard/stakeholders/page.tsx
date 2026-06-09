@@ -75,15 +75,15 @@ export default async function StakeholdersPage({
   }));
 
   return (
-    <main className="space-y-6">
-      <section className="rounded-xl border border-[#e8e6e1] bg-white px-5 py-4 shadow-sm">
+    <main className="space-y-5">
+      <section className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-slate-900">
-              StakeMap — Matriz de interesados
+            <h1 className="text-lg font-semibold text-slate-900">
+              Stakeholders
             </h1>
-            <p className="mt-1 text-[13px] text-[#6b6860]">
-              Mapa poder × interés y playbook táctico alineado a tu prototipo.
+            <p className="mt-1 text-sm text-slate-600">
+              Matriz de poder e interés por proyecto.
             </p>
           </div>
         </div>

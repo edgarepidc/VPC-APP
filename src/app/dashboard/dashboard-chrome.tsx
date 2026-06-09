@@ -63,7 +63,6 @@ export function DashboardChrome({
 
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
-  /** Tras el primer render: cada cambio de ruta oculta el lateral (pantalla completa al entrar a una sección). */
   useEffect(() => {
     if (pathOnMountRef.current === null) {
       pathOnMountRef.current = pathname;
@@ -102,56 +101,51 @@ export function DashboardChrome({
 
   const panelBody = (opts: { onNav?: () => void; showCollapseHint?: boolean }) => (
     <>
-      <div className="flex items-start gap-3 border-b border-slate-200 pb-4">
-        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+      <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
+        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
           {tenantLogoUrl ? (
             <Image
               src={tenantLogoUrl}
               alt=""
-              width={48}
-              height={48}
+              width={40}
+              height={40}
               className="max-h-full max-w-full object-contain"
               unoptimized
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-800 text-xs font-bold leading-tight tracking-tight text-slate-100">
+            <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-800 text-xs font-semibold text-slate-100">
               {tenantInitials}
             </div>
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="dash-identity-name text-lg font-semibold leading-tight text-slate-900">
-            {personDisplayName}
-          </p>
-          <p className="mt-1 text-[13px] font-medium text-slate-600">{roleLabel}</p>
-          <p className="mt-0.5 truncate text-[12px] text-slate-500">
+        <div className="min-w-0 flex-1 text-sm">
+          <p className="truncate font-semibold text-slate-900">{personDisplayName}</p>
+          <p className="truncate text-slate-600">{roleLabel}</p>
+          <p className="truncate text-xs text-slate-500">
             {tenantName} · {tenantSlug}
-          </p>
-          <p className="mt-1 text-[11px] font-medium capitalize leading-snug text-slate-500">
-            {dateLabel}
           </p>
         </div>
       </div>
+      <p className="mt-2 text-xs capitalize text-slate-500">{dateLabel}</p>
 
       <SidebarNav showPlatformAdmin={showPlatformAdmin} onLinkClick={opts.onNav} />
 
       {opts.showCollapseHint && (
-        <div className="mt-4">
+        <div className="mt-3">
           <button
             type="button"
             onClick={() => persistSidebarHidden(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:border-slate-300 hover:bg-slate-100"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           >
-            <span aria-hidden>⤢</span>
             Ocultar menú
           </button>
         </div>
       )}
 
-      <form action={signOutAction} className="mt-4">
+      <form action={signOutAction} className="mt-3">
         <button
           type="submit"
-          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:border-slate-300 hover:bg-slate-50"
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
         >
           Cerrar sesión
         </button>
@@ -160,10 +154,10 @@ export function DashboardChrome({
   );
 
   return (
-    <div className="relative z-[1] flex flex-1 flex-col gap-6 md:flex-row">
+    <div className="relative z-[1] flex flex-1 flex-col gap-4 md:flex-row">
       <aside
         className={[
-          "dash-nav-panel hidden w-full shrink-0 p-5 md:block md:w-72 md:max-w-[18rem]",
+          "dash-nav-panel hidden w-full shrink-0 p-4 md:block md:w-60",
           desktopSidebarHidden ? "md:hidden" : "",
         ].join(" ")}
         aria-label="Navegación principal"
@@ -183,9 +177,9 @@ export function DashboardChrome({
             role="dialog"
             aria-modal="true"
             aria-labelledby={sheetTitleId}
-            className="dash-bottom-sheet dash-nav-panel absolute bottom-0 left-0 right-0 max-h-[min(85dvh,640px)] overflow-y-auto rounded-t-2xl border-b-0 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl"
+            className="dash-bottom-sheet dash-nav-panel absolute bottom-0 left-0 right-0 max-h-[min(85dvh,640px)] overflow-y-auto rounded-t-2xl border-b-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl"
           >
-            <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-slate-300" aria-hidden />
+            <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-slate-300" aria-hidden />
             <p id={sheetTitleId} className="sr-only">
               Menú y accesos
             </p>
@@ -197,8 +191,8 @@ export function DashboardChrome({
       <button
         type="button"
         className={[
-          "dash-menu-fab inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md",
-          "left-4 top-[max(1rem,env(safe-area-inset-top))] md:top-[6.5rem]",
+          "dash-menu-fab inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium shadow-md",
+          "left-3 top-[max(0.75rem,env(safe-area-inset-top))] md:top-[5.5rem]",
           mobileMenuOpen ? "max-md:hidden" : "max-md:inline-flex",
           desktopSidebarHidden ? "md:inline-flex" : "md:hidden",
         ].join(" ")}
@@ -212,10 +206,10 @@ export function DashboardChrome({
         aria-label="Abrir menú de navegación"
       >
         <span aria-hidden>☰</span>
-        <span>Menú</span>
+        Menú
       </button>
 
-      <section className="dash-content-shell min-h-[min(100vh,920px)] flex-1 overflow-hidden px-4 pt-4 max-md:pt-16 sm:px-6 md:pt-6">
+      <section className="dash-content-shell min-h-0 flex-1 overflow-hidden px-3 py-3 max-md:pt-14 sm:px-4 sm:py-4">
         {mainBanner}
         {children}
       </section>

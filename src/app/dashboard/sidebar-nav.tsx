@@ -26,12 +26,12 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
             href={item.href}
             onClick={onLinkClick}
             className={[
-              "dash-nav-link flex items-center gap-2.5 rounded-lg px-3 py-2.5 font-medium transition-colors",
+              "dash-nav-link flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
               active ? "dash-nav-link--active text-slate-900" : "text-slate-600",
             ].join(" ")}
             aria-current={active ? "page" : undefined}
           >
-            <span className="text-lg leading-none opacity-95" aria-hidden>
+            <span className="text-base leading-none" aria-hidden>
               {item.emoji}
             </span>
             <span>{item.label}</span>

@@ -248,7 +248,7 @@ ${D}`;
   }, [risks, activeRisks, today]);
 
   return (
-    <div className="space-y-6 text-[#1a1917]">
+    <div className="space-y-5 text-slate-900">
       <header className="sticky top-0 z-10 -mx-1 flex items-center justify-between border-b border-[#e4e2dc] bg-[#fafaf8]/95 px-1 py-3 backdrop-blur sm:py-4">
         <div className="flex items-center gap-2.5">
           <div className="grid h-7 w-7 place-items-center rounded-md bg-slate-900 font-mono text-[11px] font-medium text-white">

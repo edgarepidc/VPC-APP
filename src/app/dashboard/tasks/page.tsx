@@ -128,17 +128,13 @@ export default async function TasksPage({ searchParams }: PageProps) {
   const hasProjects = projects.length > 0;
 
   return (
-    <main className="space-y-6">
-      <section className="pmo-card p-6">
+    <main className="space-y-5">
+      <section className="pmo-card p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="pmo-title text-slate-900">Tareas</h1>
-            <p className="mt-1 max-w-2xl text-sm text-slate-600">
-              Kanban con arrastre, tabla con edición, calendario por fecha límite
-              (navegación por mes y tareas sin fecha), línea de tiempo simple y
-              responsable por miembro del tenant. Filtros por proyecto y
-              texto; un Gantt “de libro” añadiría dependencias y librería de
-              timeline.
+            <h1 className="text-lg font-semibold text-slate-900">Tareas</h1>
+            <p className="mt-1 text-sm text-slate-600">
+              Kanban, tabla, calendario y Gantt. Filtra por proyecto o texto.
             </p>
           </div>
         </div>
@@ -326,7 +322,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
         )}
       </section>
 
-      <section className="pmo-card overflow-hidden p-6">
+      <section className="pmo-card overflow-hidden p-4">
         {view === "kanban" && (
           <KanbanBoard
             tasks={taskCards}
