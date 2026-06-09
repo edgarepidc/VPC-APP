@@ -10,15 +10,16 @@ import { DELIVERABLE_DETAIL_IN_PROJECT, DELIVERABLES_PROJECT } from "@/lib/dashb
 import {
   dashAlertWarn,
   dashCard,
-  dashCardBody,
   dashKpiGrid,
   dashKpiLabel,
   dashKpiValue,
   dashSectionTitle,
+  uiInput,
+  uiLabel,
 } from "@/lib/ui-classes";
 
 import {
-  fmtMoneyUSD,
+  fmtMoneyMxn,
   grossScore,
   heatmapTone,
   i2l,
@@ -31,6 +32,8 @@ import {
   vmeResidual,
 } from "./risk-utils";
 import { buildRiskActionItems } from "./risk-action-utils";
+import { RISK_FIELD_HINTS, RISK_KPI_HINTS } from "./risk-field-hints";
+import { RiskFieldLabel, RiskKpiLabel } from "./risk-field-label";
 import { RisksActionQueue } from "./risks-action-queue";
 
 export type RiskClientRow = {
@@ -94,17 +97,17 @@ function HeatmapBlock({
 
   return (
     <div>
-      <p className="mb-3 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
+      <p className={`mb-3 ${uiLabel}`}>{label}</p>
       <div className="flex gap-1.5">
         <div
-          className="flex items-center pb-5 font-mono text-[9px] font-medium uppercase tracking-widest text-stone-400"
+          className="flex items-center pb-5 text-[10px] font-medium text-slate-400"
           style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
         >
           Prob.
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex gap-1">
-            <div className="grid shrink-0 grid-rows-5 gap-1 py-0 pr-1.5 font-mono text-[10px] text-stone-400">
+            <div className="grid shrink-0 grid-rows-5 gap-1 py-0 pr-1.5 text-[10px] text-slate-400">
               {[5, 4, 3, 2, 1].map((n) => (
                 <div key={n} className="flex h-full items-center justify-end">
                   {n}
@@ -136,14 +139,12 @@ function HeatmapBlock({
                   }),
                 )}
               </div>
-              <div className="mt-1 grid grid-cols-5 gap-1 text-center font-mono text-[10px] text-stone-400">
+              <div className="mt-1 grid grid-cols-5 gap-1 text-center text-[10px] text-slate-400">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <span key={n}>{n}</span>
                 ))}
               </div>
-              <p className="mt-1 text-center font-mono text-[9px] font-medium uppercase tracking-wider text-stone-400">
-                Impacto
-              </p>
+              <p className={`mt-1 text-center ${uiLabel}`}>Impacto</p>
             </div>
           </div>
         </div>
@@ -302,11 +303,11 @@ Riesgos en registro     : ${risks.length}
 Riesgos activos         : ${activeRisks.length}
 Riesgos vencidos        : ${expired.length}
 
-EXPOSICIÓN FINANCIERA (VME)
+EXPOSICIÓN FINANCIERA (VME · MXN)
 ${L}
-  VME bruto (sin mitigación)    : ${fmtMoneyUSD(tV)}
-  VME residual (con mitigación) : ${fmtMoneyUSD(tR)}
-  Ahorro por mitigación         : ${fmtMoneyUSD(tV - tR)}
+  VME bruto (sin mitigación)    : ${fmtMoneyMxn(tV)}
+  VME residual (con mitigación) : ${fmtMoneyMxn(tR)}
+  Ahorro por mitigación         : ${fmtMoneyMxn(tV - tR)}
   Eficiencia de mitigación      : ${eff}%
 
 ${
@@ -329,9 +330,9 @@ ${activeRisks
   Proyecto       : ${r.project.name}
   Categoría      : ${r.category} · Dueño: ${r.ownerName}
   Entregable     : ${r.deliverable?.title ?? "—"}
-  Prob. / Impacto: ${r.probability}% · ${fmtMoneyUSD(r.impactAmount)}
-  Score bruto    : ${gs}/25 · VME bruto: ${fmtMoneyUSD(vg)}
-  Prob. residual : ${r.residualProb}% · Score residual: ${rs}/25 · VME residual: ${fmtMoneyUSD(vr)}
+  Prob. / Impacto: ${r.probability}% · ${fmtMoneyMxn(r.impactAmount)}
+  Score bruto    : ${gs}/25 · VME bruto: ${fmtMoneyMxn(vg)}
+  Prob. residual : ${r.residualProb}% · Score residual: ${rs}/25 · VME residual: ${fmtMoneyMxn(vr)}
   Mitigación     : ${r.mitigation ?? "—"}
   Disparador B   : ${r.trigger ?? "—"}
   Contingencia   : ${r.contingency ?? "—"}
@@ -350,23 +351,23 @@ ${D}`;
     <div className="space-y-4 text-slate-900">
       <div className={dashKpiGrid}>
         <div className={`${dashCard} p-4`}>
-          <p className={`mb-2 ${dashKpiLabel}`}>Exposición total VME</p>
-          <p className={`${dashKpiValue} text-red-600`}>{fmtMoneyUSD(kpis.grossV)}</p>
+          <RiskKpiLabel hint={RISK_KPI_HINTS.grossVme}>Exposición total VME</RiskKpiLabel>
+          <p className={`${dashKpiValue} text-red-600`}>{fmtMoneyMxn(kpis.grossV)}</p>
           <p className={`mt-2 ${dashKpiLabel}`}>
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" />
             {kpis.activeCount} riesgos activos
           </p>
         </div>
         <div className={`${dashCard} p-4`}>
-          <p className={`mb-2 ${dashKpiLabel}`}>VME residual</p>
-          <p className={`${dashKpiValue} text-blue-600`}>{fmtMoneyUSD(kpis.resV)}</p>
+          <RiskKpiLabel hint={RISK_KPI_HINTS.residualVme}>VME residual</RiskKpiLabel>
+          <p className={`${dashKpiValue} text-blue-600`}>{fmtMoneyMxn(kpis.resV)}</p>
           <p className={`mt-2 ${dashKpiLabel}`}>
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500 align-middle" />
             tras mitigación
           </p>
         </div>
         <div className={`${dashCard} p-4`}>
-          <p className={`mb-2 ${dashKpiLabel}`}>Riesgos críticos</p>
+          <RiskKpiLabel hint={RISK_KPI_HINTS.critical}>Riesgos críticos</RiskKpiLabel>
           <p className={`${dashKpiValue} text-amber-600`}>{kpis.critical}</p>
           <p className={`mt-2 ${dashKpiLabel}`}>
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle" />
@@ -374,7 +375,7 @@ ${D}`;
           </p>
         </div>
         <div className={`${dashCard} p-4`}>
-          <p className={`mb-2 ${dashKpiLabel}`}>Efectividad mitigación</p>
+          <RiskKpiLabel hint={RISK_KPI_HINTS.mitigationEff}>Efectividad mitigación</RiskKpiLabel>
           <p className={`${dashKpiValue} text-emerald-600`}>
             {kpis.eff !== null ? `${kpis.eff}%` : "—"}
           </p>
@@ -416,26 +417,24 @@ ${D}`;
             >
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
-                    Descripción del riesgo *
-                  </span>
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.title} required>
+                    Descripción del riesgo
+                  </RiskFieldLabel>
                   <textarea
                     name="title"
                     required
                     rows={3}
                     defaultValue={prefill?.title ?? ""}
                     placeholder="Describe el riesgo, causa y consecuencia posible…"
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
+                    className={uiInput}
                   />
                 </label>
                 <label>
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
-                    Categoría
-                  </span>
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.category}>Categoría</RiskFieldLabel>
                   <select
                     name="category"
                     defaultValue={prefill?.category ?? RISK_CATEGORIES[0]}
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
+                    className={uiInput}
                   >
                     {RISK_CATEGORIES.map((c) => (
                       <option key={c} value={c}>
@@ -445,26 +444,26 @@ ${D}`;
                   </select>
                 </label>
                 <label>
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
-                    Dueño del riesgo *
-                  </span>
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.owner} required>
+                    Dueño del riesgo
+                  </RiskFieldLabel>
                   <input
                     name="ownerName"
                     required
                     placeholder="Nombre o área responsable"
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
+                    className={uiInput}
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
-                    Proyecto *
-                  </span>
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.project} required>
+                    Proyecto
+                  </RiskFieldLabel>
                   <select
                     name="projectId"
                     required
                     defaultValue={prefill?.projectId ?? ""}
                     onChange={(e) => setFormProjectId(e.target.value)}
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
+                    className={uiInput}
                   >
                     <option value="">Selecciona proyecto</option>
                     {projects.map((p) => (
@@ -475,13 +474,10 @@ ${D}`;
                   </select>
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.deliverable}>
                     Entregable (opcional)
-                  </span>
-                  <select
-                    name="deliverableId"
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
-                  >
+                  </RiskFieldLabel>
+                  <select name="deliverableId" className={uiInput}>
                     <option value="">—</option>
                     {formDeliverables.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -491,9 +487,9 @@ ${D}`;
                   </select>
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.probability}>
                     Probabilidad de ocurrencia ({prob}%)
-                  </span>
+                  </RiskFieldLabel>
                   <input
                     type="range"
                     name="probability"
@@ -501,56 +497,52 @@ ${D}`;
                     max={100}
                     value={prob}
                     onChange={(e) => setProb(+e.target.value)}
-                    className="h-2 w-full cursor-pointer accent-blue-600"
+                    className="mt-1 h-2 w-full cursor-pointer accent-blue-600"
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
-                    Impacto financiero (USD)
-                  </span>
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.impact}>
+                    Impacto financiero (MXN)
+                  </RiskFieldLabel>
                   <input
                     name="impactAmount"
                     type="number"
                     min={0}
                     value={impact}
                     onChange={(e) => setImpact(+e.target.value || 0)}
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 font-mono text-sm outline-none focus:border-blue-500 focus:bg-white"
+                    className={`${uiInput} tabular-nums`}
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.dueDate}>
                     Fecha de caducidad (opcional)
-                  </span>
-                  <input
-                    name="dueDate"
-                    type="date"
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white"
-                  />
+                  </RiskFieldLabel>
+                  <input name="dueDate" type="date" className={uiInput} />
                 </label>
               </div>
 
-              <div className="flex items-center gap-2 border-t border-[#e4e2dc] pt-4 font-mono text-xs font-semibold uppercase tracking-wider text-slate-600">
+              <div className="flex items-center gap-2 border-t border-slate-200 pt-4">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                Plan de respuesta
+                <p className="text-sm font-semibold text-slate-900">Plan de respuesta</p>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.mitigation}>
                     Acción de mitigación
-                  </span>
+                  </RiskFieldLabel>
                   <textarea
                     name="mitigation"
                     rows={2}
                     defaultValue={prefill?.mitigation ?? ""}
                     placeholder="¿Qué acciones reducen la probabilidad?"
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white"
+                    className={uiInput}
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.residualProb}>
                     Probabilidad residual ({resProb}%)
-                  </span>
+                  </RiskFieldLabel>
                   <input
                     type="range"
                     name="residualProb"
@@ -558,48 +550,54 @@ ${D}`;
                     max={100}
                     value={resProb}
                     onChange={(e) => setResProb(+e.target.value)}
-                    className="h-2 w-full cursor-pointer accent-blue-600"
+                    className="mt-1 h-2 w-full cursor-pointer accent-blue-600"
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.trigger}>
                     Disparador del Plan B
-                  </span>
+                  </RiskFieldLabel>
                   <input
                     name="trigger"
                     defaultValue={prefill?.trigger ?? ""}
                     placeholder="Ej.: Si la entrega no ocurre antes de semana 4…"
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white"
+                    className={uiInput}
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
-                    Plan de contingencia / Plan B{" "}
-                    <span className="font-sans font-normal normal-case text-stone-400">
-                      (obligatorio si score residual &gt; 10)
-                    </span>
-                  </span>
+                  <RiskFieldLabel hint={RISK_FIELD_HINTS.contingency}>
+                    Plan de contingencia / Plan B
+                  </RiskFieldLabel>
+                  <p className="mb-1 text-xs text-slate-500">
+                    Obligatorio si el score residual es mayor que 10.
+                  </p>
                   <textarea
                     name="contingency"
                     rows={2}
                     placeholder="Plan alternativo de respuesta…"
-                    className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white"
+                    className={uiInput}
                   />
                 </label>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-4 font-mono text-sm">
+              <div className="grid grid-cols-3 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">VME bruto</p>
-                  <p className="mt-1 text-lg font-semibold text-red-600">{fmtMoneyUSD(preview.gross)}</p>
+                  <p className={dashKpiLabel}>VME bruto</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums text-red-600">
+                    {fmtMoneyMxn(preview.gross)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">VME residual</p>
-                  <p className="mt-1 text-lg font-semibold text-blue-600">{fmtMoneyUSD(preview.residual)}</p>
+                  <p className={dashKpiLabel}>VME residual</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums text-blue-600">
+                    {fmtMoneyMxn(preview.residual)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Ahorro</p>
-                  <p className="mt-1 text-lg font-semibold text-emerald-600">{fmtMoneyUSD(preview.saving)}</p>
+                  <p className={dashKpiLabel}>Ahorro</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-600">
+                    {fmtMoneyMxn(preview.saving)}
+                  </p>
                 </div>
               </div>
 
@@ -612,7 +610,7 @@ ${D}`;
                 </button>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-lg border border-[#e4e2dc] bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-[#f5f4f0]"
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   onClick={() => {
                     setProb(50);
                     setResProb(20);
@@ -654,11 +652,11 @@ ${D}`;
         />
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <label className="text-xs font-medium text-slate-600">Proyecto</label>
+          <label className={uiLabel}>Proyecto</label>
           <select
             value={projectFilter}
             onChange={(e) => setProjectFilter(e.target.value)}
-            className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-sm"
+            className={`h-9 ${uiInput} w-auto min-w-[140px] py-1.5`}
           >
             <option value="">Todos</option>
             {projects.map((p) => (
@@ -672,7 +670,7 @@ ${D}`;
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar riesgo…"
-            className="h-9 w-[200px] max-w-full rounded-lg border border-slate-300 bg-white px-2.5 text-sm"
+            className={`h-9 w-[200px] max-w-full py-1.5 ${uiInput}`}
           />
         </div>
 
@@ -708,12 +706,12 @@ ${D}`;
         </div>
 
         <div className="hidden overflow-x-auto lg:block">
-          <table className="w-full min-w-[960px] border-collapse text-sm">
+          <table className="pmo-table pmo-row-hover w-full min-w-[960px] text-sm">
             <thead>
-              <tr className="border-b border-[#e4e2dc] bg-[#f5f4f0] text-left font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">
+              <tr className="border-b border-slate-200 text-left text-slate-500">
                 <th className="whitespace-nowrap px-3 py-2">Proyecto</th>
                 <th className="whitespace-nowrap px-3 py-2">Descripción</th>
-                <th className="whitespace-nowrap px-3 py-2">Cat.</th>
+                <th className="whitespace-nowrap px-3 py-2">Categoría</th>
                 <th className="whitespace-nowrap px-3 py-2">Dueño</th>
                 <th className="whitespace-nowrap px-3 py-2">Prob.</th>
                 <th className="whitespace-nowrap px-3 py-2">Impacto</th>
@@ -736,16 +734,16 @@ ${D}`;
                 const planB =
                   rs > 10 ? (
                     risk.contingency?.trim() ? (
-                      <span className="inline-block rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-200">
+                      <span className="inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-200">
                         Definido
                       </span>
                     ) : (
-                      <span className="inline-block rounded-full bg-red-50 px-2 py-0.5 font-mono text-[10px] font-medium text-red-700 ring-1 ring-red-200">
+                      <span className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700 ring-1 ring-red-200">
                         Falta
                       </span>
                     )
                   ) : (
-                    <span className="text-stone-400">—</span>
+                    <span className="text-slate-400">—</span>
                   );
                 return (
                   <tr
@@ -754,9 +752,11 @@ ${D}`;
                       if (el) rowRefs.current.set(risk.id, el);
                       else rowRefs.current.delete(risk.id);
                     }}
-                    className={["cursor-pointer border-b border-[#e4e2dc] transition hover:bg-[#f5f4f0]", expired ? "opacity-[0.55]" : "", focusId === risk.id ? "bg-slate-50" : ""].join(
-                      " ",
-                    )}
+                    className={[
+                      "cursor-pointer border-b border-slate-200 transition hover:bg-slate-50",
+                      expired ? "opacity-[0.55]" : "",
+                      focusId === risk.id ? "bg-slate-50" : "",
+                    ].join(" ")}
                     onClick={() => openDetail(risk.id)}
                   >
                     <td className="px-3 py-3 align-middle text-slate-700">{risk.project.name}</td>
@@ -766,30 +766,30 @@ ${D}`;
                       </div>
                     </td>
                     <td className="px-3 py-3 align-middle">
-                      <span className="inline-block rounded-full border border-[#e4e2dc] bg-[#f5f4f0] px-2 py-0.5 font-mono text-[10px] text-slate-600">
+                      <span className="inline-block rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] text-slate-600">
                         {risk.category}
                       </span>
                     </td>
                     <td className="px-3 py-3 align-middle text-slate-600">{risk.ownerName}</td>
-                    <td className="px-3 py-3 align-middle font-mono text-xs">{risk.probability}%</td>
-                    <td className="px-3 py-3 align-middle font-mono text-xs">{fmtMoneyUSD(risk.impactAmount)}</td>
-                    <td className="px-3 py-3 align-middle font-mono text-xs text-red-600">{fmtMoneyUSD(vg)}</td>
-                    <td className="px-3 py-3 align-middle font-mono text-xs">{risk.residualProb}%</td>
-                    <td className="px-3 py-3 align-middle font-mono text-xs text-blue-600">{fmtMoneyUSD(vr)}</td>
+                    <td className="px-3 py-3 align-middle tabular-nums text-xs">{risk.probability}%</td>
+                    <td className="px-3 py-3 align-middle tabular-nums text-xs">{fmtMoneyMxn(risk.impactAmount)}</td>
+                    <td className="px-3 py-3 align-middle tabular-nums text-xs text-red-600">{fmtMoneyMxn(vg)}</td>
+                    <td className="px-3 py-3 align-middle tabular-nums text-xs">{risk.residualProb}%</td>
+                    <td className="px-3 py-3 align-middle tabular-nums text-xs text-blue-600">{fmtMoneyMxn(vr)}</td>
                     <td className="px-3 py-3 align-middle">
                       <div className="flex items-center gap-2">
-                        <span className={`inline-block rounded-full px-2 py-0.5 font-mono text-[10px] font-medium ${scoreBadgeClass(rs)}`}>
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${scoreBadgeClass(rs)}`}>
                           {rs}
                         </span>
-                        <div className="h-1 w-14 overflow-hidden rounded-full bg-stone-200">
+                        <div className="h-1 w-14 overflow-hidden rounded-full bg-slate-200">
                           <div className={`h-full rounded-full ${scoreBarColor(rs)}`} style={{ width: `${barW}%` }} />
                         </div>
                       </div>
                       {rs > 10 ? (
-                        <p className="mt-0.5 font-mono text-[10px] text-red-600">Plan B req.</p>
+                        <p className="mt-0.5 text-[10px] text-red-600">Plan B req.</p>
                       ) : null}
                     </td>
-                    <td className="px-3 py-3 align-middle font-mono text-xs">
+                    <td className="px-3 py-3 align-middle tabular-nums text-xs">
                       {risk.dueDate ? (
                         expired ? (
                           <span className="text-amber-700">
@@ -799,14 +799,14 @@ ${D}`;
                           new Date(risk.dueDate).toLocaleDateString("es-MX")
                         )
                       ) : (
-                        <span className="text-stone-400">—</span>
+                        <span className="text-slate-400">—</span>
                       )}
                     </td>
                     <td className="px-3 py-3 align-middle">{planB}</td>
                     <td className="whitespace-nowrap px-3 py-3 align-middle">
                       <button
                         type="button"
-                        className="rounded-md border border-transparent px-2 py-1 text-stone-400 transition hover:border-[#e4e2dc] hover:bg-white hover:text-slate-800"
+                        className="rounded-md border border-transparent px-2 py-1 text-slate-400 transition hover:border-slate-200 hover:bg-white hover:text-slate-800"
                         onClick={(e) => {
                           e.stopPropagation();
                           openDetail(risk.id);
@@ -836,7 +836,7 @@ ${D}`;
               })}
               {scopedRisks.length === 0 && (
                 <tr>
-                  <td colSpan={13} className="py-12 text-center font-mono text-sm text-stone-400">
+                  <td colSpan={13} className="py-12 text-center text-sm text-slate-400">
                     Sin riesgos en este alcance.
                   </td>
                 </tr>
@@ -858,12 +858,12 @@ ${D}`;
           <div
             role="dialog"
             aria-modal="true"
-            className="relative max-h-[min(90vh,720px)] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#e4e2dc] bg-white p-7 shadow-2xl"
+            className="relative max-h-[min(90vh,720px)] w-full max-w-xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-7 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
-              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-[#e4e2dc] bg-[#f5f4f0] text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
               onClick={closeDetail}
               aria-label="Cerrar"
             >
@@ -873,22 +873,22 @@ ${D}`;
               {detail.title.length > 90 ? `${detail.title.slice(0, 90)}…` : detail.title}
             </h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-4">
-                <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">Riesgo bruto</p>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <p className={`mb-2 ${dashKpiLabel}`}>Riesgo bruto</p>
                 <p className="flex justify-between text-xs">
                   <span className="text-slate-500">Probabilidad</span>
                   <strong>{detail.probability}%</strong>
                 </p>
                 <p className="flex justify-between text-xs">
                   <span className="text-slate-500">Impacto</span>
-                  <strong>{fmtMoneyUSD(detail.impactAmount)}</strong>
+                  <strong>{fmtMoneyMxn(detail.impactAmount)}</strong>
                 </p>
-                <p className="mt-2 text-2xl font-semibold text-red-600">
-                  {fmtMoneyUSD(vmeGross(detail.probability, detail.impactAmount))}
+                <p className="mt-2 text-2xl font-semibold tabular-nums text-red-600">
+                  {fmtMoneyMxn(vmeGross(detail.probability, detail.impactAmount))}
                 </p>
               </div>
-              <div className="rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-4">
-                <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">Riesgo residual</p>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <p className={`mb-2 ${dashKpiLabel}`}>Riesgo residual</p>
                 <p className="flex justify-between text-xs">
                   <span className="text-slate-500">Prob. residual</span>
                   <strong>{detail.residualProb}%</strong>
@@ -897,26 +897,26 @@ ${D}`;
                   <span className="text-slate-500">Score</span>
                   <strong>{residualScore(detail.residualProb, detail.impactAmount)}/25</strong>
                 </p>
-                <p className="mt-2 text-2xl font-semibold text-blue-600">
-                  {fmtMoneyUSD(vmeResidual(detail.residualProb, detail.impactAmount))}
+                <p className="mt-2 text-2xl font-semibold tabular-nums text-blue-600">
+                  {fmtMoneyMxn(vmeResidual(detail.residualProb, detail.impactAmount))}
                 </p>
               </div>
             </div>
             {detail.mitigation ? (
-              <div className="mt-4 rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-3">
-                <p className="font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">Mitigación</p>
+              <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className={dashKpiLabel}>Mitigación</p>
                 <p className="mt-1 text-sm leading-relaxed text-slate-700">{detail.mitigation}</p>
               </div>
             ) : null}
             {detail.trigger ? (
               <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                <p className="font-mono text-[10px] font-medium uppercase tracking-wider text-amber-800">Disparador Plan B</p>
+                <p className="text-xs font-medium text-amber-800">Disparador Plan B</p>
                 <p className="mt-1 text-sm text-amber-950">{detail.trigger}</p>
               </div>
             ) : null}
             {residualScore(detail.residualProb, detail.impactAmount) > 10 ? (
               <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-red-800">Contingencia</p>
+                <p className="text-xs font-semibold text-red-800">Contingencia</p>
                 <p className="mt-1 text-sm text-red-950">{detail.contingency || "No definido"}</p>
               </div>
             ) : null}
@@ -957,12 +957,12 @@ ${D}`;
           <div
             role="dialog"
             aria-modal="true"
-            className="relative max-h-[min(90vh,640px)] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#e4e2dc] bg-white p-7 shadow-2xl"
+            className="relative max-h-[min(90vh,640px)] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-7 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
-              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-[#e4e2dc] bg-[#f5f4f0] text-slate-500 transition hover:bg-slate-100"
+              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-500 transition hover:bg-slate-100"
               onClick={() => setMemoOpen(false)}
               aria-label="Cerrar"
             >
@@ -981,7 +981,7 @@ ${D}`;
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-[#e4e2dc] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-[#f5f4f0]"
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 onClick={() => {
                   const blob = new Blob([memoText], { type: "text/plain;charset=utf-8" });
                   const a = document.createElement("a");
@@ -994,7 +994,7 @@ ${D}`;
                 Descargar .txt
               </button>
             </div>
-            <pre className="mt-4 max-h-[min(50vh,480px)] overflow-y-auto whitespace-pre-wrap rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-5 font-mono text-[11.5px] leading-relaxed text-slate-700">
+            <pre className="mt-4 max-h-[min(50vh,480px)] overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-5 font-mono text-[11.5px] leading-relaxed text-slate-700">
               {memoText}
             </pre>
           </div>

@@ -33,14 +33,6 @@ import { MeetingCostAlerts } from "./meeting-cost-alerts";
 import { MeetingRoiRadarClient } from "./meeting-roi-radar-client";
 import { ProjectHealthPanel } from "./project-health-panel";
 
-function money(value: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 function mxn(value: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
@@ -142,7 +134,8 @@ export default async function PmoPage() {
         </div>
         <div>
           <p className={dashKpiLabel}>Exposición residual</p>
-          <p className={dashKpiValue}>{money(snapshot.kpis.totalResidualVme)}</p>
+          <p className={dashKpiValue}>{mxn(snapshot.kpis.totalResidualVme)}</p>
+          <p className="text-xs text-slate-500">VME en pesos</p>
         </div>
         <div>
           <p className={dashKpiLabel}>Escalamientos</p>
@@ -237,7 +230,7 @@ export default async function PmoPage() {
                 <p className="text-slate-600">
                   {risk.project.name} · {risk.ownerName} · {risk.residualScore}/25
                 </p>
-                <p className="text-xs text-slate-500">VME: {money(risk.residualVme)}</p>
+                <p className="text-xs text-slate-500">VME: {mxn(risk.residualVme)}</p>
               </li>
             ))}
             {snapshot.criticalRiskRows.length === 0 && (

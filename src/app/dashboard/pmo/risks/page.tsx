@@ -2,12 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
-import { fmtMoneyUSD } from "@/app/dashboard/risks/risk-utils";
+import { fmtMoneyMxn } from "@/app/dashboard/risks/risk-utils";
 import { getSessionUser } from "@/lib/auth/session";
 import { RISK_DETAIL_IN_PROJECT, RISKS_HUB } from "@/lib/dashboard-paths";
 import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
-import { dashCard, dashKpiLabel, dashKpiValue, dashPage } from "@/lib/ui-classes";
+import { dashCard, dashKpiLabel, dashKpiValue, dashPage, dashSectionTitle } from "@/lib/ui-classes";
 import { getPmoSnapshot } from "@/modules/pmo/service";
 
 export const dynamic = "force-dynamic";
@@ -48,12 +48,13 @@ export default async function PmoRisksPage() {
         </div>
         <div>
           <p className={dashKpiLabel}>Exposición residual</p>
-          <p className={dashKpiValue}>{fmtMoneyUSD(snapshot.kpis.totalResidualVme)}</p>
+          <p className={dashKpiValue}>{fmtMoneyMxn(snapshot.kpis.totalResidualVme)}</p>
+          <p className="text-xs text-slate-500">pesos mexicanos</p>
         </div>
       </section>
 
       <section className={`${dashCard} p-4`}>
-        <h2 className="text-sm font-semibold text-slate-900">Riesgos críticos</h2>
+        <h2 className={dashSectionTitle}>Riesgos críticos</h2>
         <ul className="mt-3 space-y-2">
           {snapshot.criticalRiskRows.map((risk) => (
             <li key={risk.id} className="rounded-lg border border-amber-100 bg-amber-50/40 p-3">
@@ -66,7 +67,7 @@ export default async function PmoRisksPage() {
               <p className="text-xs text-slate-600">
                 {risk.project.name} · {risk.ownerName} · {risk.residualScore}/25
               </p>
-              <p className="text-xs text-amber-800">VME: {fmtMoneyUSD(risk.residualVme)}</p>
+              <p className="text-xs text-amber-800">VME: {fmtMoneyMxn(risk.residualVme)}</p>
             </li>
           ))}
           {snapshot.criticalRiskRows.length === 0 ? (

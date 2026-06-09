@@ -28,13 +28,16 @@ export function vmeResidual(residualProb: number, impactUsd: number) {
   return (residualProb / 100) * impactUsd;
 }
 
-export function fmtMoneyUSD(n: number) {
+export function fmtMoneyMxn(n: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
-    currency: "USD",
+    currency: "MXN",
     maximumFractionDigits: 0,
   }).format(n);
 }
+
+/** @deprecated Usar fmtMoneyMxn */
+export const fmtMoneyUSD = fmtMoneyMxn;
 
 export function scoreBadgeClass(score: number) {
   if (score <= 4) return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
