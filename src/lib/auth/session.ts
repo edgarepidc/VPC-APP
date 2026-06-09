@@ -199,11 +199,16 @@ export async function getSessionUser(
       }
     }
 
-    const metaName = authUser.user_metadata?.name;
-    const metaPhone =
-      typeof authUser.user_metadata?.phone === "string"
-        ? authUser.user_metadata.phone.trim() || null
-        : null;
+    const meta = authUser.user_metadata ?? {};
+    const metaName = typeof meta.name === "string" ? meta.name : undefined;
+    const metaPhone = typeof meta.phone === "string" ? meta.phone.trim() || null : null;
+    const metaJobTitle =
+      typeof meta.jobTitle === "string" ? meta.jobTitle.trim() || null : null;
+    const metaDepartment =
+      typeof meta.department === "string" ? meta.department.trim() || null : null;
+    const lastSignInAt = authUser.last_sign_in_at
+      ? new Date(authUser.last_sign_in_at)
+      : null;
 
     await db.user.upsert({
       where: { id: authUser.id },
@@ -211,12 +216,18 @@ export async function getSessionUser(
         email: authEmail,
         name: metaName ?? authEmail,
         ...(metaPhone !== null ? { phone: metaPhone } : {}),
+        ...(metaJobTitle !== null ? { jobTitle: metaJobTitle } : {}),
+        ...(metaDepartment !== null ? { department: metaDepartment } : {}),
+        ...(lastSignInAt ? { lastSignInAt } : {}),
       },
       create: {
         id: authUser.id,
         email: authEmail,
         name: metaName ?? authEmail,
         phone: metaPhone,
+        jobTitle: metaJobTitle,
+        department: metaDepartment,
+        lastSignInAt,
       },
     });
   } catch (err) {

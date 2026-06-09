@@ -31,6 +31,10 @@ model User {
   name        String?
   /** Teléfono de contacto (gestión plataforma / perfil). */
   phone       String?
+  jobTitle    String?
+  department  String?
+  /** Último inicio de sesión (sincronizado desde Supabase Auth). */
+  lastSignInAt DateTime?
   passwordHash String?
   isActive    Boolean      @default(true)
   /** Plataforma: gestiona tenants y usuarios globales (ademas de env PLATFORM_SUPERADMIN_EMAILS). */
@@ -38,7 +42,23 @@ model User {
   memberships Membership[]
   sentInvitations Invitation[] @relation("InvitationSender")
   assignedTasks Task[]
+  auditLogs   UserAuditLog[] @relation("AuditTarget")
+  performedAudits UserAuditLog[] @relation("AuditActor")
   createdAt   DateTime     @default(now())
+}
+
+model UserAuditLog {
+  id          String   @id @default(uuid())
+  userId      String
+  actorUserId String?
+  action      String
+  details     String?
+  createdAt   DateTime @default(now())
+  user        User     @relation("AuditTarget", fields: [userId], references: [id], onDelete: Cascade)
+  actor       User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }
 
 model Membership {

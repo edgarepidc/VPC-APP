@@ -382,6 +382,49 @@ export function IconPeople() {
   );
 }
 
+export function UsersGrowthChart({
+  points,
+  title = "Altas de usuarios por mes",
+}: {
+  points: { month: string; count: number }[];
+  title?: string;
+}) {
+  const max = Math.max(...points.map((p) => p.count), 1);
+  const total = points.reduce((s, p) => s + p.count, 0);
+
+  const labels = points.map((p) => {
+    const [y, m] = p.month.split("-");
+    const d = new Date(Number(y), Number(m) - 1, 1);
+    return d.toLocaleDateString("es-MX", { month: "short", year: "2-digit" });
+  });
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
+          {total} altas
+        </span>
+      </div>
+      <div className="mt-4 flex h-28 items-end gap-1.5">
+        {points.map((p, i) => (
+          <div key={p.month} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+            <span className="text-[10px] font-medium tabular-nums text-slate-600">
+              {p.count > 0 ? p.count : ""}
+            </span>
+            <div
+              className="w-full rounded-t-md bg-slate-700 transition-all duration-500"
+              style={{ height: `${Math.max((p.count / max) * 100, p.count > 0 ? 8 : 2)}%` }}
+              title={`${labels[i]}: ${p.count}`}
+            />
+            <span className="max-w-full truncate text-[9px] text-slate-500">{labels[i]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function IconMail() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
