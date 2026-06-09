@@ -2,21 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
-import {
-  dashCard,
-  dashKpiLabel,
-  dashKpiValue,
-  dashPage,
-} from "@/lib/ui-classes";
+import { dashCard, dashPage } from "@/lib/ui-classes";
 import {
   DELIVERABLE_DETAIL_IN_PROJECT,
-  PMO_DELIVERABLES,
-  PMO_ESCALATIONS,
-  PMO_MEETINGS,
-  PMO_PROJECTS,
-  PMO_RISKS,
-  PMO_STAKEHOLDERS,
-  PMO_TEAM,
   RISK_DETAIL_IN_PROJECT,
   STAKEHOLDERS_HUB,
   STAKEHOLDERS_QUADRANT,
@@ -27,7 +15,11 @@ import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { serializeEscalationChecks } from "@/lib/escalation-serialize";
 import { serializeMeetingRoiSessions } from "@/lib/meeting-roi-utils";
-import { getPmoSnapshot } from "@/modules/pmo/service";
+import { getCachedPmoSnapshot } from "@/modules/pmo/cached-snapshot";
+
+import { buildPmoActionQueue } from "./pmo-action-utils";
+import { PmoActionQueue } from "./pmo-action-queue";
+import { PmoKpiBar } from "./pmo-kpi-bar";
 import { EscalationRadarClient } from "./escalation-radar-client";
 import { EscalationDeteriorationAlerts } from "./escalation-deterioration-alerts";
 import { MeetingCostAlerts } from "./meeting-cost-alerts";
@@ -49,8 +41,16 @@ export default async function PmoPage() {
   const canCreateRisk = hasPermission(session.role, "tasks.write");
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
-  const snapshot = await getPmoSnapshot(tenantId, {
+  const snapshot = await getCachedPmoSnapshot(tenantId, {
     restrictToProjectIds: projectIdsFilter,
+  });
+
+  const actionItems = buildPmoActionQueue({
+    overdueDeliverables: snapshot.overdueDeliverables,
+    criticalRiskRows: snapshot.criticalRiskRows,
+    stakeholderAlerts: snapshot.stakeholderAlerts,
+    deteriorationAlerts: snapshot.deteriorationAlerts,
+    meetingCostAlerts: snapshot.meetingCostAlerts,
   });
 
   const radarRows = serializeEscalationChecks(snapshot.escalationRadar.rows);
@@ -81,91 +81,10 @@ export default async function PmoPage() {
         description="Resumen ejecutivo de la organización: proyectos, entregables, riesgos y equipo."
       />
 
-      <section className="grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm sm:flex sm:flex-wrap sm:gap-6 sm:px-4">
-        <div>
-          <p className={dashKpiLabel}>Proyectos</p>
-          <Link href={PMO_PROJECTS} className={`${dashKpiValue} hover:underline`}>
-            {snapshot.kpis.projects}
-          </Link>
-        </div>
-        <div>
-          <p className={dashKpiLabel}>Entregables</p>
-          <Link href={PMO_DELIVERABLES} className={`${dashKpiValue} hover:underline`}>
-            {snapshot.kpis.deliverables}
-          </Link>
-          {snapshot.kpis.overdueDeliverables > 0 ? (
-            <Link
-              href={PMO_DELIVERABLES}
-              className="text-xs text-rose-700 hover:underline"
-            >
-              {snapshot.kpis.overdueDeliverables} vencidos
-            </Link>
-          ) : (
-            <p className="text-xs text-slate-500">0 vencidos</p>
-          )}
-        </div>
-        <div>
-          <p className={dashKpiLabel}>A tiempo</p>
-          <p className={dashKpiValue}>
-            {snapshot.kpis.deliverableOnTimePct !== null
-              ? `${snapshot.kpis.deliverableOnTimePct}%`
-              : "—"}
-          </p>
-          <p className="text-xs text-slate-500">cierres con fecha</p>
-        </div>
-        <div>
-          <p className={dashKpiLabel}>Lead time</p>
-          <p className={dashKpiValue}>
-            {snapshot.kpis.deliverableAvgLeadDays !== null
-              ? `${snapshot.kpis.deliverableAvgLeadDays}d`
-              : "—"}
-          </p>
-          <p className="text-xs text-slate-500">registro → entrega</p>
-        </div>
-        <div>
-          <p className={dashKpiLabel}>Riesgos</p>
-          <Link href={PMO_RISKS} className={`${dashKpiValue} hover:underline`}>
-            {snapshot.kpis.risks}
-          </Link>
-          {snapshot.kpis.criticalRisks > 0 ? (
-            <Link href={PMO_RISKS} className="text-xs text-amber-700 hover:underline">
-              {snapshot.kpis.criticalRisks} críticos
-            </Link>
-          ) : (
-            <p className="text-xs text-slate-500">0 críticos</p>
-          )}
-        </div>
-        <div>
-          <p className={dashKpiLabel}>Exposición residual</p>
-          <p className={dashKpiValue}>{mxn(snapshot.kpis.totalResidualVme)}</p>
-          <p className="text-xs text-slate-500">VME en pesos</p>
-        </div>
-        <div>
-          <p className={dashKpiLabel}>Escalamientos</p>
-          <Link href={PMO_ESCALATIONS} className={`${dashKpiValue} hover:underline`}>
-            {snapshot.kpis.escalationChecks}
-          </Link>
-          <p className="text-xs text-slate-500">últimos 30 días</p>
-        </div>
-        <div>
-          <p className={dashKpiLabel}>Reuniones</p>
-          <Link href={PMO_MEETINGS} className={`${dashKpiValue} hover:underline`}>
-            {snapshot.kpis.meetingSessions}
-          </Link>
-          <p className="text-xs text-slate-500">{mxn(snapshot.kpis.totalMeetingCostMxn)} · 30 días</p>
-        </div>
-        <div>
-          <p className={dashKpiLabel}>Interesados</p>
-          <Link href={PMO_STAKEHOLDERS} className={`${dashKpiValue} hover:underline`}>
-            {snapshot.kpis.stakeholders}
-          </Link>
-        </div>
-        <div>
-          <p className={dashKpiLabel}>Equipo</p>
-          <Link href={PMO_TEAM} className={`${dashKpiValue} hover:underline`}>
-            Gestionar
-          </Link>
-        </div>
+      <PmoKpiBar kpis={snapshot.kpis} formatMxn={mxn} />
+
+      <section className="mb-4">
+        <PmoActionQueue items={actionItems} />
       </section>
 
       <EscalationDeteriorationAlerts alerts={deteriorationAlerts} />

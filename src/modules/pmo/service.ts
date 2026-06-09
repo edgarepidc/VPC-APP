@@ -41,6 +41,7 @@ export async function getPmoSnapshot(
     risks,
     stakeholders,
     overdueDeliverables,
+    overdueDeliverablesCount,
     recentEscalations,
     latestEscalations,
     deteriorationAlerts,
@@ -102,6 +103,13 @@ export async function getPmoSnapshot(
       orderBy: { dueDate: "asc" },
       take: 8,
     }),
+    db.deliverable.count({
+      where: {
+        ...childWhere,
+        dueDate: { lt: new Date() },
+        status: { notIn: ["delivered", "approved"] },
+      },
+    }),
     listEscalationChecksByTenant(tenantId, {
       restrictToProjectIds: restrict,
       limit: 200,
@@ -156,15 +164,16 @@ export async function getPmoSnapshot(
     0,
   );
 
-  const criticalRiskRows = risks
+  const criticalRiskRowsAll = risks
     .map((risk) => ({
       ...risk,
       residualScore: residualScore(risk.residualProb, risk.impactAmount),
       residualVme: (risk.residualProb / 100) * risk.impactAmount,
     }))
     .filter((risk) => risk.residualScore > 10)
-    .sort((a, b) => b.residualScore - a.residualScore)
-    .slice(0, 6);
+    .sort((a, b) => b.residualScore - a.residualScore);
+
+  const criticalRiskRows = criticalRiskRowsAll.slice(0, 6);
 
   const stakeholdersByQuadrant = stakeholders.reduce(
     (acc, stakeholder) => {
@@ -182,7 +191,7 @@ export async function getPmoSnapshot(
     .sort((a, b) => b.influence - a.influence || b.interest - a.interest)
     .slice(0, 8);
 
-  const stakeholderAlerts = (() => {
+  const stakeholderAlertsAll = (() => {
     const alerts: {
       kind: "promoter_no_obs" | "project_no_promoters" | "project_empty";
       label: string;
@@ -229,8 +238,10 @@ export async function getPmoSnapshot(
       }
     }
 
-    return alerts.slice(0, 10);
+    return alerts;
   })();
+
+  const stakeholderAlerts = stakeholderAlertsAll.slice(0, 10);
 
   const escalationTrends = buildEscalationTrendsByProject(
     recentEscalations.map((row) => ({
@@ -308,8 +319,8 @@ export async function getPmoSnapshot(
       deliverables: deliverables.length,
       risks: risks.length,
       stakeholders: stakeholders.length,
-      overdueDeliverables: overdueDeliverables.length,
-      criticalRisks: criticalRiskRows.length,
+      overdueDeliverables: overdueDeliverablesCount,
+      criticalRisks: criticalRiskRowsAll.length,
       portfolioProgressPct,
       deliverableOnTimePct,
       deliverableAvgLeadDays,
@@ -323,6 +334,7 @@ export async function getPmoSnapshot(
     stakeholdersByQuadrant,
     keyStakeholderRows,
     stakeholderAlerts,
+    stakeholderAlertsCount: stakeholderAlertsAll.length,
     projectHealth,
     escalationRadar: {
       rows: recentEscalations.slice(0, 12),
