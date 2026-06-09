@@ -454,6 +454,10 @@
 <div class="app-wrapper" id="appWrapper">
 
   <div class="toolbar-actions">
+    <button class="btn btn-primary" onclick="registerSession()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Registrar sesión
+    </button>
     <button class="btn" onclick="copyReport()">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" stroke-width="1.3"/></svg>
       Copiar reporte
@@ -570,6 +574,7 @@
 </div>
 
 <div class="copy-toast" id="copyToast">Reporte copiado al portapapeles</div>
+<div class="copy-toast" id="registerToast">Registro enviado al dashboard</div>
 
 <script>
   const RATES = {
@@ -586,6 +591,23 @@
     tech: 'Líder Técnico / Especialista'
   };
 
+  let contextProjectName = '';
+  let contextSessionName = '';
+
+  window.addEventListener('message', (event) => {
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type !== 'roi-meetings-context') return;
+    contextProjectName = String(event.data.projectName || '').trim();
+    contextSessionName = String(event.data.sessionName || '').trim();
+  });
+
+  function getSessionLabel() {
+    if (contextProjectName && contextSessionName) {
+      return `${contextProjectName} — ${contextSessionName}`;
+    }
+    return contextProjectName || contextSessionName || '';
+  }
+
   function getInputs() {
     return {
       junior: Math.max(0, parseInt(document.getElementById('r_junior').value) || 0),
@@ -600,6 +622,128 @@
 
   function fmt(n) {
     return n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  function getCostLevel(totalCost) {
+    if (totalCost === 0) return '—';
+    if (totalCost < 3000) return 'Bajo';
+    if (totalCost < 8000) return 'Moderado';
+    if (totalCost < 15000) return 'Alto';
+    return 'Crítico';
+  }
+
+  function getDiagnosisContent(objective, cost, people, minutes, perMin) {
+    if (cost === 0 || people === 0 || minutes === 0) {
+      return {
+        panelClass: 'diagnosis-panel info',
+        title: 'Análisis de valor',
+        text: 'Configura los participantes y duración para ver el análisis de eficiencia.',
+        showTip: true,
+      };
+    }
+
+    if (objective === 'informativa') {
+      if (cost > 3000) {
+        return {
+          panelClass: 'diagnosis-panel warning',
+          title: 'Alerta de eficiencia',
+          text: `Este mensaje pudo ser un correo electrónico. Estás invirtiendo $${fmt(cost)} MXN en una sesión unidireccional con ${people} ${people === 1 ? 'persona' : 'personas'}. Considera un resumen escrito o video asíncrono para maximizar el retorno.`,
+          showTip: false,
+        };
+      }
+      return {
+        panelClass: 'diagnosis-panel info',
+        title: 'Sesión informativa',
+        text: 'Inversión razonable para una sesión informativa. Asegúrate de que todos los participantes necesiten estar presentes y considera enviar un resumen post-reunión para reforzar los puntos clave.',
+        showTip: false,
+      };
+    }
+
+    if (objective === 'decision') {
+      if (cost > 8000) {
+        return {
+          panelClass: 'diagnosis-panel success',
+          title: 'Inversión estratégica justificada',
+          text: `El costo de $${fmt(cost)} MXN está justificado si se logra un acuerdo vinculante en esta sesión. Asegúrate de documentar las decisiones tomadas y los próximos pasos con responsables y fechas claras.`,
+          showTip: false,
+        };
+      }
+      return {
+        panelClass: 'diagnosis-panel success',
+        title: 'Inversión estratégica',
+        text: 'Sesión de decisión con costo controlado. Define un facilitador y estructura la agenda con máximo 3 decisiones clave para maximizar el retorno de esta inversión.',
+        showTip: false,
+      };
+    }
+
+    if (objective === 'tecnica') {
+      if (cost > 10000) {
+        return {
+          panelClass: 'diagnosis-panel warning',
+          title: 'Revisión de alcance recomendada',
+          text: `Una sesión de planeación técnica por $${fmt(cost)} MXN con ${people} participantes puede optimizarse. Considera dividir en: una sesión de definición (equipo técnico core) y otra de validación con stakeholders.`,
+          showTip: false,
+        };
+      }
+      return {
+        panelClass: 'diagnosis-panel info',
+        title: 'Planeación técnica',
+        text: 'Sesión técnica con buena relación costo-valor. Asegura que el output sea un documento de diseño o un conjunto de tickets priorizados para que la inversión genere entregables concretos.',
+        showTip: false,
+      };
+    }
+
+    if (objective === 'crisis') {
+      return {
+        panelClass: 'diagnosis-panel danger',
+        title: 'Control de daños activo',
+        text: `Cada minuto de crisis cuesta $${fmt(Math.round(perMin))} MXN. Prioriza la solución técnica inmediata para detener el gasto operativo. Limita la sesión a quienes tienen poder de decisión o acción directa sobre el incidente.`,
+        showTip: false,
+      };
+    }
+
+    return {
+      panelClass: 'diagnosis-panel info',
+      title: 'Análisis de valor',
+      text: 'Configura los participantes y duración para ver el análisis de eficiencia.',
+      showTip: true,
+    };
+  }
+
+  function buildSnapshot() {
+    const inp = getInputs();
+    const totalMinutes = (inp.hours * 60) + inp.mins;
+    const totalHours = totalMinutes / 60;
+    const totalPeople = inp.junior + inp.senior + inp.director + inp.tech;
+
+    const roleCosts = {
+      junior: inp.junior * RATES.junior * totalHours,
+      senior: inp.senior * RATES.senior * totalHours,
+      director: inp.director * RATES.director * totalHours,
+      tech: inp.tech * RATES.tech * totalHours
+    };
+
+    const totalCost = roleCosts.junior + roleCosts.senior + roleCosts.director + roleCosts.tech;
+    const costPerMinute = totalMinutes > 0 ? totalCost / totalMinutes : 0;
+    const diagnosis = getDiagnosisContent(inp.objective, totalCost, totalPeople, totalMinutes, costPerMinute);
+
+    return {
+      objective: inp.objective,
+      totalCost,
+      costLevel: getCostLevel(totalCost),
+      costPerMinute,
+      totalParticipants: totalPeople,
+      durationMinutes: totalMinutes,
+      diagnosisTitle: diagnosis.title,
+      diagnosisText: diagnosis.text,
+      participants: {
+        junior: inp.junior,
+        senior: inp.senior,
+        director: inp.director,
+        tech: inp.tech
+      },
+      roleCosts
+    };
   }
 
   function calculate() {
@@ -649,12 +793,13 @@
     const bar = document.getElementById('costBar');
     bar.style.width = pct + '%';
 
-    let level, color;
-    if (totalCost === 0) { level = '—'; color = 'var(--border)'; }
-    else if (totalCost < 3000) { level = 'Bajo'; color = 'var(--green)'; }
-    else if (totalCost < 8000) { level = 'Moderado'; color = 'var(--blue)'; }
-    else if (totalCost < 15000) { level = 'Alto'; color = 'var(--amber)'; }
-    else { level = 'Crítico'; color = 'var(--red)'; }
+    const level = getCostLevel(totalCost);
+    let color;
+    if (totalCost === 0) color = 'var(--border)';
+    else if (totalCost < 3000) color = 'var(--green)';
+    else if (totalCost < 8000) color = 'var(--blue)';
+    else if (totalCost < 15000) color = 'var(--amber)';
+    else color = 'var(--red)';
 
     document.getElementById('costLevel').textContent = level;
     bar.style.background = color;
@@ -689,52 +834,29 @@
     const title = document.getElementById('diagnosisTitle');
     const text = document.getElementById('diagnosisText');
     const tip = document.getElementById('tipBox');
+    const diagnosis = getDiagnosisContent(objective, cost, people, minutes, perMin);
 
-    if (cost === 0 || people === 0 || minutes === 0) {
-      panel.className = 'diagnosis-panel info';
-      title.textContent = 'Análisis de valor';
-      text.textContent = 'Configura los participantes y duración para ver el análisis de eficiencia.';
-      tip.style.display = 'block';
+    panel.className = diagnosis.panelClass;
+    title.textContent = diagnosis.title;
+    text.textContent = diagnosis.text;
+    tip.style.display = diagnosis.showTip ? 'block' : 'none';
+  }
+
+  function registerSession() {
+    const snap = buildSnapshot();
+    if (snap.totalParticipants === 0 || snap.durationMinutes === 0 || snap.totalCost === 0) {
+      alert('Configura al menos un participante y una duración antes de registrar.');
       return;
     }
 
-    tip.style.display = 'none';
+    window.parent.postMessage({
+      type: 'roi-meeting-registered',
+      payload: snap
+    }, window.location.origin);
 
-    if (objective === 'informativa') {
-      if (cost > 3000) {
-        panel.className = 'diagnosis-panel warning';
-        title.textContent = 'Alerta de eficiencia';
-        text.textContent = `Este mensaje pudo ser un correo electrónico. Estás invirtiendo $${fmt(cost)} MXN en una sesión unidireccional con ${people} ${people === 1 ? 'persona' : 'personas'}. Considera un resumen escrito o video asíncrono para maximizar el retorno.`;
-      } else {
-        panel.className = 'diagnosis-panel info';
-        title.textContent = 'Sesión informativa';
-        text.textContent = `Inversión razonable para una sesión informativa. Asegúrate de que todos los participantes necesiten estar presentes y considera enviar un resumen post-reunión para reforzar los puntos clave.`;
-      }
-    } else if (objective === 'decision') {
-      if (cost > 8000) {
-        panel.className = 'diagnosis-panel success';
-        title.textContent = 'Inversión estratégica justificada';
-        text.textContent = `El costo de $${fmt(cost)} MXN está justificado si se logra un acuerdo vinculante en esta sesión. Asegúrate de documentar las decisiones tomadas y los próximos pasos con responsables y fechas claras.`;
-      } else {
-        panel.className = 'diagnosis-panel success';
-        title.textContent = 'Inversión estratégica';
-        text.textContent = `Sesión de decisión con costo controlado. Define un facilitador y estructura la agenda con máximo 3 decisiones clave para maximizar el retorno de esta inversión.`;
-      }
-    } else if (objective === 'tecnica') {
-      if (cost > 10000) {
-        panel.className = 'diagnosis-panel warning';
-        title.textContent = 'Revisión de alcance recomendada';
-        text.textContent = `Una sesión de planeación técnica por $${fmt(cost)} MXN con ${people} participantes puede optimizarse. Considera dividir en: una sesión de definición (equipo técnico core) y otra de validación con stakeholders.`;
-      } else {
-        panel.className = 'diagnosis-panel info';
-        title.textContent = 'Planeación técnica';
-        text.textContent = `Sesión técnica con buena relación costo-valor. Asegura que el output sea un documento de diseño o un conjunto de tickets priorizados para que la inversión genere entregables concretos.`;
-      }
-    } else if (objective === 'crisis') {
-      panel.className = 'diagnosis-panel danger';
-      title.textContent = 'Control de daños activo';
-      text.textContent = `Cada minuto de crisis cuesta $${fmt(Math.round(perMin))} MXN. Prioriza la solución técnica inmediata para detener el gasto operativo. Limita la sesión a quienes tienen poder de decisión o acción directa sobre el incidente.`;
-    }
+    const toast = document.getElementById('registerToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
   }
 
   function copyReport() {
@@ -758,7 +880,7 @@
 
     const report = `📋 Resumen de Inversión de Sesión
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Objetivo: ${objLabels[inp.objective]}
+${getSessionLabel() ? `Contexto: ${getSessionLabel()}\n` : ''}Objetivo: ${objLabels[inp.objective]}
 Participantes: ${totalPeople} persona${totalPeople !== 1 ? 's' : ''}
 Duración: ${durStr}
 Inversión Total: $${fmt(totalCost)} MXN

@@ -23,6 +23,7 @@ model Tenant {
   stakeholders Stakeholder[]
   tasks       Task[]
   escalationChecks EscalationCheck[]
+  meetingRoiSessions MeetingRoiSession[]
   createdAt   DateTime     @default(now())
 }
 
@@ -131,6 +132,7 @@ model Project {
   stakeholders Stakeholder[]
   tasks       Task[]
   escalationChecks EscalationCheck[]
+  meetingRoiSessions MeetingRoiSession[]
   membershipAccess MembershipProject[]
   invitationAccess InvitationProject[]
   createdAt   DateTime @default(now())
@@ -267,6 +269,35 @@ model EscalationCheck {
   createdAt   DateTime @default(now())
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, projectId, createdAt])
+  @@index([tenantId, createdAt])
+}
+
+model MeetingRoiSession {
+  id                String   @id @default(uuid())
+  tenantId          String
+  projectId         String
+  /** Nombre de la sesión o reunión (opcional). */
+  sessionName       String?
+  /** informativa | decision | tecnica | crisis */
+  objective         String
+  totalCost         Float
+  /** Bajo | Moderado | Alto | Crítico */
+  costLevel         String
+  costPerMinute     Float
+  totalParticipants Int
+  durationMinutes   Int
+  diagnosisTitle    String
+  diagnosisText     String
+  /** Conteo por rol: junior, senior, director, tech */
+  participants      Json
+  /** Costo por rol en MXN */
+  roleCosts         Json
+  createdBy         String
+  createdAt         DateTime @default(now())
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, projectId, createdAt])
   @@index([tenantId, createdAt])

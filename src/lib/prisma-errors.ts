@@ -11,3 +11,7 @@ export function isMissingTableError(err: unknown, tableHint?: string): boolean {
 export function escalationTableMissingMessage(): string {
   return "Falta la tabla EscalationCheck en la base de datos. Aplica la migración 20260609190000_escalation_checks (GitHub Actions Database migrate o SQL en Supabase).";
 }
+
+export function meetingRoiTableMissingMessage(): string {
+  return "Falta la tabla MeetingRoiSession en la base de datos. Aplica la migración 20260609200000_meeting_roi_sessions (GitHub Actions Database migrate o SQL en Supabase).";
+}
