@@ -97,6 +97,7 @@ export async function saveEscalationAction(input: {
 
   revalidatePath("/dashboard/escalometro");
   revalidatePath("/dashboard/pmo");
+  revalidatePath("/dashboard/pmo/escalations");
 
   return { ok: true as const };
 }

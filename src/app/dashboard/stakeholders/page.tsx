@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { PMO_STAKEHOLDERS } from "@/lib/dashboard-paths";
 import { hasPermission } from "@/lib/rbac";
 import { quadrantLabelFull } from "@/lib/stakeholder-playbook";
 import { getSemaphoreBadge } from "@/lib/ui";
@@ -31,7 +33,7 @@ import {
 import { StakeholderMatrixClient } from "./stakeholder-matrix-client";
 
 type StakeholdersPageProps = {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; projectId?: string }>;
 };
 
 export default async function StakeholdersPage({
@@ -113,13 +115,20 @@ export default async function StakeholdersPage({
         title="Stakeholders"
         description="Matriz de poder e interés por proyecto."
       >
-        {params.error && <p className={dashAlertError}>{params.error}</p>}
-        {params.ok && <p className={dashAlertOk}>{params.ok}</p>}
+        <Link
+          href={PMO_STAKEHOLDERS}
+          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
+        >
+          Ver resumen PMO de stakeholders
+        </Link>
+        {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
+        {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
       </DashboardPageHeader>
 
       <StakeholderMatrixClient
         stakeholders={matrixItems}
         projectNames={projects.map((p) => ({ id: p.id, name: p.name }))}
+        initialProjectId={params.projectId}
       />
 
       {canEdit ? (

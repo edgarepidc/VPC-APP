@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { PMO_RISKS } from "@/lib/dashboard-paths";
 import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
@@ -19,6 +21,9 @@ type RisksPageProps = {
   searchParams: Promise<{
     error?: string;
     ok?: string;
+    id?: string;
+    project?: string;
+    q?: string;
     prefill?: string;
     projectId?: string;
     title?: string;
@@ -138,16 +143,31 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
         title="Riesgos"
         description="Matriz, exposición y registro de riesgos."
       >
-        {params.error && <p className={dashAlertError}>{params.error}</p>}
-        {params.ok && <p className={dashAlertOk}>{params.ok}</p>}
+        <Link
+          href={PMO_RISKS}
+          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
+        >
+          Ver resumen PMO de riesgos
+        </Link>
+        {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
+        {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
       </DashboardPageHeader>
 
       <RiskManagerView
         risks={risksClient}
         projects={projects}
-        deliverables={deliverables}
+        deliverables={deliverables.map((d) => ({
+          id: d.id,
+          title: d.title,
+          projectId: d.projectId,
+        }))}
         canEdit={canEdit}
         prefill={riskPrefill}
+        initial={{
+          id: params.id,
+          project: params.project,
+          q: params.q,
+        }}
         createAction={createAction}
         deleteAction={deleteAction}
       />

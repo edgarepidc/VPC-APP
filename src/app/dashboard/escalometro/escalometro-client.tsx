@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { saveEscalationAction } from "@/app/dashboard/escalometro/actions";
 import {
@@ -29,6 +30,7 @@ type EscalometroClientProps = {
 };
 
 export function EscalometroClient({ projects, canSave }: EscalometroClientProps) {
+  const router = useRouter();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [projectId, setProjectId] = useState("");
   const [topic, setTopic] = useState("");
@@ -101,6 +103,7 @@ export function EscalometroClient({ projects, canSave }: EscalometroClientProps)
         });
 
         if (result.ok) {
+          router.refresh();
           setFeedback({
             type: "ok",
             message: `Evaluación registrada para ${selectedProject?.name ?? "el proyecto"}.`,
@@ -113,7 +116,7 @@ export function EscalometroClient({ projects, canSave }: EscalometroClientProps)
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [canSave, projectId, topic, selectedProject?.name]);
+  }, [canSave, projectId, topic, selectedProject?.name, router]);
 
   return (
     <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">

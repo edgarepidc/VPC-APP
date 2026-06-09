@@ -1,6 +1,14 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import {
+  DELIVERABLES_PROJECT,
+  PMO_ESCALATIONS_PROJECT,
+  PMO_MEETINGS_PROJECT,
+  PMO_TEAM,
+  RISKS_PROJECT,
+} from "@/lib/dashboard-paths";
 import {
   dashAlertError,
   dashAlertOk,
@@ -173,6 +181,12 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
           </>
         }
       >
+        <Link
+          href={PMO_TEAM}
+          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
+        >
+          Gestionar equipo y accesos
+        </Link>
         {usage ? (
           <p className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
             Plan {usage.plan}: {usage.projectCount}/{usage.limits.maxProjects} proyectos
@@ -226,7 +240,28 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
                 const statusBadge = getProjectStatusBadge(project.status);
                 return (
                   <tr key={project.id} className="border-b border-slate-100">
-                    <td className="py-2 font-medium text-slate-900">{project.name}</td>
+                    <td className="py-2">
+                      <Link
+                        href={DELIVERABLES_PROJECT(project.id)}
+                        className="font-medium text-slate-900 hover:underline"
+                      >
+                        {project.name}
+                      </Link>
+                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-slate-500">
+                        <Link href={DELIVERABLES_PROJECT(project.id)} className="hover:text-slate-900 hover:underline">
+                          Entregables
+                        </Link>
+                        <Link href={RISKS_PROJECT(project.id)} className="hover:text-slate-900 hover:underline">
+                          Riesgos
+                        </Link>
+                        <Link href={PMO_ESCALATIONS_PROJECT(project.id)} className="hover:text-slate-900 hover:underline">
+                          Escalamientos
+                        </Link>
+                        <Link href={PMO_MEETINGS_PROJECT(project.id)} className="hover:text-slate-900 hover:underline">
+                          Reuniones
+                        </Link>
+                      </div>
+                    </td>
                     <td className="py-2">
                       <span className={statusBadge.className}>{statusBadge.label}</span>
                     </td>

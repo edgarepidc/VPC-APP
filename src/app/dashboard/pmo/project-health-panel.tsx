@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { MeetingCostTrendDirection } from "@/lib/meeting-roi-utils";
 import type { EscalationTrendDirection } from "@/lib/escalation-utils";
 import { getEscalationTierBadge } from "@/lib/escalation-utils";
-import { DELIVERABLES_HUB, DELIVERABLES_PROJECT } from "@/lib/dashboard-paths";
+import { DELIVERABLES_HUB, DELIVERABLES_PROJECT, PMO_ESCALATIONS_PROJECT, PMO_MEETINGS_PROJECT, RISKS_PROJECT } from "@/lib/dashboard-paths";
 import { getProjectStatusBadge, getSemaphoreBadge } from "@/lib/ui";
 import { getCostLevelBadge, formatMxn } from "@/lib/meeting-roi-utils";
 import { dashCard } from "@/lib/ui-classes";
@@ -78,7 +78,9 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
                   {project.deliverables} entregables · {project.donePct}%
                 </Link>
                 <span className="rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-600">
-                  {project.risks} riesgos
+                  <Link href={RISKS_PROJECT(project.id)} className="hover:underline">
+                    {project.risks} riesgos
+                  </Link>
                 </span>
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -88,7 +90,9 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     {escalationBadge ? (
-                      <span className={escalationBadge.className}>{escalationBadge.label}</span>
+                      <Link href={PMO_ESCALATIONS_PROJECT(project.id)}>
+                        <span className={escalationBadge.className}>{escalationBadge.label}</span>
+                      </Link>
                     ) : (
                       <span className="text-xs text-slate-400">Sin evaluar</span>
                     )}
@@ -105,7 +109,9 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     {meetingBadge ? (
                       <>
-                        <span className={meetingBadge.className}>{meetingBadge.label}</span>
+                        <Link href={PMO_MEETINGS_PROJECT(project.id)}>
+                          <span className={meetingBadge.className}>{meetingBadge.label}</span>
+                        </Link>
                         {project.latestMeetingCost != null && (
                           <span className="text-xs text-slate-600">
                             {formatMxn(project.latestMeetingCost)}
@@ -189,10 +195,20 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
                       {project.donePct}%
                     </Link>
                   </td>
-                  <td className="py-2">{project.risks}</td>
+                  <td className="py-2">
+                    <Link
+                      href={RISKS_PROJECT(project.id)}
+                      className="text-slate-900 hover:underline"
+                      title="Ver riesgos del proyecto"
+                    >
+                      {project.risks}
+                    </Link>
+                  </td>
                   <td className="py-2">
                     {escalationBadge ? (
-                      <span className={escalationBadge.className}>{escalationBadge.label}</span>
+                      <Link href={PMO_ESCALATIONS_PROJECT(project.id)}>
+                        <span className={escalationBadge.className}>{escalationBadge.label}</span>
+                      </Link>
                     ) : (
                       <span className="text-xs text-slate-400">Sin evaluar</span>
                     )}
@@ -205,7 +221,9 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
                   </td>
                   <td className="py-2">
                     {meetingBadge ? (
-                      <span className={meetingBadge.className}>{meetingBadge.label}</span>
+                      <Link href={PMO_MEETINGS_PROJECT(project.id)}>
+                        <span className={meetingBadge.className}>{meetingBadge.label}</span>
+                      </Link>
                     ) : (
                       <span className="text-xs text-slate-400">Sin registrar</span>
                     )}
@@ -217,9 +235,13 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
                     </div>
                   </td>
                   <td className="py-2 text-slate-700">
-                    {project.latestMeetingCost != null
-                      ? formatMxn(project.latestMeetingCost)
-                      : "—"}
+                    {project.latestMeetingCost != null ? (
+                      <Link href={PMO_MEETINGS_PROJECT(project.id)} className="hover:underline">
+                        {formatMxn(project.latestMeetingCost)}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                 </tr>
               );

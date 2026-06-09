@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { EscalationHistoryList } from "@/app/dashboard/escalometro/escalation-history-list";
 import { EscalationDeteriorationAlerts } from "@/app/dashboard/pmo/escalation-deterioration-alerts";
 import { getSessionUser } from "@/lib/auth/session";
+import { ESCALOMETRO_HUB } from "@/lib/dashboard-paths";
 import { hasPermission } from "@/lib/rbac";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
@@ -61,7 +63,14 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
       <DashboardPageHeader
         title="Escalamientos"
         description="Historial completo de evaluaciones del Escalómetro por proyecto."
-      />
+      >
+        <Link
+          href={ESCALOMETRO_HUB}
+          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
+        >
+          Nueva evaluación
+        </Link>
+      </DashboardPageHeader>
 
       <EscalationDeteriorationAlerts alerts={alertRows} />
 

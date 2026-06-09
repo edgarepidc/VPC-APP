@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { saveMeetingRoiSessionAction } from "@/app/dashboard/roi-meetings/actions";
 import {
@@ -41,6 +42,7 @@ type RoiMeetingsClientProps = {
 };
 
 export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps) {
+  const router = useRouter();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [projectId, setProjectId] = useState("");
   const [sessionName, setSessionName] = useState("");
@@ -109,6 +111,7 @@ export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps)
         });
 
         if (result.ok) {
+          router.refresh();
           setFeedback({
             type: "ok",
             message: `Sesión registrada para ${selectedProject?.name ?? "el proyecto"}.`,
@@ -121,7 +124,7 @@ export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps)
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [canSave, projectId, sessionName, selectedProject?.name]);
+  }, [canSave, projectId, sessionName, selectedProject?.name, router]);
 
   return (
     <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">

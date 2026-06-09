@@ -6,6 +6,7 @@ import {
   weightedProgressPct,
   type DeliverableMetricRow,
 } from "@/lib/deliverable-pmo-utils";
+import { residualScore } from "@/app/dashboard/risks/risk-utils";
 import { buildEscalationTrendsByProject } from "@/lib/escalation-utils";
 import { buildMeetingCostTrendsByProject } from "@/lib/meeting-roi-utils";
 import {
@@ -39,7 +40,6 @@ export async function getPmoSnapshot(
     risks,
     stakeholders,
     overdueDeliverables,
-    criticalRisks,
     recentEscalations,
     latestEscalations,
     deteriorationAlerts,
@@ -72,8 +72,10 @@ export async function getPmoSnapshot(
         id: true,
         projectId: true,
         title: true,
+        ownerName: true,
         residualProb: true,
         impactAmount: true,
+        project: { select: { id: true, name: true } },
       },
     }),
     db.stakeholder.findMany({
@@ -89,19 +91,6 @@ export async function getPmoSnapshot(
       select: { id: true, title: true, dueDate: true, project: { select: { id: true, name: true } } },
       orderBy: { dueDate: "asc" },
       take: 8,
-    }),
-    db.risk.findMany({
-      where: childWhere,
-      select: {
-        id: true,
-        title: true,
-        residualProb: true,
-        impactAmount: true,
-        ownerName: true,
-        project: { select: { name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 10,
     }),
     listEscalationChecksByTenant(tenantId, {
       restrictToProjectIds: restrict,
@@ -157,30 +146,12 @@ export async function getPmoSnapshot(
     0,
   );
 
-  const criticalRiskRows = criticalRisks
-    .map((risk) => {
-      const impactLevel =
-        risk.impactAmount <= 10000
-          ? 1
-          : risk.impactAmount <= 50000
-            ? 2
-            : risk.impactAmount <= 200000
-              ? 3
-              : risk.impactAmount <= 1000000
-                ? 4
-                : 5;
-      const probabilityLevel = Math.max(
-        1,
-        Math.min(5, Math.ceil(risk.residualProb / 20)),
-      );
-      const residualScore = impactLevel * probabilityLevel;
-
-      return {
-        ...risk,
-        residualScore,
-        residualVme: (risk.residualProb / 100) * risk.impactAmount,
-      };
-    })
+  const criticalRiskRows = risks
+    .map((risk) => ({
+      ...risk,
+      residualScore: residualScore(risk.residualProb, risk.impactAmount),
+      residualVme: (risk.residualProb / 100) * risk.impactAmount,
+    }))
     .filter((risk) => risk.residualScore > 10)
     .sort((a, b) => b.residualScore - a.residualScore)
     .slice(0, 6);

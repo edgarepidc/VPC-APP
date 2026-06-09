@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { RoiSessionHistoryList } from "@/app/dashboard/roi-meetings/roi-session-history-list";
 import { MeetingCostAlerts } from "@/app/dashboard/pmo/meeting-cost-alerts";
 import { getSessionUser } from "@/lib/auth/session";
+import { ROI_MEETINGS_HUB } from "@/lib/dashboard-paths";
 import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { serializeMeetingRoiSessions } from "@/lib/meeting-roi-utils";
@@ -63,7 +65,14 @@ export default async function PmoMeetingsPage({ searchParams }: PmoMeetingsPageP
       <DashboardPageHeader
         title="Reuniones"
         description="Historial de sesiones registradas con la calculadora ROI por proyecto."
-      />
+      >
+        <Link
+          href={ROI_MEETINGS_HUB}
+          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
+        >
+          Registrar nueva sesión
+        </Link>
+      </DashboardPageHeader>
 
       <MeetingCostAlerts alerts={alertRows} />
 

@@ -22,6 +22,7 @@ export type MatrixStakeholder = {
 type Props = {
   stakeholders: MatrixStakeholder[];
   projectNames: { id: string; name: string }[];
+  initialProjectId?: string;
 };
 
 const qBg: Record<QuadrantId, string> = {
@@ -53,9 +54,15 @@ function initials(name: string) {
 export function StakeholderMatrixClient({
   stakeholders,
   projectNames,
+  initialProjectId,
 }: Props) {
-  const [projectFilter, setProjectFilter] = useState<string>("all");
+  const [projectFilter, setProjectFilter] = useState<string>(
+    initialProjectId && projectNames.some((p) => p.id === initialProjectId)
+      ? initialProjectId
+      : "all",
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [exportNote, setExportNote] = useState<string | null>(null);
 
   const visible = useMemo(() => {
     if (projectFilter === "all") return stakeholders;
@@ -87,6 +94,8 @@ export function StakeholderMatrixClient({
       }),
     ];
     void navigator.clipboard.writeText(lines.join("\n"));
+    setExportNote("Plan copiado al portapapeles.");
+    window.setTimeout(() => setExportNote(null), 4000);
   }
 
   return (
@@ -133,7 +142,7 @@ export function StakeholderMatrixClient({
               </select>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end gap-1">
             <button
               type="button"
               onClick={() => exportMarkdown()}
@@ -141,6 +150,9 @@ export function StakeholderMatrixClient({
             >
               Exportar
             </button>
+            {exportNote ? (
+              <span className="text-[10px] text-emerald-700">{exportNote}</span>
+            ) : null}
           </div>
         </header>
 

@@ -11,6 +11,14 @@ import {
 import {
   DELIVERABLE_DETAIL_IN_PROJECT,
   PMO_DELIVERABLES,
+  PMO_ESCALATIONS,
+  PMO_MEETINGS,
+  PMO_PROJECTS,
+  PMO_RISKS,
+  PMO_STAKEHOLDERS,
+  PMO_TEAM,
+  RISK_DETAIL_IN_PROJECT,
+  STAKEHOLDERS_HUB,
 } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
@@ -83,7 +91,9 @@ export default async function PmoPage() {
       <section className="grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm sm:flex sm:flex-wrap sm:gap-6 sm:px-4">
         <div>
           <p className={dashKpiLabel}>Proyectos</p>
-          <p className={dashKpiValue}>{snapshot.kpis.projects}</p>
+          <Link href={PMO_PROJECTS} className={`${dashKpiValue} hover:underline`}>
+            {snapshot.kpis.projects}
+          </Link>
         </div>
         <div>
           <p className={dashKpiLabel}>Entregables</p>
@@ -119,8 +129,16 @@ export default async function PmoPage() {
         </div>
         <div>
           <p className={dashKpiLabel}>Riesgos</p>
-          <p className={dashKpiValue}>{snapshot.kpis.risks}</p>
-          <p className="text-xs text-slate-500">{snapshot.kpis.criticalRisks} críticos</p>
+          <Link href={PMO_RISKS} className={`${dashKpiValue} hover:underline`}>
+            {snapshot.kpis.risks}
+          </Link>
+          {snapshot.kpis.criticalRisks > 0 ? (
+            <Link href={PMO_RISKS} className="text-xs text-amber-700 hover:underline">
+              {snapshot.kpis.criticalRisks} críticos
+            </Link>
+          ) : (
+            <p className="text-xs text-slate-500">0 críticos</p>
+          )}
         </div>
         <div>
           <p className={dashKpiLabel}>Exposición residual</p>
@@ -128,13 +146,29 @@ export default async function PmoPage() {
         </div>
         <div>
           <p className={dashKpiLabel}>Escalamientos</p>
-          <p className={dashKpiValue}>{snapshot.kpis.escalationChecks}</p>
+          <Link href={PMO_ESCALATIONS} className={`${dashKpiValue} hover:underline`}>
+            {snapshot.kpis.escalationChecks}
+          </Link>
           <p className="text-xs text-slate-500">últimos 30 días</p>
         </div>
         <div>
           <p className={dashKpiLabel}>Reuniones</p>
-          <p className={dashKpiValue}>{snapshot.kpis.meetingSessions}</p>
+          <Link href={PMO_MEETINGS} className={`${dashKpiValue} hover:underline`}>
+            {snapshot.kpis.meetingSessions}
+          </Link>
           <p className="text-xs text-slate-500">{mxn(snapshot.kpis.totalMeetingCostMxn)} · 30 días</p>
+        </div>
+        <div>
+          <p className={dashKpiLabel}>Stakeholders</p>
+          <Link href={PMO_STAKEHOLDERS} className={`${dashKpiValue} hover:underline`}>
+            {snapshot.kpis.stakeholders}
+          </Link>
+        </div>
+        <div>
+          <p className={dashKpiLabel}>Equipo</p>
+          <Link href={PMO_TEAM} className={`${dashKpiValue} hover:underline`}>
+            Gestionar
+          </Link>
         </div>
       </section>
 
@@ -160,7 +194,12 @@ export default async function PmoPage() {
         />
 
         <div className={`${dashCard} p-4`}>
-          <h2 className="text-base font-semibold text-slate-900">Stakeholders</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-slate-900">Stakeholders</h2>
+            <Link href={STAKEHOLDERS_HUB} className="text-xs font-medium text-slate-600 underline">
+              Abrir mapa
+            </Link>
+          </div>
           <div className="mt-3 space-y-2 text-sm">
             {(
               [
@@ -170,13 +209,14 @@ export default async function PmoPage() {
                 ["Espectadores", snapshot.stakeholdersByQuadrant.espectadores],
               ] as const
             ).map(([label, n]) => (
-              <div
+              <Link
                 key={label}
-                className="flex justify-between rounded-lg border border-slate-200 px-3 py-2"
+                href={STAKEHOLDERS_HUB}
+                className="flex justify-between rounded-lg border border-slate-200 px-3 py-2 transition hover:border-slate-300 hover:bg-slate-50"
               >
                 <span className="text-slate-600">{label}</span>
                 <span className="font-semibold text-slate-900">{n}</span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -188,7 +228,12 @@ export default async function PmoPage() {
           <ul className="mt-3 space-y-2 text-sm">
             {snapshot.criticalRiskRows.map((risk) => (
               <li key={risk.id} className="rounded-lg border border-slate-200 p-3">
-                <p className="font-medium text-slate-900">{risk.title}</p>
+                <Link
+                  href={RISK_DETAIL_IN_PROJECT(risk.id, risk.project.id)}
+                  className="font-medium text-slate-900 hover:underline"
+                >
+                  {risk.title}
+                </Link>
                 <p className="text-slate-600">
                   {risk.project.name} · {risk.ownerName} · {risk.residualScore}/25
                 </p>

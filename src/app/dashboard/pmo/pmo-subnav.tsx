@@ -4,14 +4,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { dashTabActive, dashTabIdle } from "@/lib/ui-classes";
-import { PMO_HUB, PMO_PROJECTS, PMO_TEAM, PMO_ESCALATIONS, PMO_MEETINGS, PMO_DELIVERABLES } from "@/lib/dashboard-paths";
+import {
+  PMO_HUB,
+  PMO_PROJECTS,
+  PMO_TEAM,
+  PMO_ESCALATIONS,
+  PMO_MEETINGS,
+  PMO_DELIVERABLES,
+  PMO_RISKS,
+  PMO_STAKEHOLDERS,
+} from "@/lib/dashboard-paths";
 
 const TABS = [
   { href: PMO_HUB, label: "Resumen", exact: true },
   { href: PMO_PROJECTS, label: "Proyectos", exact: false },
   { href: PMO_DELIVERABLES, label: "Entregables", exact: false },
+  { href: PMO_RISKS, label: "Riesgos", exact: false },
   { href: PMO_ESCALATIONS, label: "Escalamientos", exact: false },
   { href: PMO_MEETINGS, label: "Reuniones", exact: false },
+  { href: PMO_STAKEHOLDERS, label: "Stakeholders", exact: false },
   { href: PMO_TEAM, label: "Equipo", exact: false },
 ] as const;
 

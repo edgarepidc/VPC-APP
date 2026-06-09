@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import type { RiskFormPrefill } from "@/lib/escalation-risk-prefill";
+import { DELIVERABLE_DETAIL_IN_PROJECT, DELIVERABLES_PROJECT } from "@/lib/dashboard-paths";
 
 import {
   dashAlertWarn,
@@ -27,6 +30,8 @@ import {
   vmeGross,
   vmeResidual,
 } from "./risk-utils";
+import { buildRiskActionItems } from "./risk-action-utils";
+import { RisksActionQueue } from "./risks-action-queue";
 
 export type RiskClientRow = {
   id: string;
@@ -47,9 +52,10 @@ export type RiskClientRow = {
 type RiskManagerViewProps = {
   risks: RiskClientRow[];
   projects: { id: string; name: string }[];
-  deliverables: { id: string; title: string }[];
+  deliverables: { id: string; title: string; projectId: string }[];
   canEdit: boolean;
   prefill?: RiskFormPrefill | null;
+  initial?: { id?: string; project?: string; q?: string };
   createAction: (formData: FormData) => void | Promise<void>;
   deleteAction: (formData: FormData) => void | Promise<void>;
 };
@@ -152,23 +158,97 @@ export function RiskManagerView({
   deliverables,
   canEdit,
   prefill = null,
+  initial,
   createAction,
   deleteAction,
 }: RiskManagerViewProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const formSectionRef = useRef<HTMLElement>(null);
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const rowRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const [detailId, setDetailId] = useState<string | null>(initial?.id ?? null);
+  const [focusId, setFocusId] = useState<string | null>(initial?.id ?? null);
+  const [projectFilter, setProjectFilter] = useState(initial?.project ?? "");
+  const [q, setQ] = useState(initial?.q ?? "");
+  const [formProjectId, setFormProjectId] = useState(prefill?.projectId ?? "");
   const [memoOpen, setMemoOpen] = useState(false);
   const [prob, setProb] = useState(prefill?.probability ?? 50);
   const [resProb, setResProb] = useState(prefill?.residualProb ?? 20);
   const [impact, setImpact] = useState(prefill?.impactAmount ?? 50_000);
+
+  function syncUrl(patch: Record<string, string | null>) {
+    const p = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(patch)) {
+      if (value) p.set(key, value);
+      else p.delete(key);
+    }
+    const qs = p.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
+
+  function openDetail(id: string) {
+    setDetailId(id);
+    setFocusId(id);
+    syncUrl({ id });
+    requestAnimationFrame(() => {
+      rowRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }
+
+  function closeDetail() {
+    setDetailId(null);
+    setFocusId(null);
+    syncUrl({ id: null });
+  }
 
   useEffect(() => {
     if (!prefill) return;
     setProb(prefill.probability);
     setResProb(prefill.residualProb);
     setImpact(prefill.impactAmount);
+    setFormProjectId(prefill.projectId ?? "");
     formSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [prefill]);
+
+  useEffect(() => {
+    if (initial?.id && risks.some((r) => r.id === initial.id)) {
+      openDetail(initial.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deep link once
+  }, [initial?.id, risks]);
+
+  useEffect(() => {
+    syncUrl({
+      project: projectFilter || null,
+      q: q.trim() || null,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync filters only
+  }, [projectFilter, q]);
+
+  const scopedRisks = useMemo(() => {
+    const ql = q.trim().toLowerCase();
+    return risks.filter((r) => {
+      const projectOk = !projectFilter || r.project.id === projectFilter;
+      const hay =
+        !ql ||
+        r.title.toLowerCase().includes(ql) ||
+        r.project.name.toLowerCase().includes(ql) ||
+        r.ownerName.toLowerCase().includes(ql) ||
+        r.category.toLowerCase().includes(ql);
+      return projectOk && hay;
+    });
+  }, [risks, projectFilter, q]);
+
+  const actionItems = useMemo(() => buildRiskActionItems(scopedRisks), [scopedRisks]);
+
+  const formDeliverables = useMemo(
+    () =>
+      formProjectId
+        ? deliverables.filter((d) => d.projectId === formProjectId)
+        : deliverables,
+    [deliverables, formProjectId],
+  );
 
   const today = useMemo(() => startOfToday(), []);
 
@@ -191,7 +271,7 @@ export function RiskManagerView({
     return { gross: g, residual: r, saving: g - r };
   }, [prob, resProb, impact]);
 
-  const detail = risks.find((x) => x.id === detailId) ?? null;
+  const detail = scopedRisks.find((x) => x.id === detailId) ?? risks.find((x) => x.id === detailId) ?? null;
 
   const memoText = useMemo(() => {
     const now = new Date();
@@ -383,6 +463,7 @@ ${D}`;
                     name="projectId"
                     required
                     defaultValue={prefill?.projectId ?? ""}
+                    onChange={(e) => setFormProjectId(e.target.value)}
                     className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
                   >
                     <option value="">Selecciona proyecto</option>
@@ -402,7 +483,7 @@ ${D}`;
                     className="w-full rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
                   >
                     <option value="">—</option>
-                    {deliverables.map((d) => (
+                    {formDeliverables.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.title}
                       </option>
@@ -565,7 +646,68 @@ ${D}`;
       {/* Tabla */}
       <section className={`${dashCard} p-4`}>
         <h2 className={`mb-4 ${dashSectionTitle}`}>Registro de riesgos</h2>
-        <div className="overflow-x-auto">
+
+        <RisksActionQueue
+          items={actionItems}
+          activeId={focusId}
+          onSelect={openDetail}
+        />
+
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <label className="text-xs font-medium text-slate-600">Proyecto</label>
+          <select
+            value={projectFilter}
+            onChange={(e) => setProjectFilter(e.target.value)}
+            className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-sm"
+          >
+            <option value="">Todos</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar riesgo…"
+            className="h-9 w-[200px] max-w-full rounded-lg border border-slate-300 bg-white px-2.5 text-sm"
+          />
+        </div>
+
+        <div className="space-y-2 lg:hidden">
+          {scopedRisks.map((risk) => {
+            const rs = residualScore(risk.residualProb, risk.impactAmount);
+            return (
+              <button
+                key={risk.id}
+                ref={(el) => {
+                  if (el) rowRefs.current.set(risk.id, el);
+                  else rowRefs.current.delete(risk.id);
+                }}
+                type="button"
+                onClick={() => openDetail(risk.id)}
+                className={`w-full rounded-lg border p-3 text-left ${
+                  focusId === risk.id ? "border-slate-800 bg-slate-50" : "border-slate-200 bg-white"
+                }`}
+              >
+                <p className="text-sm font-medium text-slate-900">{risk.title}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {risk.project.name} · {risk.ownerName}
+                </p>
+                <span className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${scoreBadgeClass(rs)}`}>
+                  Score {rs}
+                </span>
+              </button>
+            );
+          })}
+          {scopedRisks.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-400">Sin riesgos en este alcance.</p>
+          ) : null}
+        </div>
+
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[960px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-[#e4e2dc] bg-[#f5f4f0] text-left font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">
@@ -585,7 +727,7 @@ ${D}`;
               </tr>
             </thead>
             <tbody>
-              {risks.map((risk) => {
+              {scopedRisks.map((risk) => {
                 const rs = residualScore(risk.residualProb, risk.impactAmount);
                 const vg = vmeGross(risk.probability, risk.impactAmount);
                 const vr = vmeResidual(risk.residualProb, risk.impactAmount);
@@ -608,9 +750,14 @@ ${D}`;
                 return (
                   <tr
                     key={risk.id}
-                    className={["border-b border-[#e4e2dc] transition hover:bg-[#f5f4f0]", expired ? "opacity-[0.55]" : ""].join(
+                    ref={(el) => {
+                      if (el) rowRefs.current.set(risk.id, el);
+                      else rowRefs.current.delete(risk.id);
+                    }}
+                    className={["cursor-pointer border-b border-[#e4e2dc] transition hover:bg-[#f5f4f0]", expired ? "opacity-[0.55]" : "", focusId === risk.id ? "bg-slate-50" : ""].join(
                       " ",
                     )}
+                    onClick={() => openDetail(risk.id)}
                   >
                     <td className="px-3 py-3 align-middle text-slate-700">{risk.project.name}</td>
                     <td className="max-w-[200px] px-3 py-3 align-middle">
@@ -660,7 +807,10 @@ ${D}`;
                       <button
                         type="button"
                         className="rounded-md border border-transparent px-2 py-1 text-stone-400 transition hover:border-[#e4e2dc] hover:bg-white hover:text-slate-800"
-                        onClick={() => setDetailId(risk.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDetail(risk.id);
+                        }}
                         title="Detalle"
                       >
                         ↗
@@ -684,10 +834,10 @@ ${D}`;
                   </tr>
                 );
               })}
-              {risks.length === 0 && (
+              {scopedRisks.length === 0 && (
                 <tr>
                   <td colSpan={13} className="py-12 text-center font-mono text-sm text-stone-400">
-                    Sin riesgos registrados — agrega el primero con el formulario.
+                    Sin riesgos en este alcance.
                   </td>
                 </tr>
               )}
@@ -702,7 +852,7 @@ ${D}`;
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
           role="presentation"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setDetailId(null);
+            if (e.target === e.currentTarget) closeDetail();
           }}
         >
           <div
@@ -714,7 +864,7 @@ ${D}`;
             <button
               type="button"
               className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-[#e4e2dc] bg-[#f5f4f0] text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-              onClick={() => setDetailId(null)}
+              onClick={closeDetail}
               aria-label="Cerrar"
             >
               ✕
@@ -771,11 +921,23 @@ ${D}`;
               </div>
             ) : null}
             <p className="mt-4 text-xs text-slate-500">
-              Proyecto: <strong className="text-slate-800">{detail.project.name}</strong>
+              Proyecto:{" "}
+              <Link
+                href={DELIVERABLES_PROJECT(detail.project.id)}
+                className="font-medium text-slate-800 underline"
+              >
+                {detail.project.name}
+              </Link>
               {detail.deliverable ? (
                 <>
                   {" "}
-                  · Entregable: <strong className="text-slate-800">{detail.deliverable.title}</strong>
+                  · Entregable:{" "}
+                  <Link
+                    href={DELIVERABLE_DETAIL_IN_PROJECT(detail.deliverable.id, detail.project.id)}
+                    className="font-medium text-slate-800 underline"
+                  >
+                    {detail.deliverable.title}
+                  </Link>
                 </>
               ) : null}
             </p>

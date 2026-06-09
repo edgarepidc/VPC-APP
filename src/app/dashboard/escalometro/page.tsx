@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { EscalometroClient } from "@/app/dashboard/escalometro/escalometro-client";
 import { EscalationHistoryList } from "@/app/dashboard/escalometro/escalation-history-list";
 import { getSessionUser } from "@/lib/auth/session";
+import { PMO_ESCALATIONS } from "@/lib/dashboard-paths";
 import { hasPermission } from "@/lib/rbac";
 import { listProjectsForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
@@ -52,7 +54,14 @@ export default async function EscalometroPage({ searchParams }: EscalometroPageP
       <DashboardPageHeader
         title="Escalómetro"
         description="Evalúa el nivel de escalamiento en 6 dimensiones y registra el resultado por proyecto."
-      />
+      >
+        <Link
+          href={PMO_ESCALATIONS}
+          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
+        >
+          Ver historial PMO de escalamientos
+        </Link>
+      </DashboardPageHeader>
 
       {!storageReady && (
         <p className={dashAlertWarn} role="status">

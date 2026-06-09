@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { PMO_MEETINGS } from "@/lib/dashboard-paths";
 import { RoiMeetingsClient } from "@/app/dashboard/roi-meetings/roi-meetings-client";
 import { RoiSessionHistoryList } from "@/app/dashboard/roi-meetings/roi-session-history-list";
 import { getSessionUser } from "@/lib/auth/session";
@@ -52,7 +54,14 @@ export default async function RoiMeetingsPage({ searchParams }: RoiMeetingsPageP
       <DashboardPageHeader
         title="ROI de reuniones"
         description="Calcula el costo de tus sesiones y registra el resultado por proyecto."
-      />
+      >
+        <Link
+          href={PMO_MEETINGS}
+          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
+        >
+          Ver historial PMO de reuniones
+        </Link>
+      </DashboardPageHeader>
 
       {!storageReady && (
         <p className={dashAlertWarn} role="status">
