@@ -11,6 +11,13 @@ import {
   listStakeholdersByTenant,
 } from "@/modules/stakeholders/service";
 
+import {
+  dashCard,
+  uiButtonPrimary,
+  uiInput,
+  uiLabel,
+} from "@/lib/ui-classes";
+
 import { StakeholderMatrixClient } from "./stakeholder-matrix-client";
 
 type StakeholdersPageProps = {
@@ -104,29 +111,15 @@ export default async function StakeholdersPage({
         projectNames={projects.map((p) => ({ id: p.id, name: p.name }))}
       />
 
-      <section className="rounded-xl border border-[#e8e6e1] bg-white p-6 shadow-sm">
-        <h2 className="text-[15px] font-semibold text-slate-900">
-          Agregar interesado
-        </h2>
-        <p className="mt-1 text-[13px] text-[#6b6860]">
-          Los valores de influencia e interés (0–10) posicionan el punto en la
-          matriz.
-        </p>
-        {!canEdit ? (
-          <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Tu rol es solo lectura en este módulo (consultante).
-          </p>
-        ) : (
-          <form action={createAction} className="mt-5 grid gap-4 sm:grid-cols-2">
+      {canEdit ? (
+        <details className={`${dashCard} group`}>
+          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden">
+            Agregar interesado
+          </summary>
+          <form action={createAction} className="grid gap-3 border-t border-slate-200 px-4 py-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
-                Proyecto *
-              </label>
-              <select
-                name="projectId"
-                required
-                className="w-full rounded-md border border-[#e8e6e1] bg-white px-3 py-2 text-[13px] text-slate-900 outline-none transition focus:border-[#2563eb] focus:ring-[3px] focus:ring-[#eff4ff]"
-              >
+              <label className={uiLabel}>Proyecto</label>
+              <select name="projectId" required className={`mt-1 ${uiInput}`}>
                 <option value="">Seleccionar…</option>
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
@@ -136,105 +129,66 @@ export default async function StakeholdersPage({
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
-                Nombre *
-              </label>
-              <input
-                name="name"
-                required
-                placeholder="Ej. María González"
-                className="w-full rounded-md border border-[#e8e6e1] px-3 py-2 text-[13px] outline-none focus:border-[#2563eb] focus:ring-[3px] focus:ring-[#eff4ff]"
-              />
+              <label className={uiLabel}>Nombre</label>
+              <input name="name" required placeholder="Ej. María González" className={`mt-1 ${uiInput}`} />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
-                Cargo / rol
-              </label>
-              <input
-                name="role"
-                placeholder="Ej. Directora de TI"
-                className="w-full rounded-md border border-[#e8e6e1] px-3 py-2 text-[13px] outline-none focus:border-[#2563eb] focus:ring-[3px] focus:ring-[#eff4ff]"
-              />
+              <label className={uiLabel}>Cargo / rol</label>
+              <input name="role" placeholder="Ej. Directora de TI" className={`mt-1 ${uiInput}`} />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
-                Influencia (0–10)
-              </label>
-              <input
-                name="influence"
-                type="number"
-                min={0}
-                max={10}
-                defaultValue={5}
-                className="w-full rounded-md border border-[#e8e6e1] px-3 py-2 font-mono text-[13px] outline-none focus:border-[#2563eb] focus:ring-[3px] focus:ring-[#eff4ff]"
-              />
+              <label className={uiLabel}>Influencia (0–10)</label>
+              <input name="influence" type="number" min={0} max={10} defaultValue={5} className={`mt-1 ${uiInput}`} />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
-                Interés (0–10)
-              </label>
-              <input
-                name="interest"
-                type="number"
-                min={0}
-                max={10}
-                defaultValue={5}
-                className="w-full rounded-md border border-[#e8e6e1] px-3 py-2 font-mono text-[13px] outline-none focus:border-[#2563eb] focus:ring-[3px] focus:ring-[#eff4ff]"
-              />
+              <label className={uiLabel}>Interés (0–10)</label>
+              <input name="interest" type="number" min={0} max={10} defaultValue={5} className={`mt-1 ${uiInput}`} />
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
-                Observación (opcional)
-              </label>
-              <textarea
-                name="observation"
-                placeholder="Contexto relevante sobre este interesado…"
-                rows={3}
-                className="w-full resize-y rounded-md border border-[#e8e6e1] px-3 py-2 text-[13px] outline-none focus:border-[#2563eb] focus:ring-[3px] focus:ring-[#eff4ff]"
-              />
+              <label className={uiLabel}>Observación (opcional)</label>
+              <textarea name="observation" rows={3} className={`mt-1 ${uiInput}`} />
             </div>
             <div className="sm:col-span-2">
-              <button
-                type="submit"
-                className="rounded-md bg-[#1a1916] px-4 py-2.5 text-[13px] font-medium text-white hover:bg-[#2d2c29]"
-              >
+              <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
                 Agregar al mapa
               </button>
             </div>
           </form>
-        )}
-      </section>
+        </details>
+      ) : (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Tu rol es solo lectura en este módulo.
+        </p>
+      )}
 
-      <section className="rounded-xl border border-[#e8e6e1] bg-white p-6 shadow-sm">
-        <h2 className="text-[15px] font-semibold text-slate-900">
-          Registro detallado
-        </h2>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[900px] border-collapse text-[13px]">
+      <section className={`${dashCard} p-4`}>
+        <h2 className="text-base font-semibold text-slate-900">Registro</h2>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full min-w-[720px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-[#e8e6e1] text-left">
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+              <tr className="border-b border-slate-200 text-left">
+                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
                   Proyecto
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
                   Nombre
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
                   Rol
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
                   Inf.
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
                   Int.
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
                   Cuadrante
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
                   Semáforo
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                <th className="pb-2 text-xs font-medium uppercase text-slate-500">
                   Observación
                 </th>
               </tr>

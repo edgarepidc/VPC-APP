@@ -76,7 +76,7 @@ export function TaskEditDialog({ task, projects, members, onClose }: Props) {
     <dialog
       open
       key={task.id}
-      className="open:backdrop:bg-black/40 fixed left-1/2 top-1/2 z-50 w-[min(100vw-2rem,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-0 text-slate-900 shadow-xl"
+      className="open:backdrop:bg-black/40 fixed left-1/2 top-1/2 z-50 w-[min(100vw-2rem,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-slate-200 bg-white p-0 text-sm text-slate-900 shadow-xl"
       onClose={onClose}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();

@@ -77,7 +77,7 @@ function HeatmapBlock({
 
   return (
     <div>
-      <p className="mb-3 font-mono text-[11px] font-medium uppercase tracking-wider text-stone-500">{label}</p>
+      <p className="mb-3 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
       <div className="flex gap-1.5">
         <div
           className="flex items-center pb-5 font-mono text-[9px] font-medium uppercase tracking-widest text-stone-400"
@@ -249,69 +249,59 @@ ${D}`;
 
   return (
     <div className="space-y-5 text-slate-900">
-      <header className="sticky top-0 z-10 -mx-1 flex items-center justify-between border-b border-[#e4e2dc] bg-[#fafaf8]/95 px-1 py-3 backdrop-blur sm:py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="grid h-7 w-7 place-items-center rounded-md bg-slate-900 font-mono text-[11px] font-medium text-white">
-            RC
-          </div>
-          <div>
-            <span className="text-[15px] font-semibold tracking-tight">Risk Manager</span>
-            <span className="text-[15px] font-normal text-stone-400"> / PMO</span>
-          </div>
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
+        <div>
+          <h1 className="text-lg font-semibold text-slate-900">Riesgos</h1>
+          <p className="text-sm text-slate-600">Matriz, exposición y registro de riesgos.</p>
         </div>
-        <div className="flex items-center gap-3 text-right">
-          <span className="hidden font-mono text-xs text-stone-400 sm:inline">
-            {new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
-          </span>
-          <span className="rounded-full bg-blue-50 px-2.5 py-0.5 font-mono text-[11px] font-medium text-blue-700 ring-1 ring-blue-100">
-            CRO view
-          </span>
-        </div>
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+          {new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
+        </span>
       </header>
 
       {flashError && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{flashError}</p>
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{flashError}</p>
       )}
       {flashOk && (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{flashOk}</p>
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{flashOk}</p>
       )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-xl border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
-          <p className="mb-2 font-mono text-[11px] font-medium uppercase tracking-wider text-stone-500">
+        <div className="rounded-lg border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
+          <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">
             Exposición total VME
           </p>
           <p className="text-[26px] font-semibold leading-none tracking-tight text-red-600">{fmtMoneyUSD(kpis.grossV)}</p>
-          <p className="mt-2 text-xs text-stone-500">
+          <p className="mt-2 text-xs text-slate-500">
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" />
             {kpis.activeCount} riesgos activos
           </p>
         </div>
-        <div className="rounded-xl border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
-          <p className="mb-2 font-mono text-[11px] font-medium uppercase tracking-wider text-stone-500">VME residual</p>
+        <div className="rounded-lg border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
+          <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">VME residual</p>
           <p className="text-[26px] font-semibold leading-none tracking-tight text-blue-600">{fmtMoneyUSD(kpis.resV)}</p>
-          <p className="mt-2 text-xs text-stone-500">
+          <p className="mt-2 text-xs text-slate-500">
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500 align-middle" />
             tras mitigación
           </p>
         </div>
-        <div className="rounded-xl border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
-          <p className="mb-2 font-mono text-[11px] font-medium uppercase tracking-wider text-stone-500">Riesgos críticos</p>
+        <div className="rounded-lg border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
+          <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">Riesgos críticos</p>
           <p className="text-[26px] font-semibold leading-none tracking-tight text-amber-600">{kpis.critical}</p>
-          <p className="mt-2 text-xs text-stone-500">
+          <p className="mt-2 text-xs text-slate-500">
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle" />
             score residual &gt; 10
           </p>
         </div>
-        <div className="rounded-xl border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
-          <p className="mb-2 font-mono text-[11px] font-medium uppercase tracking-wider text-stone-500">
+        <div className="rounded-lg border border-[#e4e2dc] bg-white p-5 shadow-sm transition hover:border-[#d0cec6] hover:shadow-md">
+          <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">
             Efectividad mitigación
           </p>
           <p className="text-[26px] font-semibold leading-none tracking-tight text-emerald-600">
             {kpis.eff !== null ? `${kpis.eff}%` : "—"}
           </p>
-          <p className="mt-2 text-xs text-stone-500">
+          <p className="mt-2 text-xs text-slate-500">
             <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 align-middle" />
             reducción de exposición
           </p>
@@ -320,8 +310,8 @@ ${D}`;
 
       <div className="grid gap-5 lg:grid-cols-[1fr_22rem] lg:items-start">
         {/* Formulario */}
-        <section className="rounded-xl border border-[#e4e2dc] bg-white p-6 shadow-sm">
-          <p className="mb-4 font-mono text-[11px] font-medium uppercase tracking-wider text-stone-500">
+        <section className="rounded-lg border border-[#e4e2dc] bg-white p-6 shadow-sm">
+          <p className="mb-4 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">
             Registrar riesgo
           </p>
           {!canEdit ? (
@@ -348,7 +338,7 @@ ${D}`;
             >
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Descripción del riesgo *
                   </span>
                   <textarea
@@ -360,7 +350,7 @@ ${D}`;
                   />
                 </label>
                 <label>
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Categoría
                   </span>
                   <select
@@ -375,7 +365,7 @@ ${D}`;
                   </select>
                 </label>
                 <label>
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Dueño del riesgo *
                   </span>
                   <input
@@ -386,7 +376,7 @@ ${D}`;
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Proyecto *
                   </span>
                   <select
@@ -403,7 +393,7 @@ ${D}`;
                   </select>
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Entregable (opcional)
                   </span>
                   <select
@@ -419,7 +409,7 @@ ${D}`;
                   </select>
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Probabilidad de ocurrencia ({prob}%)
                   </span>
                   <input
@@ -433,7 +423,7 @@ ${D}`;
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Impacto financiero (USD)
                   </span>
                   <input
@@ -446,7 +436,7 @@ ${D}`;
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Fecha de caducidad (opcional)
                   </span>
                   <input
@@ -457,14 +447,14 @@ ${D}`;
                 </label>
               </div>
 
-              <div className="flex items-center gap-2 border-t border-[#e4e2dc] pt-4 font-mono text-[11px] font-semibold uppercase tracking-wider text-stone-600">
+              <div className="flex items-center gap-2 border-t border-[#e4e2dc] pt-4 font-mono text-xs font-semibold uppercase tracking-wider text-slate-600">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                 Plan de respuesta
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Acción de mitigación
                   </span>
                   <textarea
@@ -475,7 +465,7 @@ ${D}`;
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Probabilidad residual ({resProb}%)
                   </span>
                   <input
@@ -489,7 +479,7 @@ ${D}`;
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Disparador del Plan B
                   </span>
                   <input
@@ -499,7 +489,7 @@ ${D}`;
                   />
                 </label>
                 <label className="sm:col-span-2">
-                  <span className="mb-1 block font-mono text-[11px] font-medium uppercase tracking-wider text-stone-600">
+                  <span className="mb-1 block font-mono text-xs font-medium uppercase tracking-wider text-slate-600">
                     Plan de contingencia / Plan B{" "}
                     <span className="font-sans font-normal normal-case text-stone-400">
                       (obligatorio si score residual &gt; 10)
@@ -516,15 +506,15 @@ ${D}`;
 
               <div className="grid grid-cols-3 gap-3 rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-4 font-mono text-sm">
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-stone-500">VME bruto</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">VME bruto</p>
                   <p className="mt-1 text-lg font-semibold text-red-600">{fmtMoneyUSD(preview.gross)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-stone-500">VME residual</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">VME residual</p>
                   <p className="mt-1 text-lg font-semibold text-blue-600">{fmtMoneyUSD(preview.residual)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-stone-500">Ahorro</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Ahorro</p>
                   <p className="mt-1 text-lg font-semibold text-emerald-600">{fmtMoneyUSD(preview.saving)}</p>
                 </div>
               </div>
@@ -538,7 +528,7 @@ ${D}`;
                 </button>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-lg border border-[#e4e2dc] bg-white px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-[#f5f4f0]"
+                  className="inline-flex items-center gap-2 rounded-lg border border-[#e4e2dc] bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-[#f5f4f0]"
                   onClick={() => {
                     setProb(50);
                     setResProb(20);
@@ -560,8 +550,8 @@ ${D}`;
         </section>
 
         {/* Heatmaps */}
-        <section className="rounded-xl border border-[#e4e2dc] bg-white p-6 shadow-sm">
-          <p className="mb-4 font-mono text-[11px] font-medium uppercase tracking-wider text-stone-500">Mapa de calor</p>
+        <section className="rounded-lg border border-[#e4e2dc] bg-white p-6 shadow-sm">
+          <p className="mb-4 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">Mapa de calor</p>
           <div className="flex flex-col gap-8">
             <HeatmapBlock label="Antes de mitigación" before={true} risks={risks} />
             <HeatmapBlock label="Después de mitigación" before={false} risks={risks} />
@@ -570,12 +560,12 @@ ${D}`;
       </div>
 
       {/* Tabla */}
-      <section className="rounded-xl border border-[#e4e2dc] bg-white p-6 shadow-sm">
-        <p className="mb-4 font-mono text-[11px] font-medium uppercase tracking-wider text-stone-500">Registro de riesgos</p>
+      <section className="rounded-lg border border-[#e4e2dc] bg-white p-6 shadow-sm">
+        <p className="mb-4 font-mono text-xs font-medium uppercase tracking-wider text-slate-500">Registro de riesgos</p>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] border-collapse text-[13px]">
+          <table className="w-full min-w-[960px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-[#e4e2dc] bg-[#f5f4f0] text-left font-mono text-[10px] font-medium uppercase tracking-wider text-stone-500">
+              <tr className="border-b border-[#e4e2dc] bg-[#f5f4f0] text-left font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">
                 <th className="whitespace-nowrap px-3 py-2">Proyecto</th>
                 <th className="whitespace-nowrap px-3 py-2">Descripción</th>
                 <th className="whitespace-nowrap px-3 py-2">Cat.</th>
@@ -619,18 +609,18 @@ ${D}`;
                       " ",
                     )}
                   >
-                    <td className="px-3 py-3 align-middle text-stone-700">{risk.project.name}</td>
+                    <td className="px-3 py-3 align-middle text-slate-700">{risk.project.name}</td>
                     <td className="max-w-[200px] px-3 py-3 align-middle">
                       <div className="font-medium leading-snug text-slate-900">
                         {risk.title.length > 80 ? `${risk.title.slice(0, 80)}…` : risk.title}
                       </div>
                     </td>
                     <td className="px-3 py-3 align-middle">
-                      <span className="inline-block rounded-full border border-[#e4e2dc] bg-[#f5f4f0] px-2 py-0.5 font-mono text-[10px] text-stone-600">
+                      <span className="inline-block rounded-full border border-[#e4e2dc] bg-[#f5f4f0] px-2 py-0.5 font-mono text-[10px] text-slate-600">
                         {risk.category}
                       </span>
                     </td>
-                    <td className="px-3 py-3 align-middle text-stone-600">{risk.ownerName}</td>
+                    <td className="px-3 py-3 align-middle text-slate-600">{risk.ownerName}</td>
                     <td className="px-3 py-3 align-middle font-mono text-xs">{risk.probability}%</td>
                     <td className="px-3 py-3 align-middle font-mono text-xs">{fmtMoneyUSD(risk.impactAmount)}</td>
                     <td className="px-3 py-3 align-middle font-mono text-xs text-red-600">{fmtMoneyUSD(vg)}</td>
@@ -649,7 +639,7 @@ ${D}`;
                         <p className="mt-0.5 font-mono text-[10px] text-red-600">Plan B req.</p>
                       ) : null}
                     </td>
-                    <td className="px-3 py-3 align-middle font-mono text-[11px]">
+                    <td className="px-3 py-3 align-middle font-mono text-xs">
                       {risk.dueDate ? (
                         expired ? (
                           <span className="text-amber-700">
@@ -666,7 +656,7 @@ ${D}`;
                     <td className="whitespace-nowrap px-3 py-3 align-middle">
                       <button
                         type="button"
-                        className="rounded-md border border-transparent px-2 py-1 text-stone-400 transition hover:border-[#e4e2dc] hover:bg-white hover:text-stone-800"
+                        className="rounded-md border border-transparent px-2 py-1 text-stone-400 transition hover:border-[#e4e2dc] hover:bg-white hover:text-slate-800"
                         onClick={() => setDetailId(risk.id)}
                         title="Detalle"
                       >
@@ -720,7 +710,7 @@ ${D}`;
           >
             <button
               type="button"
-              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-[#e4e2dc] bg-[#f5f4f0] text-stone-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-[#e4e2dc] bg-[#f5f4f0] text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
               onClick={() => setDetailId(null)}
               aria-label="Cerrar"
             >
@@ -731,13 +721,13 @@ ${D}`;
             </h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-4">
-                <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-stone-500">Riesgo bruto</p>
+                <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">Riesgo bruto</p>
                 <p className="flex justify-between text-xs">
-                  <span className="text-stone-500">Probabilidad</span>
+                  <span className="text-slate-500">Probabilidad</span>
                   <strong>{detail.probability}%</strong>
                 </p>
                 <p className="flex justify-between text-xs">
-                  <span className="text-stone-500">Impacto</span>
+                  <span className="text-slate-500">Impacto</span>
                   <strong>{fmtMoneyUSD(detail.impactAmount)}</strong>
                 </p>
                 <p className="mt-2 text-2xl font-semibold text-red-600">
@@ -745,13 +735,13 @@ ${D}`;
                 </p>
               </div>
               <div className="rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-4">
-                <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-stone-500">Riesgo residual</p>
+                <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">Riesgo residual</p>
                 <p className="flex justify-between text-xs">
-                  <span className="text-stone-500">Prob. residual</span>
+                  <span className="text-slate-500">Prob. residual</span>
                   <strong>{detail.residualProb}%</strong>
                 </p>
                 <p className="flex justify-between text-xs">
-                  <span className="text-stone-500">Score</span>
+                  <span className="text-slate-500">Score</span>
                   <strong>{residualScore(detail.residualProb, detail.impactAmount)}/25</strong>
                 </p>
                 <p className="mt-2 text-2xl font-semibold text-blue-600">
@@ -761,8 +751,8 @@ ${D}`;
             </div>
             {detail.mitigation ? (
               <div className="mt-4 rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-3">
-                <p className="font-mono text-[10px] font-medium uppercase tracking-wider text-stone-500">Mitigación</p>
-                <p className="mt-1 text-sm leading-relaxed text-stone-700">{detail.mitigation}</p>
+                <p className="font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">Mitigación</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-700">{detail.mitigation}</p>
               </div>
             ) : null}
             {detail.trigger ? (
@@ -777,12 +767,12 @@ ${D}`;
                 <p className="mt-1 text-sm text-red-950">{detail.contingency || "No definido"}</p>
               </div>
             ) : null}
-            <p className="mt-4 text-xs text-stone-500">
-              Proyecto: <strong className="text-stone-800">{detail.project.name}</strong>
+            <p className="mt-4 text-xs text-slate-500">
+              Proyecto: <strong className="text-slate-800">{detail.project.name}</strong>
               {detail.deliverable ? (
                 <>
                   {" "}
-                  · Entregable: <strong className="text-stone-800">{detail.deliverable.title}</strong>
+                  · Entregable: <strong className="text-slate-800">{detail.deliverable.title}</strong>
                 </>
               ) : null}
             </p>
@@ -807,7 +797,7 @@ ${D}`;
           >
             <button
               type="button"
-              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-[#e4e2dc] bg-[#f5f4f0] text-stone-500 transition hover:bg-stone-100"
+              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-[#e4e2dc] bg-[#f5f4f0] text-slate-500 transition hover:bg-slate-100"
               onClick={() => setMemoOpen(false)}
               aria-label="Cerrar"
             >
@@ -826,7 +816,7 @@ ${D}`;
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-[#e4e2dc] bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-[#f5f4f0]"
+                className="rounded-lg border border-[#e4e2dc] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-[#f5f4f0]"
                 onClick={() => {
                   const blob = new Blob([memoText], { type: "text/plain;charset=utf-8" });
                   const a = document.createElement("a");
@@ -839,7 +829,7 @@ ${D}`;
                 Descargar .txt
               </button>
             </div>
-            <pre className="mt-4 max-h-[min(50vh,480px)] overflow-y-auto whitespace-pre-wrap rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-5 font-mono text-[11.5px] leading-relaxed text-stone-700">
+            <pre className="mt-4 max-h-[min(50vh,480px)] overflow-y-auto whitespace-pre-wrap rounded-lg border border-[#e4e2dc] bg-[#f5f4f0] p-5 font-mono text-[11.5px] leading-relaxed text-slate-700">
               {memoText}
             </pre>
           </div>

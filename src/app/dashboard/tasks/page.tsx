@@ -164,8 +164,8 @@ export default async function TasksPage({ searchParams }: PageProps) {
               href={tasksHref(v, pf, qf, v === "calendar" ? monthQueryValue : undefined)}
               className={
                 view === v
-                  ? "rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white"
-                  : "rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  ? "rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white"
+                  : "rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
               }
             >
               {label}
@@ -176,7 +176,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
         <form
           method="GET"
           action="/dashboard/tasks"
-          className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-slate-50/80 p-4"
+          className="mt-4 flex flex-wrap items-end gap-3 border-b border-slate-200 pb-4"
         >
           <input type="hidden" name="view" value={view} />
           {view === "calendar" ? (
@@ -229,9 +229,11 @@ export default async function TasksPage({ searchParams }: PageProps) {
         </form>
 
         {canWrite && hasProjects && (
-          <section className="mt-6 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
-            <h2 className="text-sm font-semibold text-slate-900">Nueva tarea</h2>
-            <form action={createTaskWithContextAction} className="mt-3 grid gap-3 sm:grid-cols-2">
+          <details className="mt-4 rounded-lg border border-slate-200 bg-white">
+            <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden">
+              Nueva tarea
+            </summary>
+            <form action={createTaskWithContextAction} className="grid gap-3 border-t border-slate-200 px-4 py-4 sm:grid-cols-2">
               <input type="hidden" name="view" value={view} />
               <input type="hidden" name="project" value={pf} />
               <input type="hidden" name="q" value={qf} />
@@ -302,7 +304,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 </button>
               </div>
             </form>
-          </section>
+          </details>
         )}
 
         {canWrite && !hasProjects && (

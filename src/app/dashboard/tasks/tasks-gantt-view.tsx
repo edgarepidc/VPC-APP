@@ -31,10 +31,7 @@ export function TasksGanttView({ tasks }: Props) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-slate-600">
-        Cada fila es una tarea. La barra va desde la <strong>creación</strong>{" "}
-        hasta la <strong>fecha límite</strong> (si no hay, se asume un tramo de
-        unos días). Esto es un sustituto ligero de un Gantt completo (sin
-        dependencias ni hitos).
+        Barra desde creación hasta fecha límite (vista simplificada).
       </p>
       <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
         {ranges.map(({ task, start, end }) => {

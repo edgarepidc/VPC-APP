@@ -90,13 +90,13 @@ export function StakeholderMatrixClient({
   }
 
   return (
-    <div className="sh-matrix-app flex min-h-[min(720px,calc(100vh-12rem))] flex-col overflow-hidden rounded-xl border border-[#e8e6e1] bg-white shadow-sm lg:flex-row">
+    <div className="sh-matrix-app flex min-h-[min(720px,calc(100vh-12rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:flex-row">
       {/* Canvas + toolbar */}
-      <div className="flex min-h-0 flex-1 flex-col bg-[#f7f6f3]">
-        <header className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#e8e6e1] bg-white px-5 py-3">
+      <div className="flex min-h-0 flex-1 flex-col bg-slate-50">
+        <header className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-3">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-[26px] w-[26px] items-center justify-center rounded-[7px] bg-[#1a1916]">
+              <div className="flex h-[26px] w-[26px] items-center justify-center rounded-[7px] bg-slate-800">
                 <svg
                   className="h-3.5 w-3.5 text-white"
                   viewBox="0 0 16 16"
@@ -109,20 +109,20 @@ export function StakeholderMatrixClient({
                   <circle cx="11" cy="11" r="2" />
                 </svg>
               </div>
-              <span className="text-[13px] font-semibold tracking-tight text-slate-900">
-                StakeMap
+              <span className="text-sm font-semibold tracking-tight text-slate-900">
+                Matriz
               </span>
             </div>
             <div className="hidden h-[18px] w-px bg-[#e8e6e1] sm:block" />
             <div>
-              <p className="text-[12.5px] text-[#6b6860]">Proyecto activo</p>
+              <p className="text-sm text-slate-500">Proyecto activo</p>
               <select
                 value={projectFilter}
                 onChange={(e) => {
                   setProjectFilter(e.target.value);
                   setSelectedId(null);
                 }}
-                className="mt-0.5 max-w-[220px] border-0 bg-transparent text-[13px] font-medium text-slate-900 outline-none focus:ring-0"
+                className="mt-0.5 max-w-[220px] border-0 bg-transparent text-sm font-medium text-slate-900 outline-none focus:ring-0"
               >
                 <option value="all">Todos los proyectos</option>
                 {projectNames.map((p) => (
@@ -137,7 +137,7 @@ export function StakeholderMatrixClient({
             <button
               type="button"
               onClick={() => exportMarkdown()}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#e8e6e1] bg-white px-3 py-1.5 text-[12.5px] font-medium text-[#6b6860] hover:bg-[#f2f1ee]"
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-50"
             >
               Exportar
             </button>
@@ -146,12 +146,12 @@ export function StakeholderMatrixClient({
 
         <div className="flex flex-1 flex-col gap-2.5 overflow-hidden p-5 pt-4">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-[#6b6860]">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Matriz poder × interés
             </span>
-            <span className="rounded-full border border-[#e8e6e1] bg-white px-2.5 py-0.5 text-[12px] text-slate-400">
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-[12px] text-slate-400">
               Interesados:{" "}
-              <strong className="font-semibold text-[#6b6860]">
+              <strong className="font-semibold text-slate-500">
                 {visible.length}
               </strong>
             </span>
@@ -160,14 +160,14 @@ export function StakeholderMatrixClient({
           <div className="flex min-h-[280px] flex-1 gap-0 sm:min-h-[340px]">
             <div className="flex flex-shrink-0 items-center justify-center py-2 pr-1">
               <span
-                className="max-w-[2rem] text-center text-[11px] font-medium uppercase leading-snug tracking-wider text-slate-400"
+                className="max-w-[2rem] text-center text-xs font-medium uppercase leading-snug tracking-wider text-slate-400"
                 style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
               >
                 Influencia / poder
               </span>
             </div>
             <div className="flex min-w-0 flex-1 flex-col">
-              <div className="relative flex-1 overflow-hidden rounded-xl border border-[#e8e6e1] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.07)]">
+              <div className="relative flex-1 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.07)]">
                 {/* Quadrants */}
                 <div className="pointer-events-none absolute inset-0 grid grid-rows-2 grid-cols-2">
                   <div
@@ -177,7 +177,7 @@ export function StakeholderMatrixClient({
                       borderColor: qBorder.q1,
                     }}
                   >
-                    <span className="text-[11px] font-semibold uppercase leading-tight text-green-800 opacity-[0.18]">
+                    <span className="text-xs font-semibold uppercase leading-tight text-green-800 opacity-[0.18]">
                       Promotores
                       <br />
                       Jugadores clave
@@ -190,7 +190,7 @@ export function StakeholderMatrixClient({
                       borderColor: qBorder.q2,
                     }}
                   >
-                    <span className="text-[11px] font-semibold uppercase leading-tight text-amber-800 opacity-[0.18]">
+                    <span className="text-xs font-semibold uppercase leading-tight text-amber-800 opacity-[0.18]">
                       Latentes
                       <br />
                       Cumplidores
@@ -203,7 +203,7 @@ export function StakeholderMatrixClient({
                       borderColor: qBorder.q3,
                     }}
                   >
-                    <span className="text-[11px] font-semibold uppercase leading-tight text-blue-800 opacity-[0.18]">
+                    <span className="text-xs font-semibold uppercase leading-tight text-blue-800 opacity-[0.18]">
                       Defensores
                       <br />
                       Aliados
@@ -216,7 +216,7 @@ export function StakeholderMatrixClient({
                       borderColor: qBorder.q4,
                     }}
                   >
-                    <span className="text-[11px] font-semibold uppercase leading-tight text-gray-600 opacity-[0.18]">
+                    <span className="text-xs font-semibold uppercase leading-tight text-gray-600 opacity-[0.18]">
                       Espectadores
                     </span>
                   </div>
@@ -241,14 +241,14 @@ export function StakeholderMatrixClient({
                     >
                       <div
                         className={[
-                          "flex h-[34px] w-[34px] items-center justify-center rounded-full border-2 border-white text-[11px] font-semibold shadow-sm",
+                          "flex h-[34px] w-[34px] items-center justify-center rounded-full border-2 border-white text-xs font-semibold shadow-sm",
                           markerClass[qid],
                           isSel ? "ring-[3px] ring-[#2563eb] ring-offset-2" : "",
                         ].join(" ")}
                       >
                         {initials(s.name)}
                       </div>
-                      <span className="pointer-events-none absolute left-1/2 top-[calc(100%+4px)] max-w-[110px] -translate-x-1/2 truncate rounded border border-[#e8e6e1] bg-white px-1.5 py-0.5 text-[10.5px] font-medium text-slate-900 shadow-sm">
+                      <span className="pointer-events-none absolute left-1/2 top-[calc(100%+4px)] max-w-[110px] -translate-x-1/2 truncate rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10.5px] font-medium text-slate-900 shadow-sm">
                         {s.name}
                       </span>
                     </button>
@@ -266,7 +266,7 @@ export function StakeholderMatrixClient({
                   </span>
                 ))}
               </div>
-              <p className="pt-1 text-center text-[11px] font-medium uppercase tracking-wide text-slate-400">
+              <p className="pt-1 text-center text-xs font-medium uppercase tracking-wide text-slate-400">
                 Interés / apoyo →
               </p>
             </div>
@@ -275,19 +275,19 @@ export function StakeholderMatrixClient({
       </div>
 
       {/* Sidebar playbook */}
-      <aside className="flex w-full flex-shrink-0 flex-col border-t border-[#e8e6e1] bg-white lg:w-[320px] lg:border-l lg:border-t-0">
+      <aside className="flex w-full flex-shrink-0 flex-col border-t border-slate-200 bg-white lg:w-[320px] lg:border-l lg:border-t-0">
         <div className="border-b border-[#f0ede8] px-5 py-4">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-slate-400">
             Playbook tactico
           </p>
-          <p className="mt-0.5 text-[13px] font-medium text-slate-900">
+          <p className="mt-0.5 text-sm font-medium text-slate-900">
             {selected ? selected.name : "Selecciona un interesado"}
           </p>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {!selected && (
             <div className="flex flex-col items-center justify-center gap-2.5 py-8 text-center text-slate-400">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#e8e6e1] bg-[#f2f1ee]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-slate-200 bg-[#f2f1ee]">
                 <svg
                   className="h-[18px] w-[18px] text-slate-400"
                   fill="none"
@@ -299,8 +299,8 @@ export function StakeholderMatrixClient({
                   <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
-              <p className="max-w-[200px] text-[12.5px] leading-snug">
-                <strong className="font-medium text-[#6b6860]">
+              <p className="max-w-[200px] text-sm leading-snug">
+                <strong className="font-medium text-slate-500">
                   Pulsa un punto
                 </strong>{" "}
                 en la matriz para ver estrategia y tacticas sugeridas.
@@ -319,17 +319,17 @@ export function StakeholderMatrixClient({
                 <p className="text-[15px] font-semibold text-slate-900">
                   {selected.name}
                 </p>
-                <p className="mt-0.5 text-[12px] text-[#6b6860]">
+                <p className="mt-0.5 text-[12px] text-slate-500">
                   {selected.role || "Sin cargo"}
                 </p>
-                <p className="mt-2 text-[11px] text-[#6b6860]">
+                <p className="mt-2 text-xs text-slate-500">
                   Proyecto: {selected.projectName}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  <span className="inline-flex rounded-full bg-[#f2f1ee] px-2 py-0.5 font-mono text-[10.5px] text-[#6b6860]">
+                  <span className="inline-flex rounded-full bg-[#f2f1ee] px-2 py-0.5 font-mono text-[10.5px] text-slate-500">
                     Inf {selected.influence} · Int {selected.interest}
                   </span>
-                  <span className="inline-flex rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-medium text-[#15803d]">
+                  <span className="inline-flex rounded-full bg-white/80 px-2 py-0.5 text-xs font-medium text-[#15803d]">
                     {playbook.fullLabel}
                   </span>
                 </div>
@@ -340,7 +340,7 @@ export function StakeholderMatrixClient({
                   Estrategia
                   <span className="h-px flex-1 bg-[#f0ede8]" />
                 </p>
-                <div className="rounded-md border border-[#e8e6e1] bg-[#f2f1ee] px-3 py-2.5 text-[13px] font-semibold text-slate-900">
+                <div className="rounded-md border border-slate-200 bg-[#f2f1ee] px-3 py-2.5 text-sm font-semibold text-slate-900">
                   {playbook.strategy}
                 </div>
               </div>
@@ -366,7 +366,7 @@ export function StakeholderMatrixClient({
                 </ul>
               </div>
 
-              <div className="flex items-center gap-2 rounded-md border border-[#e8e6e1] bg-[#f2f1ee] px-3 py-2">
+              <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-[#f2f1ee] px-3 py-2">
                 <span aria-hidden>{playbook.freqIcon}</span>
                 <span className="text-[12px] text-slate-600">
                   Comunicacion:{" "}
@@ -375,7 +375,7 @@ export function StakeholderMatrixClient({
               </div>
 
               {selected.observation && (
-                <div className="rounded-md border border-[#e8e6e1] bg-[#f2f1ee] px-2.5 py-2 text-[12px] italic leading-relaxed text-slate-600">
+                <div className="rounded-md border border-slate-200 bg-[#f2f1ee] px-2.5 py-2 text-[12px] italic leading-relaxed text-slate-600">
                   {selected.observation}
                 </div>
               )}

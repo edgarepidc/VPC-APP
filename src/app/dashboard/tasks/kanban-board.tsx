@@ -66,7 +66,7 @@ export function KanbanBoard({ tasks, projects, members, canWrite }: Props) {
         {TASK_KANBAN_STATUSES.map((col) => (
           <section
             key={col}
-            className="flex w-[min(100%,280px)] shrink-0 flex-col rounded-lg border border-slate-200 bg-slate-50/80"
+            className="flex w-[min(100%,260px)] shrink-0 flex-col rounded-lg border border-slate-200 bg-slate-50"
             onDragOver={(e) => {
               e.preventDefault();
               e.dataTransfer.dropEffect = "move";
