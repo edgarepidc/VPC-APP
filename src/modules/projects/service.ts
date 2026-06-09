@@ -24,13 +24,17 @@ export function normalizeProjectStatus(raw: string): ProjectStatusValue {
 
 export async function listProjectsByTenant(
   tenantId: string,
-  options?: { restrictToProjectIds?: string[] },
+  options?: { restrictToProjectIds?: string[]; activeOnly?: boolean },
 ) {
   const restrict = options?.restrictToProjectIds;
+  const activeOnly = options?.activeOnly;
   return db.project.findMany({
     where: {
       tenantId,
       ...(restrict !== undefined ? { id: { in: restrict } } : {}),
+      ...(activeOnly
+        ? { status: { notIn: ["done", "blocked", "cancelled", "cancelado"] } }
+        : {}),
     },
     orderBy: { createdAt: "desc" },
   });

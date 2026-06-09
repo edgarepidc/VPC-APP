@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { personInitialsFromName, ROLE_SIDEBAR_LABELS } from "@/lib/role-labels";
 import type { RoleKey } from "@/lib/types";
 
 import { dashShell } from "@/lib/ui-classes";
@@ -11,30 +12,10 @@ import { DashboardChrome } from "./dashboard-chrome";
 
 export const dynamic = "force-dynamic";
 
-function roleLabelEs(role: RoleKey): string {
-  const map: Record<RoleKey, string> = {
-    admin: "Administrador",
-    manager: "Gestor",
-    member: "Miembro",
-  };
-  return map[role];
-}
-
 function displayPersonName(name: string, email: string): string {
   const n = name?.trim();
   if (n && n !== email) return n;
   return email;
-}
-
-function tenantInitialsFromName(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) {
-    const a = parts[0][0];
-    const b = parts[1][0];
-    if (a && b) return `${a}${b}`.toUpperCase();
-  }
-  const w = parts[0] ?? "?";
-  return w.slice(0, 2).toUpperCase();
 }
 
 function formatTodayEs(): string {
@@ -54,24 +35,35 @@ export default async function DashboardLayout({
   if (!session) redirect("/login");
   if (!session.activeTenantId) redirect("/select-tenant");
 
-  const tenant = await db.tenant.findUnique({
-    where: { id: session.activeTenantId },
-    select: { name: true, slug: true, logoUrl: true },
-  });
+  const [tenant, user] = await Promise.all([
+    db.tenant.findUnique({
+      where: { id: session.activeTenantId },
+      select: { name: true },
+    }),
+    db.user.findUnique({
+      where: { id: session.userId },
+      select: { name: true, email: true, avatarUrl: true },
+    }),
+  ]);
 
-  const personDisplayName = displayPersonName(session.name, session.email);
-  const tenantInitials = tenantInitialsFromName(tenant?.name ?? "Org");
+  const personDisplayName = displayPersonName(
+    user?.name ?? session.name,
+    session.email,
+  );
+  const personInitials = personInitialsFromName(
+    user?.name ?? session.name,
+    session.email,
+  );
 
   return (
     <div className={dashShell}>
       <DashboardChrome
         personDisplayName={personDisplayName}
-        roleLabel={roleLabelEs(session.role)}
+        personInitials={personInitials}
+        personAvatarUrl={user?.avatarUrl ?? null}
+        roleLabel={ROLE_SIDEBAR_LABELS[session.role as RoleKey]}
         tenantName={tenant?.name ?? "Organización"}
-        tenantSlug={tenant?.slug ?? "—"}
         dateLabel={formatTodayEs()}
-        tenantLogoUrl={tenant?.logoUrl ?? null}
-        tenantInitials={tenantInitials}
         showPlatformAdmin={session.isSuperAdmin}
         mainBanner={
           session.isPlatformVisit ? (

@@ -4,7 +4,6 @@ import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import {
   dashAlertError,
   dashAlertOk,
-  dashAlertWarn,
   dashCard,
   dashDetailsBody,
   dashDetailsSummary,
@@ -17,7 +16,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { listProjectsForSession } from "@/lib/project-scope";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
-import { canManageProjectsCatalog, hasPermission } from "@/lib/rbac";
+import { canManageProjectsCatalog } from "@/lib/rbac";
 import { requireTenantId } from "@/lib/tenancy";
 import { getProjectStatusBadge } from "@/lib/ui";
 import {
@@ -45,7 +44,6 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
   if (!session) redirect("/login");
 
   const tenantId = await requireTenantId();
-  const canWrite = hasPermission(session.role, "projects.write");
   const canManageCatalog = canManageProjectsCatalog(session.role);
 
   const [items, usage, tenant] = await Promise.all([
@@ -93,7 +91,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     "use server";
     const s = await getSessionUser();
     if (!s?.activeTenantId) redirect("/login");
-    if (!hasPermission(s.role, "projects.write")) {
+    if (!canManageProjectsCatalog(s.role)) {
       redirect("/dashboard/projects?error=No+tienes+permiso+para+editar");
     }
     const projectId = String(formData.get("projectId") ?? "").trim();
@@ -163,7 +161,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     }
   }
 
-  const colCount = canWrite ? 4 : 3;
+  const colCount = canManageCatalog ? 4 : 3;
 
   return (
     <main className={dashPage}>
@@ -213,10 +211,6 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
             </div>
           </form>
         </details>
-      ) : !canWrite ? (
-        <p className={dashAlertWarn}>
-          Tu rol solo permite ver proyectos asignados.
-        </p>
       ) : null}
 
       <section className={`${dashCard} overflow-hidden`}>
@@ -227,7 +221,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
                 <th className="py-2">Proyecto</th>
                 <th className="py-2">Estado</th>
                 <th className="py-2">Descripción</th>
-                {canWrite ? <th className="py-2 text-right">Acciones</th> : null}
+                {canManageCatalog ? <th className="py-2 text-right">Acciones</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -242,7 +236,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
                     <td className="py-2 text-slate-600">
                       {project.description?.trim() ? project.description : "—"}
                     </td>
-                    {canWrite ? (
+                    {canManageCatalog ? (
                       <td className="py-2 text-right align-top">
                         <div className="flex flex-col items-end gap-2">
                           <EditProjectForm
@@ -267,7 +261,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
                 <tr>
                   <td colSpan={colCount} className="py-6 text-center text-slate-500">
                     Sin proyectos.
-                    {canWrite ? " Usa «Nuevo proyecto» arriba." : null}
+                    {canManageCatalog ? " Usa «Nuevo proyecto» arriba." : null}
                   </td>
                 </tr>
               )}

@@ -10,12 +10,11 @@ import { STORAGE_SIDEBAR_HIDDEN } from "./nav-config";
 
 type DashboardChromeProps = {
   personDisplayName: string;
+  personInitials: string;
+  personAvatarUrl: string | null;
   roleLabel: string;
   tenantName: string;
-  tenantSlug: string;
   dateLabel: string;
-  tenantLogoUrl: string | null;
-  tenantInitials: string;
   showPlatformAdmin: boolean;
   mainBanner?: React.ReactNode;
   children: React.ReactNode;
@@ -23,12 +22,11 @@ type DashboardChromeProps = {
 
 export function DashboardChrome({
   personDisplayName,
+  personInitials,
+  personAvatarUrl,
   roleLabel,
   tenantName,
-  tenantSlug,
   dateLabel,
-  tenantLogoUrl,
-  tenantInitials,
   showPlatformAdmin,
   mainBanner,
   children,
@@ -91,27 +89,25 @@ export function DashboardChrome({
     <>
       <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
         <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
-          {tenantLogoUrl ? (
+          {personAvatarUrl ? (
             <Image
-              src={tenantLogoUrl}
+              src={personAvatarUrl}
               alt=""
-              width={36}
-              height={36}
-              className="max-h-full max-w-full object-contain"
+              width={40}
+              height={40}
+              className="h-full w-full object-cover"
               unoptimized
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-800 text-xs font-semibold text-slate-100">
-              {tenantInitials}
+              {personInitials}
             </div>
           )}
         </div>
         <div className="min-w-0 flex-1 text-sm">
           <p className="truncate font-semibold text-slate-900">{personDisplayName}</p>
           <p className="truncate text-slate-600">{roleLabel}</p>
-          <p className="truncate text-xs text-slate-500">
-            {tenantName} · {tenantSlug}
-          </p>
+          <p className="truncate text-xs text-slate-500">{tenantName}</p>
         </div>
       </div>
       <p className="mt-2 text-xs capitalize text-slate-500">{dateLabel}</p>

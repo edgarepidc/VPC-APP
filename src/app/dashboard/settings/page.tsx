@@ -7,10 +7,16 @@ import {
   dashAlertOk,
   dashCard,
   dashPage,
+  uiButtonPrimary,
+  uiInput,
+  uiLabel,
 } from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { personInitialsFromName } from "@/lib/role-labels";
 import { requireTenantId } from "@/lib/tenancy";
+
+import { clearUserAvatarAction, uploadUserAvatarAction } from "./avatar-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -24,31 +30,102 @@ export default async function DashboardSettingsPage({
   if (!session) redirect("/login");
 
   const tenantId = await requireTenantId();
-  const tenant = await db.tenant.findUnique({
-    where: { id: tenantId },
-    select: { name: true, slug: true },
-  });
+  const [tenant, user] = await Promise.all([
+    db.tenant.findUnique({
+      where: { id: tenantId },
+      select: { name: true, slug: true },
+    }),
+    db.user.findUnique({
+      where: { id: session.userId },
+      select: { avatarUrl: true, name: true, email: true },
+    }),
+  ]);
   if (!tenant) redirect("/select-tenant");
+
+  const personDisplayName =
+    user?.name?.trim() && user.name.trim() !== user.email
+      ? user.name.trim()
+      : session.email;
+  const personInitials = personInitialsFromName(
+    user?.name ?? session.name,
+    session.email,
+  );
 
   return (
     <main className={dashPage}>
       <DashboardPageHeader
-        title="Organización"
+        title="Configuración"
         description={
           <>
-            Workspace: <strong>{tenant.name}</strong>{" "}
-            <span className="text-slate-500">({tenant.slug})</span>
+            Workspace: <strong>{tenant.name}</strong>
           </>
         }
       />
 
-      {params.error ? <p className={dashAlertError}>{params.error}</p> : null}
-      {params.ok ? <p className={dashAlertOk}>{params.ok}</p> : null}
+      {params.error ? (
+        <p className={dashAlertError}>
+          {decodeURIComponent(params.error.replace(/\+/g, " "))}
+        </p>
+      ) : null}
+      {params.ok ? (
+        <p className={dashAlertOk}>
+          {decodeURIComponent(params.ok.replace(/\+/g, " "))}
+        </p>
+      ) : null}
+
+      <section className={`${dashCard} p-4`}>
+        <h2 className="text-base font-semibold text-slate-900">Mi perfil</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Tu foto aparece en el menú lateral junto a tu nombre.
+        </p>
+        <div className="mt-4 flex flex-wrap items-start gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-800 text-lg font-semibold text-white">
+            {user?.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatarUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              personInitials
+            )}
+          </div>
+          <div className="min-w-[14rem] flex-1 space-y-3">
+            <p className="text-sm font-medium text-slate-900">{personDisplayName}</p>
+            <form action={uploadUserAvatarAction} className="space-y-2">
+              <div>
+                <label className={uiLabel}>Subir foto (PNG, JPG o WebP, máx. 2 MB)</label>
+                <input
+                  name="avatar"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  required
+                  className={`mt-1 block w-full max-w-md text-sm ${uiInput}`}
+                />
+              </div>
+              <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
+                Guardar foto
+              </button>
+            </form>
+            {user?.avatarUrl ? (
+              <form action={clearUserAvatarAction}>
+                <button
+                  type="submit"
+                  className="text-sm text-red-600 underline decoration-red-300 underline-offset-2 hover:text-red-700"
+                >
+                  Quitar foto
+                </button>
+              </form>
+            ) : null}
+          </div>
+        </div>
+      </section>
 
       <section className={`${dashCard} p-4`}>
         <h2 className="text-base font-semibold text-slate-900">Marca del cliente</h2>
         <p className="mt-2 text-sm text-slate-600">
-          El logo del menú lateral lo configura la consultora en{" "}
+          El logo de la organización lo configura la consultora en{" "}
           {session.isSuperAdmin ? (
             <Link href="/admin" className="font-medium text-slate-900 underline">
               Administración → Clientes

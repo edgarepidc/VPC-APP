@@ -17,7 +17,11 @@ export async function getSessionProjectScope(session: SessionUser, tenantId: str
 export async function listProjectsForSession(session: SessionUser, tenantId: string) {
   const scope = await getSessionProjectScope(session, tenantId);
   const restrictIds = restrictToProjectIds(scope);
-  return listProjectsByTenant(tenantId, { restrictToProjectIds: restrictIds });
+  const activeOnly = session.role === "manager";
+  return listProjectsByTenant(tenantId, {
+    restrictToProjectIds: restrictIds,
+    activeOnly,
+  });
 }
 
 export async function getSessionProjectIdsFilter(

@@ -14,7 +14,7 @@ export function canManageMembers(role: RoleKey) {
   return role === "admin";
 }
 
-/** Crear o eliminar proyectos del tenant (solo administrador). */
+/** Crear, editar o eliminar proyectos del catálogo (solo administrador). */
 export function canManageProjectsCatalog(role: RoleKey) {
   return role === "admin";
 }

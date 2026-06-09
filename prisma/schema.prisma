@@ -39,6 +39,8 @@ model User {
   isActive    Boolean      @default(true)
   /** Plataforma: gestiona tenants y usuarios globales (ademas de env PLATFORM_SUPERADMIN_EMAILS). */
   isSuperAdmin Boolean     @default(false)
+  /** Foto de perfil (URL pública, p. ej. Supabase Storage). */
+  avatarUrl   String?
   memberships Membership[]
   sentInvitations Invitation[] @relation("InvitationSender")
   assignedTasks Task[]

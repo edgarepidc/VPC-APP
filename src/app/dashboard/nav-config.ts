@@ -14,6 +14,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   { href: "/dashboard/risks", label: "Riesgos", emoji: "⚠️" },
   { href: "/dashboard/stakeholders", label: "Stakeholders", emoji: "🎯" },
   { href: "/dashboard/members", label: "Miembros", emoji: "👥" },
+  { href: "/dashboard/settings", label: "Perfil", emoji: "👤" },
 ];
 
 export const STORAGE_SIDEBAR_HIDDEN = "vpc-dash-sidebar-hidden";
