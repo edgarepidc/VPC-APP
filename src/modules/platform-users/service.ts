@@ -10,11 +10,6 @@ import {
 } from "@/modules/memberships/project-access";
 
 import {
-  type ManagerProjectScopeInput,
-  setMembershipProjectAccess,
-} from "@/modules/memberships/project-access";
-
-import {
   logUserAudit,
   USER_AUDIT_ACTIONS,
 } from "./audit";
