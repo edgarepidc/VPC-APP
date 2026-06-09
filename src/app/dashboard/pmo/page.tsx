@@ -11,7 +11,9 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { getProjectStatusBadge, getSemaphoreBadge } from "@/lib/ui";
+import { getEscalationTierBadge } from "@/lib/escalation-utils";
 import { getPmoSnapshot } from "@/modules/pmo/service";
+import { EscalationRadar } from "./escalation-radar";
 
 function money(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -57,7 +59,17 @@ export default async function PmoPage() {
           <p className={dashKpiLabel}>Exposición residual</p>
           <p className={dashKpiValue}>{money(snapshot.kpis.totalResidualVme)}</p>
         </div>
+        <div>
+          <p className={dashKpiLabel}>Escalamientos</p>
+          <p className={dashKpiValue}>{snapshot.kpis.escalationChecks}</p>
+          <p className="text-xs text-slate-500">últimos 30 días</p>
+        </div>
       </section>
+
+      <EscalationRadar
+        rows={snapshot.escalationRadar.rows}
+        counts={snapshot.escalationRadar.counts}
+      />
 
       <section className="grid gap-4 lg:grid-cols-3">
         <div className={`${dashCard} p-4 lg:col-span-2`}>
@@ -77,6 +89,7 @@ export default async function PmoPage() {
                   <th className="py-2">Entregables</th>
                   <th className="py-2">Avance</th>
                   <th className="py-2">Riesgos</th>
+                  <th className="py-2">Escalamiento</th>
                 </tr>
               </thead>
               <tbody>
@@ -85,6 +98,9 @@ export default async function PmoPage() {
                   const semaphore = getSemaphoreBadge(
                     Math.max(0, project.donePct - Math.min(40, project.risks * 8)),
                   );
+                  const escalationBadge = project.latestEscalationTier
+                    ? getEscalationTierBadge(project.latestEscalationTier)
+                    : null;
                   return (
                     <tr key={project.id} className="border-b border-slate-100">
                       <td className="py-2 font-medium text-slate-900">{project.name}</td>
@@ -97,12 +113,19 @@ export default async function PmoPage() {
                       <td className="py-2">{project.deliverables}</td>
                       <td className="py-2">{project.donePct}%</td>
                       <td className="py-2">{project.risks}</td>
+                      <td className="py-2">
+                        {escalationBadge ? (
+                          <span className={escalationBadge.className}>{escalationBadge.label}</span>
+                        ) : (
+                          <span className="text-xs text-slate-400">Sin evaluar</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
                 {snapshot.projectHealth.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-6 text-center text-sm text-slate-500">
+                    <td colSpan={7} className="py-6 text-center text-sm text-slate-500">
                       Sin proyectos en este workspace.
                     </td>
                   </tr>

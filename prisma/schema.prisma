@@ -22,6 +22,7 @@ model Tenant {
   risks       Risk[]
   stakeholders Stakeholder[]
   tasks       Task[]
+  escalationChecks EscalationCheck[]
   createdAt   DateTime     @default(now())
 }
 
@@ -129,6 +130,7 @@ model Project {
   risks       Risk[]
   stakeholders Stakeholder[]
   tasks       Task[]
+  escalationChecks EscalationCheck[]
   membershipAccess MembershipProject[]
   invitationAccess InvitationProject[]
   createdAt   DateTime @default(now())
@@ -244,4 +246,28 @@ model Stakeholder {
   project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, projectId])
+}
+
+/** Evaluación ligera del Escalómetro — distinta al registro formal de riesgos. */
+model EscalationCheck {
+  id          String   @id @default(uuid())
+  tenantId    String
+  projectId   String
+  /** Subproyecto, tema o situación evaluada (opcional). */
+  topic       String?
+  /** green | orange | red */
+  tier        String
+  title       String
+  levelLabel  String
+  /** Mapa de indicador → low | medium | high */
+  indicators  Json
+  /** Acciones recomendadas generadas */
+  actions     Json
+  createdBy   String
+  createdAt   DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, projectId, createdAt])
+  @@index([tenantId, createdAt])
 }

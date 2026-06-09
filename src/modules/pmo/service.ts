@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { latestEscalationByProject } from "@/modules/escalations/service";
 
 export async function getPmoSnapshot(
   tenantId: string,
@@ -21,6 +22,8 @@ export async function getPmoSnapshot(
     stakeholders,
     overdueDeliverables,
     criticalRisks,
+    recentEscalations,
+    latestEscalations,
   ] = await Promise.all([
     db.project.findMany({
       where: projectWhere,
@@ -75,6 +78,13 @@ export async function getPmoSnapshot(
       orderBy: { createdAt: "desc" },
       take: 10,
     }),
+    db.escalationCheck.findMany({
+      where: childWhere,
+      include: { project: { select: { id: true, name: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 12,
+    }),
+    latestEscalationByProject(tenantId, { restrictToProjectIds: restrict }),
   ]);
 
   const delivered = deliverables.filter((d) =>
@@ -135,6 +145,7 @@ export async function getPmoSnapshot(
     const doneCount = projectDeliverables.filter((d) =>
       ["delivered", "approved"].includes(d.status),
     ).length;
+    const latestEscalation = latestEscalations.get(project.id);
 
     return {
       id: project.id,
@@ -146,8 +157,23 @@ export async function getPmoSnapshot(
           ? Math.round((doneCount / projectDeliverables.length) * 100)
           : 0,
       risks: projectRisks.length,
+      latestEscalationTier: latestEscalation?.tier ?? null,
+      latestEscalationAt: latestEscalation?.createdAt ?? null,
     };
   });
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const escalationCounts = recentEscalations
+    .filter((row) => row.createdAt >= thirtyDaysAgo)
+    .reduce(
+      (acc, row) => {
+        if (row.tier === "red") acc.red += 1;
+        else if (row.tier === "orange") acc.orange += 1;
+        else acc.green += 1;
+        return acc;
+      },
+      { red: 0, orange: 0, green: 0 },
+    );
 
   return {
     kpis: {
@@ -159,10 +185,15 @@ export async function getPmoSnapshot(
       criticalRisks: criticalRiskRows.length,
       portfolioProgressPct,
       totalResidualVme,
+      escalationChecks: recentEscalations.filter((r) => r.createdAt >= thirtyDaysAgo).length,
     },
     overdueDeliverables,
     criticalRiskRows,
     stakeholdersByQuadrant,
     projectHealth,
+    escalationRadar: {
+      rows: recentEscalations.slice(0, 12),
+      counts: escalationCounts,
+    },
   };
 }

@@ -582,23 +582,45 @@
   }
 
   /* ══════════════════════════════════════════════════════
+     CONTEXTO DESDE EL DASHBOARD (proyecto / tema)
+  ══════════════════════════════════════════════════════ */
+
+  let contextProjectName = '';
+  let contextTopic = '';
+
+  window.addEventListener('message', (event) => {
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type !== 'escalometro-context') return;
+    contextProjectName = String(event.data.projectName || '').trim();
+    contextTopic = String(event.data.topic || '').trim();
+  });
+
+  /* ══════════════════════════════════════════════════════
      GENERADOR DE CORREO EJECUTIVO
   ══════════════════════════════════════════════════════ */
+
+  function getProjectLabel() {
+    if (contextProjectName && contextTopic) {
+      return `${contextProjectName} — ${contextTopic}`;
+    }
+    return contextProjectName || '[NOMBRE DEL PROYECTO]';
+  }
 
   function generateEmail(values, result) {
     const today = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
     const criticals = INDICATORS.filter(i => values[i.id] === LEVEL.high);
     const mediums   = INDICATORS.filter(i => values[i.id] === LEVEL.medium);
+    const projectLabel = getProjectLabel();
 
     const levelMap = { green: 'VERDE — Monitoreo Normal', orange: 'NARANJA — Revisión de PMO', red: 'ROJO — Escalamiento Inmediato' };
 
-    let body = `Asunto: [${levelMap[result.tier]}] Reporte de Estado — Proyecto [NOMBRE DEL PROYECTO]\n`;
+    let body = `Asunto: [${levelMap[result.tier]}] Reporte de Estado — Proyecto ${projectLabel}\n`;
     body += `Fecha: ${today}\n`;
     body += `De: [Tu Nombre] — Project Manager\n`;
     body += `Para: [Sponsor / PMO / Stakeholders]\n`;
     body += `\n${'─'.repeat(56)}\n\n`;
     body += `Estimado/a [Nombre],\n\n`;
-    body += `Por medio del presente, comunico el estado actual del proyecto [NOMBRE DEL PROYECTO] con base en la evaluación de indicadores de gobernanza del día de hoy.\n\n`;
+    body += `Por medio del presente, comunico el estado actual del proyecto ${projectLabel} con base en la evaluación de indicadores de gobernanza del día de hoy.\n\n`;
     body += `NIVEL DE ESCALAMIENTO: ${levelMap[result.tier].toUpperCase()}\n\n`;
 
     if (criticals.length > 0) {
@@ -725,6 +747,12 @@
     /* Guarda contexto para el email */
     panel._values = values;
     panel._result = result;
+
+    /* Notifica al dashboard para registrar la evaluación */
+    window.parent.postMessage({
+      type: 'escalometro-evaluated',
+      payload: { values, result },
+    }, window.location.origin);
   }
 
   document.getElementById('btn-email').addEventListener('click', () => {
