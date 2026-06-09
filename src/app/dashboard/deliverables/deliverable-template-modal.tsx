@@ -12,7 +12,7 @@ type DeliverableTemplateModalProps = {
   projects: DeliverableTrackerProject[];
   defaultProjectId?: string;
   onClose: () => void;
-  run: (fn: () => Promise<void>) => void;
+  run: (fn: () => Promise<string | void>, okMessage?: string) => void;
 };
 
 export function DeliverableTemplateModal({
@@ -112,8 +112,7 @@ export function DeliverableTemplateModal({
             onClick={() =>
               run(async () => {
                 if (!projectId || !templateId || !startDate) {
-                  alert("Proyecto, plantilla y fecha de inicio son obligatorios.");
-                  return;
+                  throw new Error("Proyecto, plantilla y fecha de inicio son obligatorios.");
                 }
                 const result = await applyDeliverableTemplateAction({
                   projectId,
@@ -122,8 +121,8 @@ export function DeliverableTemplateModal({
                   ownerName: ownerName.trim(),
                   clientName: clientName.trim(),
                 });
-                alert(`Se crearon ${result.count} entregables.`);
                 onClose();
+                return `Se crearon ${result.count} entregables.`;
               })
             }
             className="flex-1 rounded-lg bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-800"

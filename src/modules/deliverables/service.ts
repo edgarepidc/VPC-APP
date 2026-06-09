@@ -438,6 +438,7 @@ export async function updateDeliverableStatus(input: {
   id: string;
   tenantId: string;
   status: string;
+  rejectReason?: string | null;
 }) {
   const row = await db.deliverable.findFirst({
     where: { id: input.id, tenantId: input.tenantId },
@@ -466,7 +467,13 @@ export async function updateDeliverableStatus(input: {
   }
 
   const label = DELIVERABLE_STATUS_LABEL[next];
-  const nextLog = appendLog(log, `Estado cambiado a: ${label}`, next);
+  let logText = `Estado cambiado a: ${label}`;
+  if (next === "rejected") {
+    const reason = input.rejectReason?.trim();
+    if (!reason) throw new Error("Indica el motivo del rechazo.");
+    logText = `Rechazado: ${reason}`;
+  }
+  const nextLog = appendLog(log, logText, next);
 
   let deliveredAt = row.deliveredAt;
   if (advancingToDone && !isDeliverableDoneStatus(prev)) {

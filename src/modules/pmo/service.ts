@@ -1,4 +1,11 @@
 import { db } from "@/lib/db";
+import {
+  averageLeadTimeDays,
+  buildWeeklyDeliverableTrend,
+  onTimeDeliveryPct,
+  weightedProgressPct,
+  type DeliverableMetricRow,
+} from "@/lib/deliverable-pmo-utils";
 import { buildEscalationTrendsByProject } from "@/lib/escalation-utils";
 import { buildMeetingCostTrendsByProject } from "@/lib/meeting-roi-utils";
 import {
@@ -53,7 +60,10 @@ export async function getPmoSnapshot(
         title: true,
         status: true,
         dueDate: true,
+        deliveredAt: true,
+        createdAt: true,
         weight: true,
+        dependsOnId: true,
       },
     }),
     db.risk.findMany({
@@ -113,28 +123,34 @@ export async function getPmoSnapshot(
     }),
   ]);
 
-  const delivered = deliverables.filter((d) =>
-    ["delivered", "approved"].includes(d.status),
-  );
+  const deliverableMetrics: DeliverableMetricRow[] = deliverables.map((d) => ({
+    id: d.id,
+    projectId: d.projectId,
+    status: d.status,
+    weight: d.weight,
+    dueDate: d.dueDate,
+    deliveredAt: d.deliveredAt,
+    createdAt: d.createdAt,
+  }));
+
   const portfolioProgressPct = (() => {
-    const byProject = new Map<string, typeof deliverables>();
-    for (const d of deliverables) {
+    const byProject = new Map<string, DeliverableMetricRow[]>();
+    for (const d of deliverableMetrics) {
       const list = byProject.get(d.projectId) ?? [];
       list.push(d);
       byProject.set(d.projectId, list);
     }
     if (byProject.size === 0) return 0;
     let sumPct = 0;
-    for (const [, projectDeliverables] of byProject) {
-      const sum = projectDeliverables.reduce((acc, row) => acc + row.weight, 0);
-      const scale = sum > 0 ? 100 / sum : 1;
-      const done = projectDeliverables
-        .filter((row) => ["delivered", "approved"].includes(row.status))
-        .reduce((acc, row) => acc + row.weight * scale, 0);
-      sumPct += Math.round(done);
+    for (const [, projectRows] of byProject) {
+      sumPct += weightedProgressPct(projectRows);
     }
     return Math.round(sumPct / byProject.size);
   })();
+
+  const deliverableOnTimePct = onTimeDeliveryPct(deliverableMetrics);
+  const deliverableAvgLeadDays = averageLeadTimeDays(deliverableMetrics);
+  const deliverableWeeklyTrend = buildWeeklyDeliverableTrend(deliverableMetrics);
 
   const totalResidualVme = risks.reduce(
     (sum, risk) => sum + (risk.residualProb / 100) * risk.impactAmount,
@@ -197,11 +213,9 @@ export async function getPmoSnapshot(
   );
 
   const projectHealth = projects.map((project) => {
-    const projectDeliverables = deliverables.filter((d) => d.projectId === project.id);
+    const projectDeliverables = deliverableMetrics.filter((d) => d.projectId === project.id);
     const projectRisks = risks.filter((r) => r.projectId === project.id);
-    const doneCount = projectDeliverables.filter((d) =>
-      ["delivered", "approved"].includes(d.status),
-    ).length;
+    const donePct = weightedProgressPct(projectDeliverables);
     const latestEscalation = latestEscalations.get(project.id);
     const trend = escalationTrends.get(project.id);
     const latestMeeting = latestMeetings.get(project.id);
@@ -212,10 +226,7 @@ export async function getPmoSnapshot(
       name: project.name,
       status: project.status,
       deliverables: projectDeliverables.length,
-      donePct:
-        projectDeliverables.length > 0
-          ? Math.round((doneCount / projectDeliverables.length) * 100)
-          : 0,
+      donePct,
       risks: projectRisks.length,
       latestEscalationTier: latestEscalation?.tier ?? null,
       latestEscalationAt: latestEscalation?.createdAt ?? null,
@@ -264,6 +275,8 @@ export async function getPmoSnapshot(
       overdueDeliverables: overdueDeliverables.length,
       criticalRisks: criticalRiskRows.length,
       portfolioProgressPct,
+      deliverableOnTimePct,
+      deliverableAvgLeadDays,
       totalResidualVme,
       escalationChecks: recentEscalations.filter((r) => r.createdAt >= thirtyDaysAgo).length,
       meetingSessions: meetingsLast30.length,
@@ -284,5 +297,23 @@ export async function getPmoSnapshot(
     },
     deteriorationAlerts,
     meetingCostAlerts,
+    deliverablesRadar: {
+      onTimePct: deliverableOnTimePct,
+      avgLeadDays: deliverableAvgLeadDays,
+      weeklyTrend: deliverableWeeklyTrend,
+      recentClosed: deliverables
+        .filter((d) => d.deliveredAt)
+        .sort((a, b) => (b.deliveredAt?.getTime() ?? 0) - (a.deliveredAt?.getTime() ?? 0))
+        .slice(0, 10)
+        .map((d) => ({
+          id: d.id,
+          title: d.title,
+          projectId: d.projectId,
+          projectName: projects.find((p) => p.id === d.projectId)?.name ?? "—",
+          dueDate: d.dueDate,
+          deliveredAt: d.deliveredAt,
+          status: d.status,
+        })),
+    },
   };
 }

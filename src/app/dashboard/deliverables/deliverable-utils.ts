@@ -35,77 +35,105 @@ function daysFromDue(due: string | null, status: string): number | null {
   return Math.round((d.getTime() - today.getTime()) / 86400000);
 }
 
-export function buildDeliverableActionItems(
+export type ConsolidatedActionItem = {
+  row: DeliverableTrackerRow;
+  kinds: DeliverableActionKind[];
+  priority: number;
+};
+
+const kindRank: Record<DeliverableActionKind, number> = {
+  overdue: 0,
+  blocked: 1,
+  due_soon: 2,
+  review: 3,
+  acuse_pending: 4,
+};
+
+export function buildConsolidatedActionItems(
   rows: DeliverableTrackerRow[],
   rowById: Map<string, DeliverableTrackerRow>,
-): DeliverableActionItem[] {
-  const items: DeliverableActionItem[] = [];
+): ConsolidatedActionItem[] {
+  const map = new Map<string, ConsolidatedActionItem>();
 
   for (const row of rows) {
     const st = normalizeDeliverableStatus(row.status);
     const df = daysFromDue(row.dueDate, row.status);
+    const kinds: DeliverableActionKind[] = [];
 
-    if (df !== null && df < 0) {
-      items.push({
-        id: `${row.id}-overdue`,
-        kind: "overdue",
-        label: `Vencido · ${row.title}`,
-        row,
-      });
-      continue;
-    }
-
+    if (df !== null && df < 0) kinds.push("overdue");
     if (row.dependsOnId) {
       const dep = rowById.get(row.dependsOnId);
-      if (dep && !isDeliverableDoneStatus(dep.status)) {
-        items.push({
-          id: `${row.id}-blocked`,
-          kind: "blocked",
-          label: `Bloqueado · ${row.title}`,
-          row,
-        });
-      }
+      if (dep && !isDeliverableDoneStatus(dep.status)) kinds.push("blocked");
+    }
+    if (df !== null && df >= 0 && df <= 5) kinds.push("due_soon");
+    if (st === "review") kinds.push("review");
+    if (row.acuses.some((a) => !a.ok) && !isDeliverableDoneStatus(st)) {
+      kinds.push("acuse_pending");
     }
 
-    if (df !== null && df >= 0 && df <= 5) {
-      items.push({
-        id: `${row.id}-due`,
-        kind: "due_soon",
-        label: `Vence pronto · ${row.title}`,
-        row,
-      });
-    }
-
-    if (st === "review") {
-      items.push({
-        id: `${row.id}-review`,
-        kind: "review",
-        label: `En revisión · ${row.title}`,
-        row,
-      });
-    }
-
-    const pendingAcuses = row.acuses.filter((a) => !a.ok).length;
-    if (pendingAcuses > 0 && !isDeliverableDoneStatus(st)) {
-      items.push({
-        id: `${row.id}-acuse`,
-        kind: "acuse_pending",
-        label: `Acuses pendientes · ${row.title}`,
-        row,
-      });
-    }
+    if (kinds.length === 0) continue;
+    const priority = Math.min(...kinds.map((k) => kindRank[k]));
+    map.set(row.id, { row, kinds, priority });
   }
 
-  const rank: Record<DeliverableActionKind, number> = {
-    overdue: 0,
-    blocked: 1,
-    due_soon: 2,
-    review: 3,
-    acuse_pending: 4,
-  };
-
-  return items.sort((a, b) => rank[a.kind] - rank[b.kind]).slice(0, 12);
+  return [...map.values()].sort((a, b) => a.priority - b.priority).slice(0, 12);
 }
+
+/** @deprecated use buildConsolidatedActionItems */
+export function buildDeliverableActionItems(
+  rows: DeliverableTrackerRow[],
+  rowById: Map<string, DeliverableTrackerRow>,
+): DeliverableActionItem[] {
+  return buildConsolidatedActionItems(rows, rowById).flatMap((item) =>
+    item.kinds.map((kind) => ({
+      id: `${item.row.id}-${kind}`,
+      kind,
+      label: item.row.title,
+      row: item.row,
+    })),
+  );
+}
+
+export function isDeliverableBlocked(
+  row: DeliverableTrackerRow,
+  rowById: Map<string, DeliverableTrackerRow>,
+): boolean {
+  if (!row.dependsOnId) return false;
+  const dep = rowById.get(row.dependsOnId);
+  return Boolean(dep && !isDeliverableDoneStatus(dep.status));
+}
+
+export function computeScopeCompliance(rows: DeliverableTrackerRow[]) {
+  const closed = rows.filter(
+    (r) => isDeliverableDoneStatus(r.status) && r.deliveredAt && r.dueDate,
+  );
+  let onTime = 0;
+  for (const r of closed) {
+    const due = parseYmd(r.dueDate);
+    const del = new Date(r.deliveredAt!);
+    if (!due) continue;
+    const dueEnd = new Date(due);
+    dueEnd.setHours(23, 59, 59, 999);
+    if (del.getTime() <= dueEnd.getTime()) onTime += 1;
+  }
+  const onTimePct = closed.length > 0 ? Math.round((onTime / closed.length) * 100) : null;
+
+  const withLead = rows.filter((r) => isDeliverableDoneStatus(r.status) && r.deliveredAt && r.createdAt);
+  let avgLeadDays: number | null = null;
+  if (withLead.length > 0) {
+    const total = withLead.reduce((sum, r) => {
+      const created = new Date(r.createdAt!);
+      const delivered = new Date(r.deliveredAt!);
+      created.setHours(0, 0, 0, 0);
+      delivered.setHours(0, 0, 0, 0);
+      return sum + Math.max(0, Math.round((delivered.getTime() - created.getTime()) / 86400000));
+    }, 0);
+    avgLeadDays = Math.round(total / withLead.length);
+  }
+
+  return { onTimePct, avgLeadDays, closedCount: closed.length };
+}
+
 
 export function formatDeliveredAt(iso: string | null): string | null {
   if (!iso) return null;

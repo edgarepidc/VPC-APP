@@ -138,10 +138,16 @@ export async function applyDeliverableTemplateAction(input: {
   return result;
 }
 
-export async function setDeliverableStatusAction(id: string, status: string) {
+export async function setDeliverableStatusAction(
+  id: string,
+  status: string,
+  rejectReason?: string,
+) {
   const tenantId = await requireWriteTenantId();
-  await updateDeliverableStatus({ tenantId, id, status });
+  await updateDeliverableStatus({ tenantId, id, status, rejectReason });
   revalidatePath("/dashboard/deliverables");
+  revalidatePath("/dashboard/pmo");
+  revalidatePath("/dashboard/pmo/deliverables");
 }
 
 export async function deleteDeliverableAction(id: string) {

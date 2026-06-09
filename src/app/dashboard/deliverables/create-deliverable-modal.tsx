@@ -21,7 +21,7 @@ type CreateDeliverableModalProps = {
   phaseOptions: string[];
   defaultProjectId?: string;
   onClose: () => void;
-  run: (fn: () => Promise<void>) => void;
+  run: (fn: () => Promise<string | void>, okMessage?: string) => void;
 };
 
 export function CreateDeliverableModal({
@@ -265,8 +265,7 @@ export function CreateDeliverableModal({
             onClick={() =>
               run(async () => {
                 if (!title.trim() || !ownerName.trim() || !dueDate) {
-                  alert("Nombre, responsable y fecha compromiso son obligatorios.");
-                  return;
+                  throw new Error("Nombre, responsable y fecha compromiso son obligatorios.");
                 }
                 const result = await createDeliverableAction({
                   projectId,
@@ -288,7 +287,7 @@ export function CreateDeliverableModal({
                   fd.append("file", pdfRef.current);
                   const up = await uploadDeliverablePdfAction(fd);
                   if (!up.ok) {
-                    alert(up.error);
+                    throw new Error(up.error);
                   }
                 }
                 onClose();

@@ -23,7 +23,15 @@ import { DeliverablesTracker, type DeliverableTrackerRow } from "./deliverables-
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    ok?: string;
+    id?: string;
+    project?: string;
+    q?: string;
+    st?: string;
+    phase?: string;
+  }>;
 };
 
 function displayEntId(id: string): string {
@@ -119,6 +127,7 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
       name: d.supportFileName,
     }),
     deliveredAt: dateToIso(d.deliveredAt),
+    createdAt: dateToIso(d.createdAt),
     dependsOnId: d.dependsOnId,
     dependsOnTitle: null,
     description: d.description,
@@ -157,7 +166,18 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
           </p>
         </section>
       ) : (
-        <DeliverablesTracker rows={rows} projects={projectOptions} canEdit={canEdit} />
+        <DeliverablesTracker
+          rows={rows}
+          projects={projectOptions}
+          canEdit={canEdit}
+          initial={{
+            id: params.id,
+            project: params.project,
+            q: params.q,
+            st: params.st,
+            phase: params.phase,
+          }}
+        />
       )}
 
       {!canEdit && projects.length > 0 ? (

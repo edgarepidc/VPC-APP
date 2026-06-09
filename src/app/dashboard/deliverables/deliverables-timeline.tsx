@@ -47,6 +47,7 @@ type DeliverablesTimelineProps = {
   focusId?: string | null;
   onFocusChange?: (id: string | null) => void;
   onSelect: (id: string) => void;
+  showDependencies?: boolean;
 };
 
 export function DeliverablesTimeline({
@@ -54,6 +55,7 @@ export function DeliverablesTimeline({
   focusId,
   onFocusChange,
   onSelect,
+  showDependencies = false,
 }: DeliverablesTimelineProps) {
   const [localFocus, setLocalFocus] = useState<string | null>(null);
   const focusedId = focusId !== undefined ? focusId : localFocus;
@@ -101,6 +103,34 @@ export function DeliverablesTimeline({
     [focusedId, items],
   );
 
+  const positionsById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const { row, date } of items) {
+      const rawPct =
+        range && items.length === 1
+          ? 50
+          : range
+            ? ((date.getTime() - range.min) / range.span) * 100
+            : 0;
+      map.set(row.id, TRACK_INSET + (rawPct * (100 - TRACK_INSET * 2)) / 100);
+    }
+    return map;
+  }, [items, range]);
+
+  const dependencyEdges = useMemo(() => {
+    if (!showDependencies) return [];
+    const itemIds = new Set(items.map(({ row }) => row.id));
+    return items
+      .filter(({ row }) => row.dependsOnId && itemIds.has(row.dependsOnId))
+      .map(({ row }) => ({
+        fromId: row.dependsOnId!,
+        toId: row.id,
+        fromLeft: positionsById.get(row.dependsOnId!) ?? 0,
+        toLeft: positionsById.get(row.id) ?? 0,
+      }))
+      .filter((e) => e.fromLeft !== e.toLeft);
+  }, [items, positionsById, showDependencies]);
+
   if (items.length === 0) {
     return (
       <section className="py-6 text-center text-sm text-slate-500">
@@ -124,6 +154,28 @@ export function DeliverablesTimeline({
         <span className="text-xs text-slate-400">{items.length} fechas</span>
       </div>
 
+      <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500">
+        {(Object.keys(STATUS_THEME) as DeliverableStatus[]).map((st) => (
+          <span key={st} className="inline-flex items-center gap-1">
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ background: STATUS_THEME[st].accent }}
+            />
+            {DELIVERABLE_STATUS_LABEL[st]}
+          </span>
+        ))}
+        <span className="inline-flex items-center gap-1">
+          <span className="h-2 w-2 rounded-full bg-rose-500" />
+          Vencido
+        </span>
+        {showDependencies ? (
+          <span className="inline-flex items-center gap-1">
+            <span className="h-px w-4 bg-slate-400" />
+            Dependencia
+          </span>
+        ) : null}
+      </div>
+
       <div className="overflow-x-auto overflow-y-visible overscroll-x-contain pb-1 pt-1">
         <div
           className="relative mx-auto"
@@ -135,6 +187,45 @@ export function DeliverablesTimeline({
           }}
         >
           <div className="relative h-full w-full">
+            {showDependencies && dependencyEdges.length > 0 ? (
+              <svg
+                className="pointer-events-none absolute inset-0 z-[2] h-full w-full overflow-visible"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                aria-hidden
+              >
+                <defs>
+                  <marker
+                    id="dep-arrow"
+                    markerWidth="8"
+                    markerHeight="8"
+                    refX="6"
+                    refY="4"
+                    orient="auto"
+                  >
+                    <path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8" />
+                  </marker>
+                </defs>
+                {dependencyEdges.map((edge) => {
+                  const y = 50;
+                  const mid = (edge.fromLeft + edge.toLeft) / 2;
+                  return (
+                    <path
+                      key={`${edge.fromId}-${edge.toId}`}
+                      d={`M ${edge.fromLeft} ${y} Q ${mid} ${y - 14} ${edge.toLeft} ${y}`}
+                      fill="none"
+                      stroke="#94a3b8"
+                      strokeWidth="0.35"
+                      vectorEffect="non-scaling-stroke"
+                      strokeDasharray="1.2 0.8"
+                      markerEnd="url(#dep-arrow)"
+                      opacity="0.85"
+                    />
+                  );
+                })}
+              </svg>
+            ) : null}
+
             <div
               className="deliverable-timeline-line absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full opacity-90"
               style={{ background: gradientLine }}
@@ -143,10 +234,10 @@ export function DeliverablesTimeline({
 
             {todayLeft !== null ? (
               <div
-                className="pointer-events-none absolute top-[14%] bottom-[14%] z-[1] w-px bg-amber-400/90"
+                className="pointer-events-none absolute top-[8%] bottom-[8%] z-[3] w-0.5 bg-amber-500 shadow-[0_0_0_1px_rgba(245,158,11,0.25)]"
                 style={{ left: `${todayLeft}%` }}
               >
-                <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
                   Hoy
                 </span>
               </div>

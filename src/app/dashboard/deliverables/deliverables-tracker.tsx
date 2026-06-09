@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import {
   DELIVERABLE_STATUSES,
@@ -16,14 +16,17 @@ import {
   computeProjectProgress,
   TARGET_SUM,
 } from "@/lib/deliverable-weight-utils";
-import { uiInput, uiLabel } from "@/lib/ui-classes";
+import { uiInput, uiLabel, dashAlertError, dashAlertOk } from "@/lib/ui-classes";
 
 import { CreateDeliverableModal } from "./create-deliverable-modal";
 import {
-  buildDeliverableActionItems,
+  buildConsolidatedActionItems,
+  computeScopeCompliance,
   formatDeliveredAt,
+  isDeliverableBlocked,
   projectWeightAssigned,
 } from "./deliverable-utils";
+import { approveNeedsAcuseConfirm, statusBlockReason } from "./deliverable-status-rules";
 import { DeliverableSupportFields } from "./deliverable-support-fields";
 import { DeliverableTemplateModal } from "./deliverable-template-modal";
 import { DeliverableWeightField } from "./deliverable-weight-field";
@@ -62,6 +65,7 @@ export type DeliverableTrackerRow = {
   supportFileName: string | null;
   supportFiles: DeliverableSupportFile[];
   deliveredAt: string | null;
+  createdAt: string | null;
   dependsOnId: string | null;
   dependsOnTitle: string | null;
   description: string | null;
@@ -71,10 +75,19 @@ export type DeliverableTrackerRow = {
   activityLog: DeliverableLogEntry[];
 };
 
+type TrackerInitial = {
+  id?: string;
+  project?: string;
+  q?: string;
+  st?: string;
+  phase?: string;
+};
+
 type Props = {
   rows: DeliverableTrackerRow[];
   projects: DeliverableTrackerProject[];
   canEdit: boolean;
+  initial?: TrackerInitial;
 };
 
 const pillClass: Record<DeliverableStatus, string> = {
@@ -219,18 +232,21 @@ function progressBarColor(pct: number): string {
   return "#E24B4A";
 }
 
-export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
+export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map());
   const [pending, startTransition] = useTransition();
-  const [q, setQ] = useState("");
-  const [st, setSt] = useState("");
-  const [phase, setPhase] = useState("");
-  const [projectFilter, setProjectFilter] = useState("");
+  const [flash, setFlash] = useState<{ type: "ok" | "error"; message: string } | null>(null);
+  const [q, setQ] = useState(initial?.q ?? "");
+  const [st, setSt] = useState(initial?.st ?? "");
+  const [phase, setPhase] = useState(initial?.phase ?? "");
+  const [projectFilter, setProjectFilter] = useState(initial?.project ?? "");
   const [sort, setSort] = useState<"fecha" | "peso" | "estado" | "fase">("fecha");
   const [panel, setPanel] = useState<"closed" | "detail" | "create" | "template">("closed");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [focusId, setFocusId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initial?.id ?? null);
+  const [focusId, setFocusId] = useState<string | null>(initial?.id ?? null);
 
   const scopeRows = useMemo(
     () => (projectFilter ? rows.filter((r) => r.projectId === projectFilter) : rows),
@@ -240,9 +256,21 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
   const rowById = useMemo(() => new Map(rows.map((r) => [r.id, r])), [rows]);
 
   const actionItems = useMemo(
-    () => buildDeliverableActionItems(scopeRows, rowById),
+    () => buildConsolidatedActionItems(scopeRows, rowById),
     [scopeRows, rowById],
   );
+
+  const compliance = useMemo(() => computeScopeCompliance(scopeRows), [scopeRows]);
+
+  function syncUrl(patch: Record<string, string | null>) {
+    const p = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(patch)) {
+      if (value) p.set(key, value);
+      else p.delete(key);
+    }
+    const qs = p.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
   const phases = useMemo(() => {
     const set = new Set<string>();
@@ -306,16 +334,41 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
 
   const selected = selectedId ? rows.find((r) => r.id === selectedId) : undefined;
 
-  function run(fn: () => Promise<void>) {
+  function run(fn: () => Promise<string | void>, okMessage = "Cambios guardados.") {
     startTransition(async () => {
       try {
-        await fn();
+        const custom = await fn();
         router.refresh();
+        setFlash({
+          type: "ok",
+          message: typeof custom === "string" ? custom : okMessage,
+        });
       } catch (e) {
-        alert(e instanceof Error ? e.message : "Error");
+        setFlash({
+          type: "error",
+          message: e instanceof Error ? e.message : "Error al guardar.",
+        });
       }
     });
   }
+
+  useEffect(() => {
+    if (initial?.id && rows.some((r) => r.id === initial.id)) {
+      setPanel("detail");
+      setSelectedId(initial.id);
+      setFocusId(initial.id);
+    }
+  }, [initial?.id, rows]);
+
+  useEffect(() => {
+    syncUrl({
+      project: projectFilter || null,
+      q: q.trim() || null,
+      st: st || null,
+      phase: phase || null,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync filters only
+  }, [projectFilter, q, st, phase]);
 
   function focusDeliverable(id: string, openPanel = false) {
     setFocusId(id);
@@ -328,14 +381,20 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
     });
   }
 
+  function closeDetail() {
+    setPanel("closed");
+    setSelectedId(null);
+    setFocusId(null);
+    syncUrl({ id: null });
+  }
+
   function openDetail(id: string) {
     if (selectedId === id && panel === "detail") {
-      setPanel("closed");
-      setSelectedId(null);
-      setFocusId(null);
+      closeDetail();
       return;
     }
     focusDeliverable(id, true);
+    syncUrl({ id });
   }
 
   useEffect(() => {
@@ -353,18 +412,21 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
       "Responsable",
       "Cliente",
       "Fecha compromiso",
+      "Fecha entrega",
       "Estado",
       "Peso %",
-      "% avance",
+      "Depende de",
+      "Enlace soporte",
+      "PDFs",
       "Acuses OK",
       "Total acuses",
       "Criterios",
       "Notas",
     ];
     const lines = [hdr.join(",")];
-    for (const d of rows) {
-      const share = d.weight;
+    for (const d of filtered) {
       const ok = d.acuses.filter((a) => a.ok).length;
+      const pdfs = d.supportFiles.map((f) => f.name).join("; ");
       lines.push(
         [
           d.displayId,
@@ -374,8 +436,12 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
           d.ownerName ?? "",
           d.clientName ?? "",
           toDateInput(d.dueDate),
+          formatDeliveredAt(d.deliveredAt) ?? "",
           DELIVERABLE_STATUS_LABEL[normalizeDeliverableStatus(d.status)],
-          `${share}%`,
+          `${d.weight}%`,
+          `"${(d.dependsOnTitle ?? "").replace(/"/g, "'")}"`,
+          d.supportUrl ?? "",
+          `"${pdfs.replace(/"/g, "'")}"`,
           ok,
           d.acuses.length,
           `"${(d.acceptanceCriteria ?? "").replace(/"/g, "'")}"`,
@@ -406,6 +472,22 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
     >
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
         <div className="min-w-0 flex-1 space-y-4 overflow-y-auto p-4 pb-10">
+          {flash ? (
+            <div
+              className={`flex items-start justify-between gap-2 rounded-lg px-3 py-2 text-sm ${
+                flash.type === "ok" ? dashAlertOk : dashAlertError
+              }`}
+            >
+              <span>{flash.message}</span>
+              <button
+                type="button"
+                onClick={() => setFlash(null)}
+                className="shrink-0 text-xs opacity-70 hover:opacity-100"
+              >
+                ✕
+              </button>
+            </div>
+          ) : null}
           <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-2">
             <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
               <div className="mb-0.5 text-xs text-slate-500">Total entregables</div>
@@ -454,6 +536,24 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                 {projectCount} proyecto{projectCount !== 1 ? "s" : ""} · media ponderada
               </div>
             </div>
+            <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
+              <div className="mb-0.5 text-xs text-slate-500">A tiempo</div>
+              <div className="text-lg font-semibold tabular-nums leading-none text-[#27500A]">
+                {compliance.onTimePct !== null ? `${compliance.onTimePct}%` : "—"}
+              </div>
+              <div className="mt-0.5 text-xs text-slate-400">
+                {compliance.closedCount > 0
+                  ? `${compliance.closedCount} cerrados con fecha`
+                  : "sin cierres medibles"}
+              </div>
+            </div>
+            <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
+              <div className="mb-0.5 text-xs text-slate-500">Lead time medio</div>
+              <div className="text-lg font-semibold tabular-nums leading-none">
+                {compliance.avgLeadDays !== null ? `${compliance.avgLeadDays}d` : "—"}
+              </div>
+              <div className="mt-0.5 text-xs text-slate-400">registro → entrega</div>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -498,6 +598,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
               focusId={focusId}
               onFocusChange={setFocusId}
               onSelect={(id) => openDetail(id)}
+              showDependencies={!!projectFilter}
             />
           </div>
 
@@ -654,6 +755,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                   {filtered.map((d) => {
                     const stKey = normalizeDeliverableStatus(d.status);
                     const isFocused = focusId === d.id || (selectedId === d.id && panel === "detail");
+                    const blocked = isDeliverableBlocked(d, rowById);
                     return (
                       <tr
                         key={d.id}
@@ -671,7 +773,16 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
                           {d.displayId}
                         </td>
                         <td className="px-3 py-2.5 text-xs text-slate-500">{d.projectName}</td>
-                        <td className="px-3 py-2.5 text-sm font-medium leading-snug">{d.title}</td>
+                        <td className="px-3 py-2.5 text-sm font-medium leading-snug">
+                          <span className="inline-flex items-center gap-1">
+                            {blocked ? (
+                              <span className="text-xs" title="Bloqueado por dependencia">
+                                🔒
+                              </span>
+                            ) : null}
+                            {d.title}
+                          </span>
+                        </td>
                         <td className="px-3 py-2.5 text-xs text-slate-500">{d.phase || "—"}</td>
                         <td className="px-3 py-2.5 text-xs text-slate-500">
                           {d.ownerName || "—"}
@@ -728,26 +839,47 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
         </div>
 
         <aside
-          className={`shrink-0 overflow-y-auto border-slate-200 bg-white transition-[width] duration-200 ease-out lg:border-l ${
-            panel === "detail" ? "w-full min-w-0 lg:w-[430px] lg:min-w-[430px]" : "w-0 min-w-0 overflow-hidden lg:w-0"
+          className={`hidden shrink-0 overflow-y-auto border-slate-200 bg-white transition-[width] duration-200 ease-out lg:block lg:border-l ${
+            panel === "detail" ? "w-0 min-w-0 overflow-hidden lg:w-[430px] lg:min-w-[430px]" : "w-0 min-w-0 overflow-hidden lg:w-0"
           }`}
         >
           {panel === "detail" && selected ? (
             <DetailPanel
               row={selected}
               allRows={rows}
+              rowById={rowById}
               projects={projects}
               phaseOptions={phases}
               canEdit={canEdit}
-              onClose={() => {
-                setPanel("closed");
-                setSelectedId(null);
-              }}
+              onClose={closeDetail}
               run={run}
             />
           ) : null}
         </aside>
       </div>
+
+      {panel === "detail" && selected ? (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <button
+            type="button"
+            className="dash-drawer-backdrop absolute inset-0 bg-black/40"
+            aria-label="Cerrar detalle"
+            onClick={closeDetail}
+          />
+          <div className="dash-bottom-sheet absolute bottom-0 left-0 right-0 max-h-[min(88dvh,720px)] overflow-y-auto rounded-t-2xl border border-slate-200 bg-white shadow-2xl">
+            <DetailPanel
+              row={selected}
+              allRows={rows}
+              rowById={rowById}
+              projects={projects}
+              phaseOptions={phases}
+              canEdit={canEdit}
+              onClose={closeDetail}
+              run={run}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {panel === "create" && canEdit ? (
         <CreateDeliverableModal
@@ -774,6 +906,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
 function DetailPanel({
   row,
   allRows,
+  rowById,
   projects,
   phaseOptions,
   canEdit,
@@ -782,16 +915,42 @@ function DetailPanel({
 }: {
   row: DeliverableTrackerRow;
   allRows: DeliverableTrackerRow[];
+  rowById: Map<string, DeliverableTrackerRow>;
   projects: DeliverableTrackerProject[];
   phaseOptions: string[];
   canEdit: boolean;
   onClose: () => void;
-  run: (fn: () => Promise<void>) => void;
+  run: (fn: () => Promise<string | void>, okMessage?: string) => void;
 }) {
   const stKey = normalizeDeliverableStatus(row.status);
   const projectRows = allRows.filter((r) => r.projectId === row.projectId);
   const [acName, setAcName] = useState("");
   const [acRole, setAcRole] = useState("");
+
+  function changeStatus(target: DeliverableStatus) {
+    if (stKey === target) return;
+    const block = statusBlockReason(row, target, rowById);
+    if (block) {
+      run(async () => {
+        throw new Error(block);
+      });
+      return;
+    }
+    if (target === "rejected") {
+      const reason = window.prompt("Motivo del rechazo (obligatorio):");
+      if (!reason?.trim()) return;
+      run(async () => {
+        await setDeliverableStatusAction(row.id, target, reason.trim());
+      }, "Estado actualizado.");
+      return;
+    }
+    if (target === "approved" && approveNeedsAcuseConfirm(row)) {
+      if (!window.confirm("Hay acuses pendientes. ¿Aprobar de todos modos?")) return;
+    }
+    run(async () => {
+      await setDeliverableStatusAction(row.id, target);
+    }, "Estado actualizado.");
+  }
 
   return (
     <div className="w-full min-w-[min(100vw,430px)] max-w-full p-[18px] lg:w-[430px]">
@@ -848,22 +1007,24 @@ function DetailPanel({
             Cambiar estado
           </div>
           <div className="mb-3.5 flex flex-wrap gap-1">
-            {DELIVERABLE_STATUSES.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() =>
-                  run(async () => {
-                    await setDeliverableStatusAction(row.id, s);
-                  })
-                }
-                className={`rounded-full border border-black/[0.17] px-3 py-1 text-xs font-medium text-slate-500 hover:bg-[#f7f5f1] ${
-                  stKey === s ? statusBtnActive[s] : "bg-white"
-                }`}
-              >
-                {DELIVERABLE_STATUS_LABEL[s]}
-              </button>
-            ))}
+            {DELIVERABLE_STATUSES.map((s) => {
+              const block = statusBlockReason(row, s, rowById);
+              const disabled = Boolean(block && stKey !== s);
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  disabled={disabled}
+                  title={disabled ? (block ?? undefined) : undefined}
+                  onClick={() => changeStatus(s)}
+                  className={`rounded-full border border-black/[0.17] px-3 py-1 text-xs font-medium text-slate-500 hover:bg-[#f7f5f1] disabled:cursor-not-allowed disabled:opacity-40 ${
+                    stKey === s ? statusBtnActive[s] : "bg-white"
+                  }`}
+                >
+                  {DELIVERABLE_STATUS_LABEL[s]}
+                </button>
+              );
+            })}
           </div>
         </>
       ) : null}
@@ -1081,7 +1242,7 @@ function DetailEditForm({
   allRows: DeliverableTrackerRow[];
   projects: DeliverableTrackerProject[];
   phaseOptions: string[];
-  run: (fn: () => Promise<void>) => void;
+  run: (fn: () => Promise<string | void>, okMessage?: string) => void;
 }) {
   const router = useRouter();
   const [projectId, setProjectId] = useState(row.projectId);
