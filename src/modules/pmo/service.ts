@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import {
+  findGreenToRedDeteriorations,
   latestEscalationByProject,
   listEscalationChecksByTenant,
 } from "@/modules/escalations/service";
@@ -27,6 +28,7 @@ export async function getPmoSnapshot(
     criticalRisks,
     recentEscalations,
     latestEscalations,
+    deteriorationAlerts,
   ] = await Promise.all([
     db.project.findMany({
       where: projectWhere,
@@ -86,6 +88,10 @@ export async function getPmoSnapshot(
       limit: 12,
     }),
     latestEscalationByProject(tenantId, { restrictToProjectIds: restrict }),
+    findGreenToRedDeteriorations(tenantId, {
+      restrictToProjectIds: restrict,
+      withinDays: 7,
+    }),
   ]);
 
   const delivered = deliverables.filter((d) =>
@@ -196,5 +202,6 @@ export async function getPmoSnapshot(
       rows: recentEscalations.slice(0, 12),
       counts: escalationCounts,
     },
+    deteriorationAlerts,
   };
 }

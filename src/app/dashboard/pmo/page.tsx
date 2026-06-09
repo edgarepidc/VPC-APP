@@ -12,8 +12,10 @@ import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { getProjectStatusBadge, getSemaphoreBadge } from "@/lib/ui";
 import { getEscalationTierBadge } from "@/lib/escalation-utils";
+import { serializeEscalationChecks } from "@/lib/escalation-serialize";
 import { getPmoSnapshot } from "@/modules/pmo/service";
-import { EscalationRadar } from "./escalation-radar";
+import { EscalationRadarClient } from "./escalation-radar-client";
+import { EscalationDeteriorationAlerts } from "./escalation-deterioration-alerts";
 
 function money(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -32,6 +34,16 @@ export default async function PmoPage() {
   const snapshot = await getPmoSnapshot(tenantId, {
     restrictToProjectIds: projectIdsFilter,
   });
+
+  const radarRows = serializeEscalationChecks(snapshot.escalationRadar.rows);
+  const deteriorationAlerts = snapshot.deteriorationAlerts.map((a) => ({
+    projectId: a.projectId,
+    projectName: a.projectName,
+    previousAt: a.previousAt.toISOString(),
+    currentAt: a.currentAt.toISOString(),
+    topic: a.topic,
+    title: a.title,
+  }));
 
   return (
     <main className={dashPage}>
@@ -66,8 +78,10 @@ export default async function PmoPage() {
         </div>
       </section>
 
-      <EscalationRadar
-        rows={snapshot.escalationRadar.rows}
+      <EscalationDeteriorationAlerts alerts={deteriorationAlerts} />
+
+      <EscalationRadarClient
+        rows={radarRows}
         counts={snapshot.escalationRadar.counts}
       />
 

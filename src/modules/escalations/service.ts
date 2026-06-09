@@ -47,14 +47,24 @@ export async function createEscalationCheck(input: {
 
 export async function listEscalationChecksByTenant(
   tenantId: string,
-  options?: { restrictToProjectIds?: string[]; limit?: number },
+  options?: {
+    restrictToProjectIds?: string[];
+    projectId?: string;
+    limit?: number;
+    since?: Date;
+  },
 ) {
   const restrict = options?.restrictToProjectIds;
+  if (restrict !== undefined && restrict.length === 0) {
+    return [];
+  }
   try {
     return await db.escalationCheck.findMany({
       where: {
         tenantId,
         ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
+        ...(options?.projectId ? { projectId: options.projectId } : {}),
+        ...(options?.since ? { createdAt: { gte: options.since } } : {}),
       },
       include: {
         project: { select: { id: true, name: true } },
@@ -69,6 +79,95 @@ export async function listEscalationChecksByTenant(
     }
     throw err;
   }
+}
+
+export async function getEscalationCheckById(
+  tenantId: string,
+  checkId: string,
+  options?: { restrictToProjectIds?: string[] },
+) {
+  const restrict = options?.restrictToProjectIds;
+  if (restrict !== undefined && restrict.length === 0) {
+    return null;
+  }
+  try {
+    return await db.escalationCheck.findFirst({
+      where: {
+        id: checkId,
+        tenantId,
+        ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
+      },
+      include: {
+        project: { select: { id: true, name: true } },
+      },
+    });
+  } catch (err) {
+    if (isMissingTableError(err, "EscalationCheck")) return null;
+    throw err;
+  }
+}
+
+export type EscalationDeteriorationAlert = {
+  projectId: string;
+  projectName: string;
+  previousTier: EscalationTier;
+  currentTier: EscalationTier;
+  currentAt: Date;
+  previousAt: Date;
+  topic: string | null;
+  title: string;
+};
+
+/** Proyectos que pasaron de verde a rojo en los últimos N días. */
+export async function findGreenToRedDeteriorations(
+  tenantId: string,
+  options?: { restrictToProjectIds?: string[]; withinDays?: number },
+): Promise<EscalationDeteriorationAlert[]> {
+  const withinDays = options?.withinDays ?? 7;
+  const since = new Date(Date.now() - withinDays * 24 * 60 * 60 * 1000);
+  const rows = await listEscalationChecksByTenant(tenantId, {
+    restrictToProjectIds: options?.restrictToProjectIds,
+    since,
+    limit: 500,
+  });
+
+  const byProject = new Map<string, typeof rows>();
+  for (const row of rows) {
+    const list = byProject.get(row.projectId) ?? [];
+    list.push(row);
+    byProject.set(row.projectId, list);
+  }
+
+  const alerts: EscalationDeteriorationAlert[] = [];
+  for (const [, checks] of byProject) {
+    const sorted = [...checks].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+    const latest = sorted[0];
+    if (latest.tier !== "red") continue;
+
+    const priorGreen = sorted.find(
+      (c) =>
+        c.id !== latest.id &&
+        c.tier === "green" &&
+        latest.createdAt.getTime() - c.createdAt.getTime() <=
+          withinDays * 24 * 60 * 60 * 1000,
+    );
+    if (!priorGreen) continue;
+
+    alerts.push({
+      projectId: latest.projectId,
+      projectName: latest.project.name,
+      previousTier: "green",
+      currentTier: "red",
+      currentAt: latest.createdAt,
+      previousAt: priorGreen.createdAt,
+      topic: latest.topic,
+      title: latest.title,
+    });
+  }
+
+  return alerts.sort((a, b) => b.currentAt.getTime() - a.currentAt.getTime());
 }
 
 /** Última evaluación por proyecto (para tabla de salud PMO). */

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { dashTabActive, dashTabIdle } from "@/lib/ui-classes";
-import { PMO_HUB, PMO_PROJECTS, PMO_TEAM } from "@/lib/dashboard-paths";
+import { PMO_HUB, PMO_PROJECTS, PMO_TEAM, PMO_ESCALATIONS } from "@/lib/dashboard-paths";
 
 const TABS = [
   { href: PMO_HUB, label: "Resumen", exact: true },
   { href: PMO_PROJECTS, label: "Proyectos", exact: false },
+  { href: PMO_ESCALATIONS, label: "Escalamientos", exact: false },
   { href: PMO_TEAM, label: "Equipo", exact: false },
 ] as const;
 

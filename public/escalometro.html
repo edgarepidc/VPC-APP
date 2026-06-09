@@ -108,6 +108,87 @@
   }
   .card-icon svg { width: 12px; height: 12px; stroke: var(--text-2); }
 
+  .card-label-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .card-label-row .card-label { margin-bottom: 0; flex: 1; min-width: 0; }
+
+  .help-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .help-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--border-md);
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: help;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+  }
+  .help-btn:hover,
+  .help-btn:focus-visible {
+    background: var(--accent-lt);
+    color: var(--accent);
+    border-color: var(--accent);
+    outline: none;
+  }
+  .help-popover {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(280px, 72vw);
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-md);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    z-index: 30;
+    text-align: left;
+    pointer-events: none;
+  }
+  .help-wrap:hover .help-popover,
+  .help-wrap:focus-within .help-popover {
+    display: block;
+    pointer-events: auto;
+  }
+  .help-popover .help-domain {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+  .help-popover p {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-2);
+    margin-bottom: 8px;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+  }
+  .help-popover p:last-child { margin-bottom: 0; }
+  .help-popover .help-eval {
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-1);
+  }
+
   /* ── SELECT ── */
   .select-wrap { position: relative; }
   select {
@@ -450,6 +531,11 @@
       id: 'budget',
       label: 'Desviación de Presupuesto',
       icon: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+      help: {
+        domain: 'Gestión de costos · EVM (PMP)',
+        summary: 'Compara costo real (AC) con valor planificado (PV) y valor ganado (EV). CPI &lt; 1 indica sobrecosto.',
+        evaluate: 'Revisa CPI y proyección EAC. Desviaciones &gt;15 % suelen requerir escalamiento a finanzas.',
+      },
       options: [
         { label: '0–5 % — Dentro del rango',          value: LEVEL.low    },
         { label: '5–15 % — Variación moderada',        value: LEVEL.medium },
@@ -460,6 +546,11 @@
       id: 'schedule',
       label: 'Retraso en Cronograma',
       icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+      help: {
+        domain: 'Gestión del cronograma (PMP)',
+        summary: 'Mide desfase en hitos y ruta crítica. SPI (EV/PV) resume si el avance acompaña el calendario.',
+        evaluate: 'Retrasos &gt;7 días en hitos clave activan planes de recuperación (fast-track, crashing).',
+      },
       options: [
         { label: '0–3 días — En plazo',                value: LEVEL.low    },
         { label: '4–7 días — Retraso manejable',       value: LEVEL.medium },
@@ -470,6 +561,11 @@
       id: 'team',
       label: 'Desempeño del Equipo',
       icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      help: {
+        domain: 'Gestión de recursos (PMP)',
+        summary: 'Capacidad, cumplimiento de compromisos y calidad de entregas. Incluye skills, RACI y disponibilidad.',
+        evaluate: 'Dos semanas sin cumplir objetivos del hito/sprint sugiere intervención del PM o RRHH.',
+      },
       options: [
         { label: 'Estable — Objetivos cumplidos',      value: LEVEL.low    },
         { label: 'Inconsistente — Entregas variables', value: LEVEL.medium },
@@ -480,6 +576,11 @@
       id: 'scope',
       label: 'Deriva de Alcance (Scope Creep)',
       icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+      help: {
+        domain: 'Gestión del alcance (PMP)',
+        summary: 'Scope creep: cambios no controlados fuera del WBS. Todo cambio material pasa por control integrado de cambios.',
+        evaluate: 'Si el esfuerzo extra supera ~10 % del plan, emite Change Request y congela nuevos requerimientos.',
+      },
       options: [
         { label: 'Alineado — Sin cambios',             value: LEVEL.low    },
         { label: 'Variación menor — Controlada',       value: LEVEL.medium },
@@ -490,6 +591,11 @@
       id: 'stakeholders',
       label: 'Alineación de Stakeholders',
       icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+      help: {
+        domain: 'Gestión de stakeholders (PMP)',
+        summary: 'Expectativas, apoyo y resistencia de patrocinadores y áreas impactadas. Usa matriz poder/interés.',
+        evaluate: 'Conflicto activo o sponsor desalineado requiere sesión ejecutiva antes de seguir ejecutando.',
+      },
       options: [
         { label: 'Satisfechos — Sin fricciones',       value: LEVEL.low    },
         { label: 'Duda razonable — En conversación',   value: LEVEL.medium },
@@ -500,6 +606,11 @@
       id: 'impact',
       label: 'Impacto en el Negocio',
       icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+      help: {
+        domain: 'Beneficios y alineación estratégica (PMP)',
+        summary: 'Consecuencias operativas, regulatorias o estratégicas si el proyecto falla. Conecta con OKRs y valor de negocio.',
+        evaluate: 'Impacto alto (regulatorio, revenue, reputación) eleva prioridad de escalamiento a PMO.',
+      },
       options: [
         { label: 'Bajo — Operativo / local',           value: LEVEL.low    },
         { label: 'Medio — Área o proceso clave',       value: LEVEL.medium },
@@ -665,15 +776,26 @@
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
-        <label class="card-label" for="select-${ind.id}">
-          <span class="card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              ${ind.icon}
-            </svg>
-          </span>
-          ${ind.label}
-        </label>
+        <div class="card-label-row">
+          <label class="card-label" for="select-${ind.id}">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                ${ind.icon}
+              </svg>
+            </span>
+            ${ind.label}
+          </label>
+          ${ind.help ? `
+          <div class="help-wrap">
+            <button type="button" class="help-btn" aria-label="Ayuda: ${ind.label}" aria-describedby="help-${ind.id}">?</button>
+            <div class="help-popover" id="help-${ind.id}" role="tooltip">
+              <div class="help-domain">${ind.help.domain}</div>
+              <p>${ind.help.summary}</p>
+              <p class="help-eval"><strong>Cómo evaluar:</strong> ${ind.help.evaluate}</p>
+            </div>
+          </div>` : ''}
+        </div>
         <div class="select-wrap">
           <select id="select-${ind.id}" name="${ind.id}" aria-label="${ind.label}">
             <option value="" disabled selected>Seleccionar nivel…</option>
