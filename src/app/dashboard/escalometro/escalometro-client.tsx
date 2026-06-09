@@ -73,7 +73,7 @@ export function EscalometroClient({ projects, canSave }: EscalometroClientProps)
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           Contexto de evaluación
