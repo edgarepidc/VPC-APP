@@ -1,5 +1,8 @@
 import { db } from "@/lib/db";
-import { latestEscalationByProject } from "@/modules/escalations/service";
+import {
+  latestEscalationByProject,
+  listEscalationChecksByTenant,
+} from "@/modules/escalations/service";
 
 export async function getPmoSnapshot(
   tenantId: string,
@@ -78,11 +81,9 @@ export async function getPmoSnapshot(
       orderBy: { createdAt: "desc" },
       take: 10,
     }),
-    db.escalationCheck.findMany({
-      where: childWhere,
-      include: { project: { select: { id: true, name: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 12,
+    listEscalationChecksByTenant(tenantId, {
+      restrictToProjectIds: restrict,
+      limit: 12,
     }),
     latestEscalationByProject(tenantId, { restrictToProjectIds: restrict }),
   ]);

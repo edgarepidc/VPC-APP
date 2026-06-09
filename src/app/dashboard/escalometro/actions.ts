@@ -79,17 +79,21 @@ export async function saveEscalationAction(input: {
     return { ok: false as const, error: (e as Error).message };
   }
 
-  await createEscalationCheck({
-    tenantId: session.activeTenantId,
-    projectId,
-    topic: input.topic?.trim(),
-    tier: input.tier as EscalationTier,
-    title,
-    levelLabel,
-    indicators,
-    actions,
-    createdBy: session.userId,
-  });
+  try {
+    await createEscalationCheck({
+      tenantId: session.activeTenantId,
+      projectId,
+      topic: input.topic?.trim(),
+      tier: input.tier as EscalationTier,
+      title,
+      levelLabel,
+      indicators,
+      actions,
+      createdBy: session.userId,
+    });
+  } catch (e) {
+    return { ok: false as const, error: (e as Error).message };
+  }
 
   revalidatePath("/dashboard/escalometro");
   revalidatePath("/dashboard/pmo");

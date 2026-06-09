@@ -7,6 +7,7 @@ import { hasPermission } from "@/lib/rbac";
 import { listProjectsForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import {
+  dashAlertWarn,
   dashCard,
   dashPage,
 } from "@/lib/ui-classes";
@@ -18,8 +19,10 @@ import {
   getIndicatorLevelClass,
   parseEscalationIndicators,
 } from "@/lib/escalation-utils";
-import { listEscalationChecksByTenant } from "@/modules/escalations/service";
+import { listEscalationChecksByTenant, isEscalationStorageReady } from "@/modules/escalations/service";
+import { escalationTableMissingMessage } from "@/lib/prisma-errors";
 
+export const dynamic = "force-dynamic";
 export default async function EscalometroPage() {
   const session = await getSessionUser();
   if (!session) redirect("/login");
@@ -27,12 +30,13 @@ export default async function EscalometroPage() {
   const canSave = hasPermission(session.role, "tasks.write");
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
-  const [projects, recentChecks] = await Promise.all([
+  const [projects, recentChecks, storageReady] = await Promise.all([
     listProjectsForSession(session, tenantId),
     listEscalationChecksByTenant(tenantId, {
       restrictToProjectIds: projectIdsFilter,
       limit: 8,
     }),
+    isEscalationStorageReady(),
   ]);
 
   return (
@@ -41,6 +45,13 @@ export default async function EscalometroPage() {
         title="Escalómetro"
         description="Evalúa el nivel de escalamiento en 6 dimensiones y registra el resultado por proyecto."
       />
+
+      {!storageReady && (
+        <p className={dashAlertWarn} role="status">
+          {escalationTableMissingMessage()} Mientras tanto puedes usar la herramienta, pero los
+          registros no se guardarán.
+        </p>
+      )}
 
       <EscalometroClient projects={projects} canSave={canSave} />
 
