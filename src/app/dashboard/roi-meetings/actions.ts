@@ -8,6 +8,9 @@ import { hasPermission } from "@/lib/rbac";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import {
   createMeetingRoiSession,
+  deleteMeetingRoiSession,
+  getMeetingRoiSession,
+  updateMeetingRoiSession,
   type MeetingCostLevel,
   type MeetingObjective,
   type RoleCosts,
@@ -127,6 +130,102 @@ export async function saveMeetingRoiSessionAction(input: {
       participants,
       roleCosts,
       createdBy: session.userId,
+    });
+  } catch (e) {
+    return { ok: false as const, error: (e as Error).message };
+  }
+
+  revalidatePath("/dashboard/roi-meetings");
+  revalidatePath("/dashboard/pmo");
+  revalidatePath("/dashboard/pmo/meetings");
+
+  return { ok: true as const };
+}
+
+export async function updateMeetingRoiSessionAction(id: string, sessionName: string | null) {
+  const session = await getSessionUser();
+  if (!session?.activeTenantId) redirect("/login");
+  if (!hasPermission(session.role, "tasks.write")) {
+    return { ok: false as const, error: "No tienes permiso para editar sesiones." };
+  }
+
+  const trimmedId = id?.trim();
+  if (!trimmedId) {
+    return { ok: false as const, error: "Sesión inválida." };
+  }
+
+  const existing = await getMeetingRoiSession(session.activeTenantId, trimmedId);
+  if (!existing) {
+    return { ok: false as const, error: "Sesión no encontrada." };
+  }
+
+  try {
+    await assertCanAccessProject({
+      tenantId: session.activeTenantId,
+      userId: session.userId,
+      role: session.role,
+      projectId: existing.projectId,
+      isPlatformVisit: session.isPlatformVisit,
+    });
+  } catch (e) {
+    return { ok: false as const, error: (e as Error).message };
+  }
+
+  const normalizedName = sessionName?.trim() || null;
+  if (normalizedName && normalizedName.length > 200) {
+    return { ok: false as const, error: "El nombre no puede superar 200 caracteres." };
+  }
+
+  try {
+    await updateMeetingRoiSession({
+      tenantId: session.activeTenantId,
+      id: trimmedId,
+      sessionName: normalizedName,
+    });
+  } catch (e) {
+    return { ok: false as const, error: (e as Error).message };
+  }
+
+  revalidatePath("/dashboard/roi-meetings");
+  revalidatePath("/dashboard/pmo");
+  revalidatePath("/dashboard/pmo/meetings");
+
+  return { ok: true as const };
+}
+
+export async function deleteMeetingRoiSessionAction(id: string) {
+  const session = await getSessionUser();
+  if (!session?.activeTenantId) redirect("/login");
+  if (!hasPermission(session.role, "tasks.write")) {
+    return { ok: false as const, error: "No tienes permiso para eliminar sesiones." };
+  }
+
+  const trimmedId = id?.trim();
+  if (!trimmedId) {
+    return { ok: false as const, error: "Sesión inválida." };
+  }
+
+  const existing = await getMeetingRoiSession(session.activeTenantId, trimmedId);
+  if (!existing) {
+    return { ok: false as const, error: "Sesión no encontrada." };
+  }
+
+  try {
+    await assertCanAccessProject({
+      tenantId: session.activeTenantId,
+      userId: session.userId,
+      role: session.role,
+      projectId: existing.projectId,
+      isPlatformVisit: session.isPlatformVisit,
+    });
+  } catch (e) {
+    return { ok: false as const, error: (e as Error).message };
+  }
+
+  try {
+    await deleteMeetingRoiSession({
+      tenantId: session.activeTenantId,
+      id: trimmedId,
     });
   } catch (e) {
     return { ok: false as const, error: (e as Error).message };

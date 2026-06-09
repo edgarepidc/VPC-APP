@@ -106,7 +106,7 @@ export default async function RoiMeetingsPage({ searchParams }: RoiMeetingsPageP
         </div>
         <ul className="mt-3 space-y-2">
           {historyRows.length > 0 ? (
-            <RoiSessionHistoryList rows={historyRows} />
+            <RoiSessionHistoryList rows={historyRows} canEdit={canSave} />
           ) : (
             <li className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
               {filterProjectId

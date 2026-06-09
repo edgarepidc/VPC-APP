@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { saveMeetingRoiSessionAction } from "@/app/dashboard/roi-meetings/actions";
+import type { MeetingCalculatorSnapshot } from "@/lib/meeting-roi-calculator";
 import {
   dashAlertError,
   dashAlertOk,
@@ -11,30 +12,9 @@ import {
   uiLabel,
 } from "@/lib/ui-classes";
 
-type ProjectOption = { id: string; name: string };
+import { RoiMeetingsCalculator } from "./roi-meetings-calculator";
 
-type SessionPayload = {
-  objective: string;
-  totalCost: number;
-  costLevel: string;
-  costPerMinute: number;
-  totalParticipants: number;
-  durationMinutes: number;
-  diagnosisTitle: string;
-  diagnosisText: string;
-  participants: {
-    junior: number;
-    senior: number;
-    director: number;
-    tech: number;
-  };
-  roleCosts: {
-    junior: number;
-    senior: number;
-    director: number;
-    tech: number;
-  };
-};
+type ProjectOption = { id: string; name: string };
 
 type RoiMeetingsClientProps = {
   projects: ProjectOption[];
@@ -43,7 +23,6 @@ type RoiMeetingsClientProps = {
 
 export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps) {
   const router = useRouter();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [projectId, setProjectId] = useState("");
   const [sessionName, setSessionName] = useState("");
   const [feedback, setFeedback] = useState<{ type: "ok" | "error"; message: string } | null>(
@@ -51,80 +30,31 @@ export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps)
   );
   const [pending, startTransition] = useTransition();
 
-  const selectedProject = projects.find((p) => p.id === projectId);
+  function register(snapshot: MeetingCalculatorSnapshot) {
+    if (!canSave) {
+      setFeedback({ type: "error", message: "No tienes permiso para registrar sesiones." });
+      return;
+    }
+    if (!projectId) {
+      setFeedback({ type: "error", message: "Selecciona un proyecto antes de registrar." });
+      return;
+    }
 
-  const pushContextToIframe = useCallback(() => {
-    const win = iframeRef.current?.contentWindow;
-    if (!win) return;
-    win.postMessage(
-      {
-        type: "roi-meetings-context",
-        projectName: selectedProject?.name ?? "",
-        sessionName: sessionName.trim(),
-      },
-      window.location.origin,
-    );
-  }, [selectedProject?.name, sessionName]);
-
-  useEffect(() => {
-    pushContextToIframe();
-  }, [pushContextToIframe]);
-
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-
-    const onLoad = () => pushContextToIframe();
-    iframe.addEventListener("load", onLoad);
-    return () => iframe.removeEventListener("load", onLoad);
-  }, [pushContextToIframe]);
-
-  useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data?.type !== "roi-meeting-registered") return;
-
-      const payload = event.data.payload as SessionPayload | undefined;
-      if (!payload?.objective || payload.totalCost === undefined) return;
-
-      if (!canSave) {
-        setFeedback({
-          type: "error",
-          message: "No tienes permiso para registrar sesiones.",
-        });
-        return;
-      }
-
-      if (!projectId) {
-        setFeedback({
-          type: "error",
-          message: "Selecciona un proyecto antes de registrar.",
-        });
-        return;
-      }
-
-      startTransition(async () => {
-        const result = await saveMeetingRoiSessionAction({
-          projectId,
-          sessionName: sessionName.trim() || undefined,
-          ...payload,
-        });
-
-        if (result.ok) {
-          router.refresh();
-          setFeedback({
-            type: "ok",
-            message: `Sesión registrada para ${selectedProject?.name ?? "el proyecto"}.`,
-          });
-        } else {
-          setFeedback({ type: "error", message: result.error });
-        }
+    startTransition(async () => {
+      const result = await saveMeetingRoiSessionAction({
+        projectId,
+        sessionName: sessionName.trim() || undefined,
+        ...snapshot,
       });
-    };
 
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, [canSave, projectId, sessionName, selectedProject?.name, router]);
+      if (result.ok) {
+        router.refresh();
+        setFeedback({ type: "ok", message: "Sesión registrada correctamente." });
+      } else {
+        setFeedback({ type: "error", message: result.error });
+      }
+    });
+  }
 
   return (
     <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -158,34 +88,23 @@ export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps)
               type="text"
               value={sessionName}
               onChange={(e) => setSessionName(e.target.value)}
-              placeholder="Ej. Sprint planning, comité directivo, war room…"
+              placeholder="Ej. Sprint planning, comité directivo…"
               className={`${uiInput} mt-1`}
               maxLength={200}
             />
           </label>
         </div>
-        {feedback && (
+        {feedback ? (
           <p
             className={`mt-3 ${feedback.type === "ok" ? dashAlertOk : dashAlertError}`}
             role="status"
           >
             {pending ? "Guardando registro…" : feedback.message}
           </p>
-        )}
-        {!projectId && (
-          <p className="mt-2 text-xs text-slate-500">
-            Elige el proyecto al que corresponde esta sesión antes de pulsar Registrar sesión.
-          </p>
-        )}
+        ) : null}
       </div>
 
-      <iframe
-        ref={iframeRef}
-        title="ROI de Reuniones"
-        src="/roi-meetings.html"
-        className="min-h-[720px] w-full border-0 bg-slate-50 sm:min-h-[820px]"
-        sandbox="allow-scripts allow-same-origin"
-      />
+      <RoiMeetingsCalculator canRegister={canSave} pending={pending} onRegister={register} />
     </section>
   );
 }

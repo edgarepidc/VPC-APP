@@ -15,9 +15,10 @@ import { RoiSessionDetailDialog } from "@/app/dashboard/pmo/roi-session-detail-d
 
 type RoiSessionHistoryListProps = {
   rows: MeetingRoiDetailRecord[];
+  canEdit?: boolean;
 };
 
-export function RoiSessionHistoryList({ rows }: RoiSessionHistoryListProps) {
+export function RoiSessionHistoryList({ rows, canEdit = false }: RoiSessionHistoryListProps) {
   const [selected, setSelected] = useState<MeetingRoiDetailRecord | null>(null);
 
   return (
@@ -73,7 +74,11 @@ export function RoiSessionHistoryList({ rows }: RoiSessionHistoryListProps) {
           </li>
         );
       })}
-      <RoiSessionDetailDialog record={selected} onClose={() => setSelected(null)} />
+      <RoiSessionDetailDialog
+        record={selected}
+        canEdit={canEdit}
+        onClose={() => setSelected(null)}
+      />
     </>
   );
 }

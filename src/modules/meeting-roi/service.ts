@@ -150,6 +150,74 @@ export async function isMeetingRoiStorageReady() {
   }
 }
 
+export async function getMeetingRoiSession(tenantId: string, id: string) {
+  try {
+    const row = await db.meetingRoiSession.findFirst({
+      where: { id, tenantId },
+      include: { project: { select: { id: true, name: true } } },
+    });
+    if (!row) return null;
+    const [enriched] = await attachAuthorNames([row]);
+    return enriched ?? null;
+  } catch (err) {
+    if (isMissingTableError(err, "MeetingRoiSession")) {
+      throw new Error(meetingRoiTableMissingMessage());
+    }
+    throw err;
+  }
+}
+
+export async function updateMeetingRoiSession(input: {
+  tenantId: string;
+  id: string;
+  sessionName?: string | null;
+}) {
+  const existing = await db.meetingRoiSession.findFirst({
+    where: { id: input.id, tenantId: input.tenantId },
+    select: { id: true, projectId: true },
+  });
+  if (!existing) throw new Error("Sesión no encontrada.");
+
+  try {
+    const updated = await db.meetingRoiSession.update({
+      where: { id: input.id },
+      data: {
+        sessionName:
+          input.sessionName === undefined
+            ? undefined
+            : input.sessionName?.trim() || null,
+      },
+      include: { project: { select: { id: true, name: true } } },
+    });
+    const [enriched] = await attachAuthorNames([updated]);
+    return enriched!;
+  } catch (err) {
+    if (isMissingTableError(err, "MeetingRoiSession")) {
+      throw new Error(meetingRoiTableMissingMessage());
+    }
+    throw err;
+  }
+}
+
+export async function deleteMeetingRoiSession(input: { tenantId: string; id: string }) {
+  const existing = await db.meetingRoiSession.findFirst({
+    where: { id: input.id, tenantId: input.tenantId },
+    select: { id: true },
+  });
+  if (!existing) throw new Error("Sesión no encontrada.");
+
+  try {
+    await db.meetingRoiSession.deleteMany({
+      where: { id: input.id, tenantId: input.tenantId },
+    });
+  } catch (err) {
+    if (isMissingTableError(err, "MeetingRoiSession")) {
+      throw new Error(meetingRoiTableMissingMessage());
+    }
+    throw err;
+  }
+}
+
 export type MeetingCostAlert = {
   projectId: string;
   projectName: string;

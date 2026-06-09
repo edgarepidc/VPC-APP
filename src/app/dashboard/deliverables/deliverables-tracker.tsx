@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import {
@@ -926,6 +926,9 @@ function DetailPanel({
   const projectRows = allRows.filter((r) => r.projectId === row.projectId);
   const [acName, setAcName] = useState("");
   const [acRole, setAcRole] = useState("");
+  const [pendingStatus, setPendingStatus] = useState<DeliverableStatus | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function changeStatus(target: DeliverableStatus) {
     if (stKey === target) return;
@@ -937,19 +940,35 @@ function DetailPanel({
       return;
     }
     if (target === "rejected") {
-      const reason = window.prompt("Motivo del rechazo (obligatorio):");
-      if (!reason?.trim()) return;
-      run(async () => {
-        await setDeliverableStatusAction(row.id, target, reason.trim());
-      }, "Estado actualizado.");
+      setRejectReason("");
+      setPendingStatus(target);
       return;
     }
     if (target === "approved" && approveNeedsAcuseConfirm(row)) {
-      if (!window.confirm("Hay acuses pendientes. ¿Aprobar de todos modos?")) return;
+      setPendingStatus(target);
+      return;
     }
     run(async () => {
       await setDeliverableStatusAction(row.id, target);
     }, "Estado actualizado.");
+  }
+
+  function confirmStatusChange() {
+    if (!pendingStatus) return;
+    if (pendingStatus === "rejected") {
+      const reason = rejectReason.trim();
+      if (!reason) return;
+      run(async () => {
+        await setDeliverableStatusAction(row.id, pendingStatus, reason);
+      }, "Estado actualizado.");
+      setPendingStatus(null);
+      setRejectReason("");
+      return;
+    }
+    run(async () => {
+      await setDeliverableStatusAction(row.id, pendingStatus);
+    }, "Estado actualizado.");
+    setPendingStatus(null);
   }
 
   return (
@@ -1149,18 +1168,157 @@ function DetailPanel({
       {canEdit ? (
         <button
           type="button"
-          onClick={() => {
-            if (!confirm("¿Eliminar este entregable?")) return;
-            run(async () => {
-              await deleteDeliverableAction(row.id);
-              onClose();
-            });
-          }}
+          onClick={() => setConfirmDelete(true)}
           className="w-full rounded-lg border border-[#F09595] py-2 text-xs font-medium text-[#791F1F] hover:bg-[#FCEBEB]"
         >
           Eliminar entregable
         </button>
       ) : null}
+
+      {pendingStatus === "rejected" ? (
+        <DeliverableConfirmOverlay
+          title="Motivo del rechazo"
+          onClose={() => {
+            setPendingStatus(null);
+            setRejectReason("");
+          }}
+        >
+          <p className="text-sm text-slate-600">
+            Indica por qué se rechaza este entregable. El motivo quedará registrado en el historial.
+          </p>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            rows={3}
+            placeholder="Motivo obligatorio…"
+            className="mt-3 w-full rounded-lg border border-black/[0.17] px-3 py-2 text-sm"
+            autoFocus
+          />
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={!rejectReason.trim()}
+              onClick={confirmStatusChange}
+              className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            >
+              Confirmar rechazo
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPendingStatus(null);
+                setRejectReason("");
+              }}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </DeliverableConfirmOverlay>
+      ) : null}
+
+      {pendingStatus === "approved" ? (
+        <DeliverableConfirmOverlay
+          title="Aprobar con acuses pendientes"
+          onClose={() => setPendingStatus(null)}
+        >
+          <p className="text-sm text-slate-600">
+            Hay acuses del cliente sin confirmar. ¿Deseas aprobar el entregable de todos modos?
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={confirmStatusChange}
+              className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              Sí, aprobar
+            </button>
+            <button
+              type="button"
+              onClick={() => setPendingStatus(null)}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </DeliverableConfirmOverlay>
+      ) : null}
+
+      {confirmDelete ? (
+        <DeliverableConfirmOverlay
+          title="Eliminar entregable"
+          onClose={() => setConfirmDelete(false)}
+        >
+          <p className="text-sm text-slate-600">
+            ¿Eliminar <span className="font-medium">{row.title}</span>? Esta acción no se puede
+            deshacer.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                run(async () => {
+                  await deleteDeliverableAction(row.id);
+                  onClose();
+                });
+                setConfirmDelete(false);
+              }}
+              className="rounded-lg bg-rose-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-800"
+            >
+              Sí, eliminar
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </DeliverableConfirmOverlay>
+      ) : null}
+    </div>
+  );
+}
+
+function DeliverableConfirmOverlay({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/45"
+        aria-label="Cerrar"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deliverable-confirm-title"
+        className="relative w-full max-w-md rounded-t-2xl border border-slate-200 bg-white p-5 shadow-xl sm:rounded-xl"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <h3 id="deliverable-confirm-title" className="text-base font-semibold text-slate-900">
+            {title}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="mt-3">{children}</div>
+      </div>
     </div>
   );
 }

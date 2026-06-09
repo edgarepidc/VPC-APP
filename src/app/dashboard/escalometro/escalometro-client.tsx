@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { saveEscalationAction } from "@/app/dashboard/escalometro/actions";
+import type { EscalationEvaluation } from "@/lib/escalation-evaluate";
 import {
   dashAlertError,
   dashAlertOk,
@@ -12,17 +13,9 @@ import {
 } from "@/lib/ui-classes";
 import type { EscalationIndicators } from "@/modules/escalations/service";
 
-type ProjectOption = { id: string; name: string };
+import { EscalometroCalculator } from "./escalometro-calculator";
 
-type EvaluationPayload = {
-  values: EscalationIndicators;
-  result: {
-    tier: string;
-    title: string;
-    levelLabel: string;
-    actions: string[];
-  };
-};
+type ProjectOption = { id: string; name: string };
 
 type EscalometroClientProps = {
   projects: ProjectOption[];
@@ -31,7 +24,6 @@ type EscalometroClientProps = {
 
 export function EscalometroClient({ projects, canSave }: EscalometroClientProps) {
   const router = useRouter();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [projectId, setProjectId] = useState("");
   const [topic, setTopic] = useState("");
   const [feedback, setFeedback] = useState<{ type: "ok" | "error"; message: string } | null>(
@@ -41,82 +33,44 @@ export function EscalometroClient({ projects, canSave }: EscalometroClientProps)
 
   const selectedProject = projects.find((p) => p.id === projectId);
 
-  const pushContextToIframe = useCallback(() => {
-    const win = iframeRef.current?.contentWindow;
-    if (!win) return;
-    win.postMessage(
-      {
-        type: "escalometro-context",
-        projectName: selectedProject?.name ?? "",
-        topic: topic.trim(),
-      },
-      window.location.origin,
-    );
-  }, [selectedProject?.name, topic]);
-
-  useEffect(() => {
-    pushContextToIframe();
-  }, [pushContextToIframe]);
-
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-
-    const onLoad = () => pushContextToIframe();
-    iframe.addEventListener("load", onLoad);
-    return () => iframe.removeEventListener("load", onLoad);
-  }, [pushContextToIframe]);
-
-  useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data?.type !== "escalometro-evaluated") return;
-
-      const payload = event.data.payload as EvaluationPayload | undefined;
-      if (!payload?.result || !payload.values) return;
-
-      if (!canSave) {
-        setFeedback({
-          type: "error",
-          message: "No tienes permiso para registrar evaluaciones.",
-        });
-        return;
-      }
-
-      if (!projectId) {
-        setFeedback({
-          type: "error",
-          message: "Selecciona un proyecto antes de evaluar.",
-        });
-        return;
-      }
-
-      startTransition(async () => {
-        const result = await saveEscalationAction({
-          projectId,
-          topic: topic.trim() || undefined,
-          tier: payload.result.tier,
-          title: payload.result.title,
-          levelLabel: payload.result.levelLabel,
-          indicators: payload.values,
-          actions: payload.result.actions,
-        });
-
-        if (result.ok) {
-          router.refresh();
-          setFeedback({
-            type: "ok",
-            message: `Evaluación registrada para ${selectedProject?.name ?? "el proyecto"}.`,
-          });
-        } else {
-          setFeedback({ type: "error", message: result.error });
-        }
+  function handleEvaluate(values: EscalationIndicators, result: EscalationEvaluation) {
+    if (!canSave) {
+      setFeedback({
+        type: "error",
+        message: "No tienes permiso para registrar evaluaciones.",
       });
-    };
+      return;
+    }
+    if (!projectId) {
+      setFeedback({
+        type: "error",
+        message: "Selecciona un proyecto antes de evaluar.",
+      });
+      return;
+    }
 
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, [canSave, projectId, topic, selectedProject?.name, router]);
+    startTransition(async () => {
+      const saveResult = await saveEscalationAction({
+        projectId,
+        topic: topic.trim() || undefined,
+        tier: result.tier,
+        title: result.title,
+        levelLabel: result.levelLabel,
+        indicators: values,
+        actions: result.actions,
+      });
+
+      if (saveResult.ok) {
+        router.refresh();
+        setFeedback({
+          type: "ok",
+          message: `Evaluación registrada para ${selectedProject?.name ?? "el proyecto"}.`,
+        });
+      } else {
+        setFeedback({ type: "error", message: saveResult.error });
+      }
+    });
+  }
 
   return (
     <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -150,34 +104,28 @@ export function EscalometroClient({ projects, canSave }: EscalometroClientProps)
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Ej. Fase 2, integración SAP, release Q3…"
+              placeholder="Ej. Fase 2, integración SAP…"
               className={`${uiInput} mt-1`}
               maxLength={200}
             />
           </label>
         </div>
-        {feedback && (
+        {feedback ? (
           <p
             className={`mt-3 ${feedback.type === "ok" ? dashAlertOk : dashAlertError}`}
             role="status"
           >
             {pending ? "Guardando registro…" : feedback.message}
           </p>
-        )}
-        {!projectId && (
+        ) : null}
+        {!projectId ? (
           <p className="mt-2 text-xs text-slate-500">
             Elige el proyecto al que corresponde esta evaluación antes de pulsar Evaluar.
           </p>
-        )}
+        ) : null}
       </div>
 
-      <iframe
-        ref={iframeRef}
-        title="Super-Escalómetro de Proyectos"
-        src="/escalometro.html"
-        className="min-h-[780px] w-full border-0 bg-slate-50"
-        sandbox="allow-scripts allow-same-origin"
-      />
+      <EscalometroCalculator onEvaluate={handleEvaluate} />
     </section>
   );
 }
