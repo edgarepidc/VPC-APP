@@ -197,6 +197,11 @@ model Deliverable {
   description         String?
   acceptanceCriteria  String?
   notes               String?
+  /** Enlace a carpeta o ubicación del entregable (SharePoint, Drive, etc.). */
+  supportUrl          String?
+  /** URL pública del PDF de soporte en storage. */
+  supportFileUrl      String?
+  supportFileName     String?
   /** Lista de acuses: [{ "name", "role", "ok", "confirmedAt" }]. */
   acuses              Json      @default("[]")
   /** Historial: [{ "at", "text", "color?" }]. */

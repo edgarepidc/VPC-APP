@@ -21,6 +21,20 @@ import {
   type DeliverableLogEntry,
 } from "./json";
 
+function normalizeSupportUrl(raw: string | null | undefined): string | null {
+  const value = raw?.trim();
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+export { normalizeSupportUrl };
+
 async function applyWeightPlan(
   tenantId: string,
   plan: Array<{ id: string; weight: number; weightManual: boolean }>,
@@ -152,6 +166,7 @@ export async function createDeliverable(input: {
   description?: string | null;
   acceptanceCriteria?: string | null;
   notes?: string | null;
+  supportUrl?: string | null;
 }) {
   const project = await db.project.findFirst({
     where: { id: input.projectId, tenantId: input.tenantId },
@@ -200,6 +215,7 @@ export async function createDeliverable(input: {
       description: input.description?.trim() || null,
       acceptanceCriteria: input.acceptanceCriteria?.trim() || null,
       notes: input.notes?.trim() || null,
+      supportUrl: normalizeSupportUrl(input.supportUrl),
       acuses: [] as unknown as Prisma.InputJsonValue,
       activityLog: toJsonActivityLog(initialLog) as Prisma.InputJsonValue,
     },
@@ -238,6 +254,9 @@ export async function updateDeliverable(input: {
   description?: string | null;
   acceptanceCriteria?: string | null;
   notes?: string | null;
+  supportUrl?: string | null;
+  supportFileUrl?: string | null;
+  supportFileName?: string | null;
   acuses?: DeliverableAcuse[];
   activityLog?: DeliverableLogEntry[];
 }) {
@@ -283,6 +302,15 @@ export async function updateDeliverable(input: {
     data.acceptanceCriteria = input.acceptanceCriteria?.trim() || null;
   }
   if (input.notes !== undefined) data.notes = input.notes?.trim() || null;
+  if (input.supportUrl !== undefined) {
+    data.supportUrl = normalizeSupportUrl(input.supportUrl);
+  }
+  if (input.supportFileUrl !== undefined) {
+    data.supportFileUrl = input.supportFileUrl?.trim() || null;
+  }
+  if (input.supportFileName !== undefined) {
+    data.supportFileName = input.supportFileName?.trim() || null;
+  }
   if (input.acuses !== undefined) {
     data.acuses = toJsonAcuses(input.acuses) as Prisma.InputJsonValue;
   }
@@ -382,13 +410,17 @@ export async function updateDeliverableStatus(input: {
 export async function deleteDeliverable(input: { tenantId: string; id: string }) {
   const row = await db.deliverable.findFirst({
     where: { id: input.id, tenantId: input.tenantId },
-    select: { id: true, projectId: true },
+    select: { id: true, projectId: true, supportFileUrl: true },
   });
   if (!row) throw new Error("Entregable no encontrado.");
 
   await db.deliverable.deleteMany({
     where: { id: input.id, tenantId: input.tenantId },
   });
+
+  if (row.supportFileUrl) {
+    await removeDeliverableStorageObject(row.supportFileUrl).catch(() => undefined);
+  }
 
   const remaining = await listProjectWeightRows(input.tenantId, row.projectId);
   if (remaining.length === 0) return;
@@ -498,6 +530,45 @@ export async function removeDeliverableAcuse(input: {
     where: { id: input.id },
     data: {
       acuses: toJsonAcuses(acuses) as Prisma.InputJsonValue,
+    },
+  });
+}
+
+const DELIVERABLE_DOCS_BUCKET = "deliverable-documents";
+
+export async function removeDeliverableStorageObject(publicUrl: string) {
+  if (!publicUrl.includes(DELIVERABLE_DOCS_BUCKET)) return;
+  const { createAdminClient } = await import("@/utils/supabase/admin");
+  const admin = createAdminClient();
+  const prefix = `/storage/v1/object/public/${DELIVERABLE_DOCS_BUCKET}/`;
+  const u = new URL(publicUrl);
+  const p = u.pathname.indexOf(prefix);
+  if (p === -1) return;
+  const objectPath = decodeURIComponent(u.pathname.slice(p + prefix.length));
+  await admin.storage.from(DELIVERABLE_DOCS_BUCKET).remove([objectPath]);
+}
+
+export async function setDeliverableSupportFile(input: {
+  tenantId: string;
+  id: string;
+  supportFileUrl: string | null;
+  supportFileName: string | null;
+}) {
+  const row = await db.deliverable.findFirst({
+    where: { id: input.id, tenantId: input.tenantId },
+    select: { id: true, supportFileUrl: true },
+  });
+  if (!row) throw new Error("Entregable no encontrado.");
+
+  if (row.supportFileUrl && row.supportFileUrl !== input.supportFileUrl) {
+    await removeDeliverableStorageObject(row.supportFileUrl).catch(() => undefined);
+  }
+
+  await db.deliverable.update({
+    where: { id: input.id },
+    data: {
+      supportFileUrl: input.supportFileUrl,
+      supportFileName: input.supportFileName,
     },
   });
 }

@@ -45,6 +45,7 @@ export type CreateDeliverableInput = {
   description?: string;
   acceptanceCriteria?: string;
   notes?: string;
+  supportUrl?: string;
 };
 
 export async function createDeliverableAction(input: CreateDeliverableInput) {
@@ -52,7 +53,7 @@ export async function createDeliverableAction(input: CreateDeliverableInput) {
   const due = parseLocalDate(input.dueDate);
   if (!due) throw new Error("La fecha compromiso es obligatoria.");
 
-  await createDeliverable({
+  const created = await createDeliverable({
     tenantId,
     projectId: input.projectId.trim(),
     title: input.title.trim(),
@@ -65,8 +66,10 @@ export async function createDeliverableAction(input: CreateDeliverableInput) {
     description: input.description?.trim() || null,
     acceptanceCriteria: input.acceptanceCriteria?.trim() || null,
     notes: input.notes?.trim() || null,
+    supportUrl: input.supportUrl?.trim() || null,
   });
   revalidatePath("/dashboard/deliverables");
+  return { id: created.id };
 }
 
 export type UpdateDeliverableDetailInput = {
@@ -81,6 +84,7 @@ export type UpdateDeliverableDetailInput = {
   description?: string;
   acceptanceCriteria?: string;
   notes?: string;
+  supportUrl?: string;
 };
 
 export async function updateDeliverableDetailAction(input: UpdateDeliverableDetailInput) {
@@ -101,6 +105,7 @@ export async function updateDeliverableDetailAction(input: UpdateDeliverableDeta
     description: input.description?.trim() || null,
     acceptanceCriteria: input.acceptanceCriteria?.trim() || null,
     notes: input.notes?.trim() || null,
+    supportUrl: input.supportUrl?.trim() || null,
   });
   revalidatePath("/dashboard/deliverables");
 }

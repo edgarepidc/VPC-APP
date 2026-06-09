@@ -14,15 +14,16 @@ import type { DeliverableAcuse, DeliverableLogEntry } from "@/modules/deliverabl
 import {
   clampWeight,
   computeProjectProgress,
-  projectWeightBudget,
-  redistributeWeightChange,
   TARGET_SUM,
 } from "@/lib/deliverable-weight-utils";
 import { uiInput, uiLabel } from "@/lib/ui-classes";
 
+import { CreateDeliverableModal } from "./create-deliverable-modal";
+import { DeliverableSupportFields } from "./deliverable-support-fields";
+import { DeliverableWeightField } from "./deliverable-weight-field";
+import { DeliverablesTimeline } from "./deliverables-timeline";
 import {
   addDeliverableAcuseAction,
-  createDeliverableAction,
   deleteDeliverableAction,
   removeDeliverableAcuseAction,
   setDeliverableStatusAction,
@@ -49,6 +50,9 @@ export type DeliverableTrackerRow = {
   status: string;
   weight: number;
   weightManual: boolean;
+  supportUrl: string | null;
+  supportFileUrl: string | null;
+  supportFileName: string | null;
   description: string | null;
   acceptanceCriteria: string | null;
   notes: string | null;
@@ -407,6 +411,14 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
             </div>
           </div>
 
+          <DeliverablesTimeline
+            rows={filtered}
+            onSelect={(id) => {
+              setSelectedId(id);
+              setPanel("detail");
+            }}
+          />
+
           <div className="rounded-lg border border-slate-200 bg-white px-[18px] py-3.5">
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
               <div>
@@ -614,7 +626,7 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
 
         <aside
           className={`shrink-0 overflow-y-auto border-slate-200 bg-white transition-[width] duration-200 ease-out lg:border-l ${
-            panel !== "closed" ? "w-full min-w-0 lg:w-[430px] lg:min-w-[430px]" : "w-0 min-w-0 overflow-hidden lg:w-0"
+            panel === "detail" ? "w-full min-w-0 lg:w-[430px] lg:min-w-[430px]" : "w-0 min-w-0 overflow-hidden lg:w-0"
           }`}
         >
           {panel === "detail" && selected ? (
@@ -631,103 +643,17 @@ export function DeliverablesTracker({ rows, projects, canEdit }: Props) {
               run={run}
             />
           ) : null}
-          {panel === "create" && canEdit ? (
-            <CreatePanel
-              allRows={rows}
-              projects={projects}
-              phaseOptions={phases}
-              onClose={() => setPanel("closed")}
-              run={run}
-            />
-          ) : null}
         </aside>
       </div>
-    </div>
-  );
-}
 
-function WeightShareField({
-  value,
-  onChange,
-  projectRows,
-  currentId,
-}: {
-  value: number;
-  onChange: (next: number) => void;
-  projectRows: DeliverableTrackerRow[];
-  currentId?: string;
-}) {
-  const safeValue = clampWeight(value);
-  const budget = projectWeightBudget(
-    projectRows.map((r) => ({
-      id: r.id,
-      weight: r.id === currentId ? safeValue : r.weight,
-      weightManual: r.weightManual,
-    })),
-    currentId,
-  );
-
-  const preview = useMemo(() => {
-    if (!currentId) return null;
-    const base = projectRows.map((r) => ({
-      id: r.id,
-      weight: r.weight,
-      weightManual: r.weightManual,
-    }));
-    return redistributeWeightChange(base, currentId, safeValue).filter((r) => r.id !== currentId);
-  }, [currentId, projectRows, safeValue]);
-
-  return (
-    <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className={uiLabel}>% del avance del proyecto</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Los entregables sin ajuste manual absorben el resto hasta completar 100%.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={safeValue}
-            onChange={(e) => onChange(clampWeight(Number(e.target.value) || 1))}
-            className={`${uiInput} h-9 w-16 text-center text-base font-semibold tabular-nums`}
-          />
-          <span className="text-sm font-medium text-slate-600">%</span>
-        </div>
-      </div>
-      <input
-        type="range"
-        min={1}
-        max={100}
-        value={safeValue}
-        onChange={(e) => onChange(clampWeight(Number(e.target.value)))}
-        className="mt-3 w-full accent-slate-800"
-        aria-label="Porcentaje del avance del proyecto"
-      />
-      <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
-        <span>Asignado en proyecto: {budget.assigned + (currentId ? 0 : safeValue)}%</span>
-        <span>Disponible: {budget.available}%</span>
-      </div>
-      {preview && preview.some((r) => r.weightManual === false) ? (
-        <ul className="mt-2 space-y-0.5 border-t border-slate-200 pt-2 text-xs text-slate-600">
-          {preview
-            .filter((r) => {
-              const prev = projectRows.find((row) => row.id === r.id);
-              return prev && prev.weight !== r.weight;
-            })
-            .map((r) => {
-              const prev = projectRows.find((row) => row.id === r.id);
-              return (
-                <li key={r.id}>
-                  {prev?.title ?? "Entregable"}: {prev?.weight}% → {r.weight}%
-                  {r.weightManual ? "" : " (auto)"}
-                </li>
-              );
-            })}
-        </ul>
+      {panel === "create" && canEdit ? (
+        <CreateDeliverableModal
+          allRows={rows}
+          projects={projects}
+          phaseOptions={phases}
+          onClose={() => setPanel("closed")}
+          run={run}
+        />
       ) : null}
     </div>
   );
@@ -971,6 +897,35 @@ function ReadOnlyDetail({ row }: { row: DeliverableTrackerRow }) {
       <Field label="Criterios de aceptación" value={row.acceptanceCriteria} />
       <Field label="Cliente / destinatario" value={row.clientName} />
       <Field label="Notas" value={row.notes} />
+      {row.supportUrl || row.supportFileUrl ? (
+        <div className="mb-3">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Soporte documental
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+            {row.supportUrl ? (
+              <a
+                href={row.supportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-slate-800 underline"
+              >
+                Abrir ubicación
+              </a>
+            ) : null}
+            {row.supportFileUrl ? (
+              <a
+                href={row.supportFileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-slate-800 underline"
+              >
+                {row.supportFileName ?? "Ver PDF"}
+              </a>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
@@ -1001,6 +956,7 @@ function DetailEditForm({
   phaseOptions: string[];
   run: (fn: () => Promise<void>) => void;
 }) {
+  const router = useRouter();
   const [projectId, setProjectId] = useState(row.projectId);
   const [title, setTitle] = useState(row.title);
   const [phase, setPhase] = useState(row.phase ?? "");
@@ -1011,6 +967,7 @@ function DetailEditForm({
   const [description, setDescription] = useState(row.description ?? "");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState(row.acceptanceCriteria ?? "");
   const [notes, setNotes] = useState(row.notes ?? "");
+  const [supportUrl, setSupportUrl] = useState(row.supportUrl ?? "");
 
   const rowsForWeight =
     projectId === row.projectId
@@ -1022,14 +979,14 @@ function DetailEditForm({
 
   return (
     <>
-      <WeightShareField
+      <DeliverableWeightField
         value={weight}
         onChange={setWeight}
         projectRows={rowsForWeight}
         currentId={row.id}
       />
 
-      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mb-3 mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className={uiLabel}>Proyecto</label>
           <select
@@ -1120,6 +1077,16 @@ function DetailEditForm({
         </div>
       </div>
 
+      <DeliverableSupportFields
+        deliverableId={row.id}
+        supportUrl={supportUrl}
+        onSupportUrlChange={setSupportUrl}
+        supportFileUrl={row.supportFileUrl}
+        supportFileName={row.supportFileName}
+        canEdit
+        onUploadComplete={() => router.refresh()}
+      />
+
       <button
         type="button"
         onClick={() =>
@@ -1136,226 +1103,14 @@ function DetailEditForm({
               description,
               acceptanceCriteria,
               notes,
+              supportUrl,
             });
           })
         }
-        className="mb-4 w-full rounded-lg border border-[var(--accent)] bg-[var(--accent)] py-2 text-sm font-medium text-white hover:bg-[var(--accent-d)]"
+        className="mb-4 mt-4 w-full rounded-lg border border-[var(--accent)] bg-[var(--accent)] py-2 text-sm font-medium text-white hover:bg-[var(--accent-d)]"
       >
         Guardar cambios
       </button>
     </>
-  );
-}
-
-function CreatePanel({
-  allRows,
-  projects,
-  phaseOptions,
-  onClose,
-  run,
-}: {
-  allRows: DeliverableTrackerRow[];
-  projects: DeliverableTrackerProject[];
-  phaseOptions: string[];
-  onClose: () => void;
-  run: (fn: () => Promise<void>) => void;
-}) {
-  const [projectId, setProjectId] = useState(projects[0]?.id ?? "");
-  const [title, setTitle] = useState("");
-  const [phase, setPhase] = useState("");
-  const [ownerName, setOwnerName] = useState("");
-  const [clientName, setClientName] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [status, setStatus] = useState<DeliverableStatus>("pending");
-  const [description, setDescription] = useState("");
-  const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
-
-  const projectRows = allRows.filter((r) => r.projectId === projectId);
-  const defaultWeight = Math.max(
-    1,
-    projectRows.length === 0 ? TARGET_SUM : Math.floor(TARGET_SUM / (projectRows.length + 1)),
-  );
-  const [weight, setWeight] = useState(defaultWeight);
-
-  const selectedProject = projects.find((p) => p.id === projectId);
-
-  return (
-    <div className="w-full min-w-[min(100vw,430px)] max-w-full p-[18px] lg:w-[430px]">
-      <div className="mb-4 flex items-start justify-between gap-2 border-b border-slate-200 pb-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Contexto de registro
-          </p>
-          <div className="mt-1 text-sm font-semibold">Nuevo entregable</div>
-          {selectedProject ? (
-            <p className="mt-0.5 text-xs text-slate-500">{selectedProject.name}</p>
-          ) : null}
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-xs hover:bg-slate-50"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div className="mb-3">
-        <label className={uiLabel}>Proyecto *</label>
-        <select
-          value={projectId}
-          onChange={(e) => {
-            setProjectId(e.target.value);
-            const siblings = allRows.filter((r) => r.projectId === e.target.value);
-            setWeight(
-              Math.max(
-                1,
-                siblings.length === 0
-                  ? TARGET_SUM
-                  : Math.floor(TARGET_SUM / (siblings.length + 1)),
-              ),
-            );
-          }}
-          className={`${uiInput} mt-1`}
-        >
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <WeightShareField
-        value={weight}
-        onChange={setWeight}
-        projectRows={projectRows}
-      />
-
-      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label className={uiLabel}>Nombre del entregable *</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ej. Informe de pruebas"
-            className={`${uiInput} mt-1`}
-          />
-        </div>
-        <div>
-          <label className={uiLabel}>Fase del proyecto</label>
-          <input
-            value={phase}
-            onChange={(e) => setPhase(e.target.value)}
-            placeholder="Ej. Desarrollo"
-            list="phase-dl-create"
-            className={`${uiInput} mt-1`}
-          />
-          <datalist id="phase-dl-create">
-            {phaseOptions.map((f) => (
-              <option key={f} value={f} />
-            ))}
-          </datalist>
-        </div>
-        <div>
-          <label className={uiLabel}>Responsable *</label>
-          <input
-            value={ownerName}
-            onChange={(e) => setOwnerName(e.target.value)}
-            placeholder="Nombre o equipo"
-            className={`${uiInput} mt-1`}
-          />
-        </div>
-        <div>
-          <label className={uiLabel}>Cliente / destinatario</label>
-          <input
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            placeholder="Quien aprueba"
-            className={`${uiInput} mt-1`}
-          />
-        </div>
-        <div>
-          <label className={uiLabel}>Fecha compromiso *</label>
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className={`${uiInput} mt-1`}
-          />
-        </div>
-        <div>
-          <label className={uiLabel}>Estado inicial</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as DeliverableStatus)}
-            className={`${uiInput} mt-1`}
-          >
-            {DELIVERABLE_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {DELIVERABLE_STATUS_LABEL[s]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="sm:col-span-2">
-          <label className={uiLabel}>Descripción</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            placeholder="¿Qué incluye este entregable?"
-            className={`${uiInput} mt-1 resize-y`}
-          />
-        </div>
-        <div className="sm:col-span-2">
-          <label className={uiLabel}>Criterios de aceptación</label>
-          <textarea
-            value={acceptanceCriteria}
-            onChange={(e) => setAcceptanceCriteria(e.target.value)}
-            rows={3}
-            placeholder="Condiciones para aprobarlo"
-            className={`${uiInput} mt-1 resize-y`}
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() =>
-            run(async () => {
-              if (!title.trim() || !ownerName.trim() || !dueDate) {
-                alert("Nombre, responsable y fecha compromiso son obligatorios.");
-                return;
-              }
-              await createDeliverableAction({
-                projectId,
-                title: title.trim(),
-                phase: phase.trim(),
-                ownerName: ownerName.trim(),
-                clientName: clientName.trim(),
-                dueDate,
-                status,
-                weight: clampWeight(weight),
-                description: description.trim(),
-                acceptanceCriteria: acceptanceCriteria.trim(),
-              });
-              onClose();
-            })
-          }
-          className="flex-1 rounded-lg border border-[var(--accent)] bg-[var(--accent)] py-2 text-sm font-medium text-white hover:bg-[var(--accent-d)]"
-        >
-          Registrar entregable
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50"
-        >
-          Cancelar
-        </button>
-      </div>
-    </div>
   );
 }

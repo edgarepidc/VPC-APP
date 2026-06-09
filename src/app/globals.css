@@ -201,6 +201,36 @@ body {
   }
 }
 
+.deliverable-timeline-line {
+  transform-origin: left center;
+  animation: deliverable-timeline-draw 1.2s ease-out forwards;
+  transform: scaleX(0);
+}
+
+.deliverable-timeline-dot {
+  animation: deliverable-timeline-dot 0.5s ease backwards;
+}
+
+@keyframes deliverable-timeline-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes deliverable-timeline-dot {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dash-bottom-sheet {
     animation: none;
