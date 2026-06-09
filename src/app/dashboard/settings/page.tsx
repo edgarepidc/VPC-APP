@@ -26,11 +26,11 @@ export default async function DashboardSettingsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-[#0f1f5c]">Organización</h1>
-        <p className="mt-1 text-sm text-[#5c5346]">
+        <h1 className="text-xl font-semibold text-slate-900">Organización</h1>
+        <p className="mt-1 text-sm text-slate-600">
           Workspace activo:{" "}
-          <strong className="text-[#0f1f5c]">{tenant.name}</strong>{" "}
-          <span className="text-[#a09d98]">({tenant.slug})</span>
+          <strong className="text-slate-900">{tenant.name}</strong>{" "}
+          <span className="text-slate-400">({tenant.slug})</span>
         </p>
       </div>
 
@@ -40,29 +40,29 @@ export default async function DashboardSettingsPage({
         </p>
       ) : null}
       {params.ok ? (
-        <p className="rounded-lg border border-[#c9a46c]/40 bg-[linear-gradient(135deg,#faf8f4_0%,#f3ead8_100%)] px-4 py-3 text-sm text-[#2a2412] ring-1 ring-[#0f1f5c]/[0.06]">
+        <p className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-[#2a2412] ring-1 ring-slate-200">
           {params.ok}
         </p>
       ) : null}
 
-      <section className="rounded-xl border border-[#e3d6c4] bg-[linear-gradient(165deg,#ffffff_0%,#faf8f4_100%)] p-6 shadow-sm ring-1 ring-[#0f1f5c]/[0.04]">
-        <h2 className="text-base font-semibold text-[#0f1f5c]">Marca del cliente</h2>
-        <p className="mt-2 text-sm leading-relaxed text-[#5c5346]">
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <h2 className="text-base font-semibold text-slate-900">Marca del cliente</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
           El logo que aparece en el menú lateral lo configura la consultora en{" "}
           {session.isSuperAdmin ? (
             <Link
               href="/admin/tenants"
-              className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/50 underline-offset-2 hover:decoration-[#c9a46c]"
+              className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
             >
               Administración global → Organizaciones
             </Link>
           ) : (
-            <span className="font-medium text-[#0f1f5c]">Administración global → Organizaciones</span>
+            <span className="font-medium text-slate-900">Administración global → Organizaciones</span>
           )}
           . Para invitar o cambiar roles del equipo, usa{" "}
           <Link
             href="/dashboard/members"
-            className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/50 underline-offset-2 hover:decoration-[#c9a46c]"
+            className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
           >
             Miembros
           </Link>

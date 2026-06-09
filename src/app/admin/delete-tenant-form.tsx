@@ -65,7 +65,7 @@ export function DeleteTenantForm({
             required
             autoComplete="off"
             placeholder={tenantSlug}
-            className="mt-1 block w-full rounded border border-rose-300 px-2 py-1 text-[12px] text-zinc-900"
+            className="mt-1 block w-full rounded border border-rose-300 px-2 py-1 text-[12px] text-slate-900"
           />
         </label>
         <div className="flex flex-wrap gap-2">

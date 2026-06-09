@@ -132,8 +132,8 @@ export default async function TasksPage({ searchParams }: PageProps) {
       <section className="pmo-card p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="pmo-title text-zinc-900">Tareas</h1>
-            <p className="mt-1 max-w-2xl text-sm text-zinc-600">
+            <h1 className="pmo-title text-slate-900">Tareas</h1>
+            <p className="mt-1 max-w-2xl text-sm text-slate-600">
               Kanban con arrastre, tabla con edición, calendario por fecha límite
               (navegación por mes y tareas sin fecha), línea de tiempo simple y
               responsable por miembro del tenant. Filtros por proyecto y
@@ -154,7 +154,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
           </p>
         )}
 
-        <nav className="mt-5 flex flex-wrap gap-2 border-b border-zinc-200 pb-3">
+        <nav className="mt-5 flex flex-wrap gap-2 border-b border-slate-200 pb-3">
           {(
             [
               ["kanban", "Kanban"],
@@ -168,8 +168,8 @@ export default async function TasksPage({ searchParams }: PageProps) {
               href={tasksHref(v, pf, qf, v === "calendar" ? monthQueryValue : undefined)}
               className={
                 view === v
-                  ? "rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white"
-                  : "rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                  ? "rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white"
+                  : "rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
               }
             >
               {label}
@@ -180,18 +180,18 @@ export default async function TasksPage({ searchParams }: PageProps) {
         <form
           method="GET"
           action="/dashboard/tasks"
-          className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 bg-zinc-50/80 p-4"
+          className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-slate-50/80 p-4"
         >
           <input type="hidden" name="view" value={view} />
           {view === "calendar" ? (
             <input type="hidden" name="month" value={monthQueryValue} />
           ) : null}
           <div>
-            <label className="text-xs font-medium text-zinc-600">Proyecto</label>
+            <label className="text-xs font-medium text-slate-600">Proyecto</label>
             <select
               name="project"
               defaultValue={pf}
-              className="mt-1 block min-w-[200px] rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
+              className="mt-1 block min-w-[200px] rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
             >
               <option value="">Todos los proyectos</option>
               {projects.map((p) => (
@@ -202,18 +202,18 @@ export default async function TasksPage({ searchParams }: PageProps) {
             </select>
           </div>
           <div className="min-w-[200px] flex-1">
-            <label className="text-xs font-medium text-zinc-600">Buscar</label>
+            <label className="text-xs font-medium text-slate-600">Buscar</label>
             <input
               name="q"
               type="search"
               defaultValue={qf}
               placeholder="Título de la tarea…"
-              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
             />
           </div>
           <button
             type="submit"
-            className="rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-900"
+            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900"
           >
             Aplicar filtros
           </button>
@@ -225,7 +225,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 "",
                 view === "calendar" ? monthQueryValue : undefined,
               )}
-              className="text-sm font-medium text-zinc-600 underline"
+              className="text-sm font-medium text-slate-600 underline"
             >
               Limpiar
             </Link>
@@ -233,8 +233,8 @@ export default async function TasksPage({ searchParams }: PageProps) {
         </form>
 
         {canWrite && hasProjects && (
-          <section className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50/80 p-4">
-            <h2 className="text-sm font-semibold text-zinc-900">Nueva tarea</h2>
+          <section className="mt-6 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+            <h2 className="text-sm font-semibold text-slate-900">Nueva tarea</h2>
             <form action={createTaskWithContextAction} className="mt-3 grid gap-3 sm:grid-cols-2">
               <input type="hidden" name="view" value={view} />
               <input type="hidden" name="project" value={pf} />
@@ -243,7 +243,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 <input type="hidden" name="month" value={monthQueryValue} />
               ) : null}
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-zinc-600">Proyecto</label>
+                <label className="text-xs font-medium text-slate-600">Proyecto</label>
                 <select
                   name="projectId"
                   required
@@ -252,7 +252,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
                       ? pf
                       : (projects[0]?.id ?? "")
                   }
-                  className="mt-1 w-full max-w-md rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full max-w-md rounded-md border border-slate-300 px-3 py-2 text-sm"
                 >
                   {projects.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -262,32 +262,32 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-zinc-600">Título</label>
+                <label className="text-xs font-medium text-slate-600">Título</label>
                 <input
                   name="title"
                   required
                   maxLength={500}
                   placeholder="Describe la tarea"
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-zinc-600">
+                <label className="text-xs font-medium text-slate-600">
                   Fecha límite (opcional)
                 </label>
                 <input
                   type="date"
                   name="dueDate"
-                  className="mt-1 w-full max-w-xs rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full max-w-xs rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-zinc-600">
+                <label className="text-xs font-medium text-slate-600">
                   Responsable (opcional)
                 </label>
                 <select
                   name="assigneeUserId"
-                  className="mt-1 w-full max-w-md rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full max-w-md rounded-md border border-slate-300 px-3 py-2 text-sm"
                 >
                   <option value="">Sin asignar</option>
                   {members.map((m) => (
@@ -300,7 +300,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
               <div className="sm:col-span-2">
                 <button
                   type="submit"
-                  className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+                  className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
                 >
                   Crear tarea
                 </button>

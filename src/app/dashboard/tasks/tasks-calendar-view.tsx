@@ -62,38 +62,38 @@ export function TasksCalendarView({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-slate-600">
           Tareas con <strong>fecha límite</strong> en{" "}
-          <span className="font-semibold capitalize text-zinc-900">{monthTitle}</span>.
+          <span className="font-semibold capitalize text-slate-900">{monthTitle}</span>.
         </p>
         <div className="flex items-center gap-2">
           <Link
             href={prevMonthHref}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
           >
             ← Mes anterior
           </Link>
           <Link
             href={nextMonthHref}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
           >
             Mes siguiente →
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-zinc-200 bg-zinc-200 text-center text-xs">
+      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 text-center text-xs">
         {WEEKDAYS.map((w) => (
           <div
             key={w}
-            className="bg-zinc-100 py-2 font-semibold uppercase tracking-wide text-zinc-600"
+            className="bg-slate-100 py-2 font-semibold uppercase tracking-wide text-slate-600"
           >
             {w}
           </div>
         ))}
         {cells.map((day, i) =>
           day === null ? (
-            <div key={`e-${i}`} className="min-h-[88px] bg-zinc-50" />
+            <div key={`e-${i}`} className="min-h-[88px] bg-slate-50" />
           ) : (
             <div
               key={day}
@@ -101,7 +101,7 @@ export function TasksCalendarView({
                 highlightTodayDay === day ? "ring-2 ring-inset ring-sky-400" : ""
               }`}
             >
-              <p className="text-[11px] font-semibold text-zinc-500">{day}</p>
+              <p className="text-[11px] font-semibold text-slate-500">{day}</p>
               <ul className="mt-1 space-y-1">
                 {(byDay.get(day) ?? []).map((t) => {
                   const who = assigneeLabel(t);
@@ -126,15 +126,15 @@ export function TasksCalendarView({
         )}
       </div>
 
-      <section className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-4">
-        <h3 className="text-sm font-semibold text-zinc-900">
+      <section className="rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+        <h3 className="text-sm font-semibold text-slate-900">
           Sin fecha límite ({undatedTasks.length})
         </h3>
-        <p className="mt-1 text-[12px] text-zinc-600">
+        <p className="mt-1 text-[12px] text-slate-600">
           Mismos filtros de proyecto y búsqueda; no aparecen en la grilla del mes.
         </p>
         {undatedTasks.length === 0 ? (
-          <p className="mt-3 text-sm text-zinc-500">No hay tareas sin fecha.</p>
+          <p className="mt-3 text-sm text-slate-500">No hay tareas sin fecha.</p>
         ) : (
           <ul className="mt-3 max-h-48 space-y-2 overflow-y-auto text-sm">
             {undatedTasks.map((t) => {
@@ -142,10 +142,10 @@ export function TasksCalendarView({
               return (
                 <li
                   key={t.id}
-                  className="flex flex-wrap items-baseline justify-between gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2"
+                  className="flex flex-wrap items-baseline justify-between gap-2 rounded-md border border-slate-200 bg-white px-3 py-2"
                 >
-                  <span className="font-medium text-zinc-900">{t.title}</span>
-                  <span className="text-[11px] text-zinc-500">
+                  <span className="font-medium text-slate-900">{t.title}</span>
+                  <span className="text-[11px] text-slate-500">
                     {t.projectName}
                     {who ? ` · ${who}` : ""}
                   </span>
@@ -156,9 +156,9 @@ export function TasksCalendarView({
         )}
       </section>
 
-      <p className="text-[12px] text-zinc-500">
+      <p className="text-[12px] text-slate-500">
         Vista calendario ligera (sin arrastre entre días). El mes se controla por la URL{" "}
-        <code className="rounded bg-zinc-100 px-1">?month=AAAA-MM</code>.
+        <code className="rounded bg-slate-100 px-1">?month=AAAA-MM</code>.
       </p>
     </div>
   );

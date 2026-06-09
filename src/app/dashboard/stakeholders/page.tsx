@@ -79,7 +79,7 @@ export default async function StakeholdersPage({
       <section className="rounded-xl border border-[#e8e6e1] bg-white px-5 py-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-[#1a1916]">
+            <h1 className="text-lg font-semibold tracking-tight text-slate-900">
               StakeMap — Matriz de interesados
             </h1>
             <p className="mt-1 text-[13px] text-[#6b6860]">
@@ -105,7 +105,7 @@ export default async function StakeholdersPage({
       />
 
       <section className="rounded-xl border border-[#e8e6e1] bg-white p-6 shadow-sm">
-        <h2 className="text-[15px] font-semibold text-[#1a1916]">
+        <h2 className="text-[15px] font-semibold text-slate-900">
           Agregar interesado
         </h2>
         <p className="mt-1 text-[13px] text-[#6b6860]">
@@ -119,13 +119,13 @@ export default async function StakeholdersPage({
         ) : (
           <form action={createAction} className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-[#57534e]">
+              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
                 Proyecto *
               </label>
               <select
                 name="projectId"
                 required
-                className="w-full rounded-md border border-[#e8e6e1] bg-white px-3 py-2 text-[13px] text-[#1a1916] outline-none transition focus:border-[#2563eb] focus:ring-[3px] focus:ring-[#eff4ff]"
+                className="w-full rounded-md border border-[#e8e6e1] bg-white px-3 py-2 text-[13px] text-slate-900 outline-none transition focus:border-[#2563eb] focus:ring-[3px] focus:ring-[#eff4ff]"
               >
                 <option value="">Seleccionar…</option>
                 {projects.map((project) => (
@@ -136,7 +136,7 @@ export default async function StakeholdersPage({
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-[#57534e]">
+              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
                 Nombre *
               </label>
               <input
@@ -147,7 +147,7 @@ export default async function StakeholdersPage({
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-[#57534e]">
+              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
                 Cargo / rol
               </label>
               <input
@@ -157,7 +157,7 @@ export default async function StakeholdersPage({
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-[#57534e]">
+              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
                 Influencia (0–10)
               </label>
               <input
@@ -170,7 +170,7 @@ export default async function StakeholdersPage({
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-[#57534e]">
+              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
                 Interés (0–10)
               </label>
               <input
@@ -183,7 +183,7 @@ export default async function StakeholdersPage({
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-[#57534e]">
+              <label className="mb-1.5 block text-[11.5px] font-semibold text-slate-600">
                 Observación (opcional)
               </label>
               <textarea
@@ -206,35 +206,35 @@ export default async function StakeholdersPage({
       </section>
 
       <section className="rounded-xl border border-[#e8e6e1] bg-white p-6 shadow-sm">
-        <h2 className="text-[15px] font-semibold text-[#1a1916]">
+        <h2 className="text-[15px] font-semibold text-slate-900">
           Registro detallado
         </h2>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[900px] border-collapse text-[13px]">
             <thead>
               <tr className="border-b border-[#e8e6e1] text-left">
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Proyecto
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Nombre
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Rol
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Inf.
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Int.
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Cuadrante
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Semáforo
                 </th>
-                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Observación
                 </th>
               </tr>
@@ -250,10 +250,10 @@ export default async function StakeholdersPage({
                     className="border-b border-[#f0ede8] transition hover:bg-[#f7f6f3]"
                   >
                     <td className="py-3 pr-2">{item.project.name}</td>
-                    <td className="py-3 pr-2 font-medium text-[#1a1916]">
+                    <td className="py-3 pr-2 font-medium text-slate-900">
                       {item.name}
                     </td>
-                    <td className="py-3 pr-2 text-[#57534e]">
+                    <td className="py-3 pr-2 text-slate-600">
                       {item.role ?? "—"}
                     </td>
                     <td className="py-3 pr-2 font-mono text-[12px]">
@@ -262,13 +262,13 @@ export default async function StakeholdersPage({
                     <td className="py-3 pr-2 font-mono text-[12px]">
                       {item.interest}
                     </td>
-                    <td className="py-3 pr-2 text-[#57534e]">
+                    <td className="py-3 pr-2 text-slate-600">
                       {quadrantLabelFull(item.influence, item.interest)}
                     </td>
                     <td className="py-3 pr-2">
                       <span className={semaphore.className}>{semaphore.label}</span>
                     </td>
-                    <td className="max-w-xs py-3 text-[#57534e]">
+                    <td className="max-w-xs py-3 text-slate-600">
                       {item.observation ?? "—"}
                     </td>
                   </tr>
@@ -278,7 +278,7 @@ export default async function StakeholdersPage({
                 <tr>
                   <td
                     colSpan={8}
-                    className="py-10 text-center font-mono text-[12px] text-[#a09d98]"
+                    className="py-10 text-center font-mono text-[12px] text-slate-400"
                   >
                     Aún no hay interesados. Usa el formulario para agregar el
                     primero.

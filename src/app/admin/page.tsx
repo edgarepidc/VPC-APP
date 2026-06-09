@@ -80,7 +80,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
         </p>
       )}
       {params.ok && (
-        <p className="rounded-md border border-[#c9a46c]/40 bg-[linear-gradient(135deg,#faf8f4_0%,#f3ead8_100%)] p-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-[#0f1f5c]/[0.05]">
+        <p className="rounded-md border border-slate-300 bg-white p-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-slate-200">
           {params.ok}
         </p>
       )}
@@ -161,16 +161,16 @@ export default async function AdminHomePage({ searchParams }: Props) {
       <VpcAdminInsetShell innerClassName="p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-[#0f1f5c]">
+            <h3 className="text-base font-semibold text-slate-900">
               Cartera de organizaciones
             </h3>
-            <p className="mt-1 text-[13px] text-[#5c5346]">
+            <p className="mt-1 text-[13px] text-slate-600">
               Entra al workspace del cliente para ver y editar sus proyectos.
             </p>
           </div>
           <Link
             href="/admin/tenants"
-            className="rounded-lg border border-[#c9a46c]/45 bg-gradient-to-b from-white to-[#faf6ef] px-3 py-2 text-[13px] font-semibold text-[#0f1f5c] shadow-sm ring-1 ring-[#0f1f5c]/6 transition hover:border-[#c9a46c]/70 hover:shadow-md"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[13px] font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 transition hover:border-slate-300 hover:shadow-md"
           >
             Crear organizacion nueva
           </Link>
@@ -190,18 +190,18 @@ export default async function AdminHomePage({ searchParams }: Props) {
             type="search"
             placeholder="Nombre o slug..."
             defaultValue={rawQ}
-            className="min-w-[200px] flex-1 rounded-lg border border-[#e3d6c4] bg-white px-3 py-2 text-[13px] text-[#1a1916] placeholder:text-[#a09d98] focus:border-[#0f1f5c]/40 focus:outline-none focus:ring-2 focus:ring-[#0f1f5c]/15"
+            className="min-w-[200px] flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
           <button
             type="submit"
-            className="rounded-lg bg-gradient-to-b from-[#152d4f] to-[#0f1f5c] px-4 py-2 text-[13px] font-semibold text-white shadow-sm ring-1 ring-[#c9a46c]/35 transition hover:from-[#1a3a63] hover:to-[#12224d] active:scale-[0.99]"
+            className="rounded-lg bg-slate-800 px-4 py-2 text-[13px] font-semibold text-white shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-700 active:scale-[0.99]"
           >
             Buscar
           </button>
           {isFiltered && (
             <Link
               href="/admin"
-              className="text-[13px] font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+              className="text-[13px] font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
             >
               Limpiar filtro
             </Link>
@@ -211,26 +211,26 @@ export default async function AdminHomePage({ searchParams }: Props) {
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-[13px]">
             <thead>
-              <tr className="border-b border-[#e8dfd0] text-left">
-                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+              <tr className="border-b border-slate-200 text-left">
+                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Logo
                 </th>
-                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Organizacion
                 </th>
-                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Slug
                 </th>
-                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Plan
                 </th>
-                <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Proyectos
                 </th>
-                <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Miembros
                 </th>
-                <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="pb-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Acciones
                 </th>
               </tr>
@@ -239,10 +239,10 @@ export default async function AdminHomePage({ searchParams }: Props) {
               {tenants.map((t) => (
                 <tr
                   key={t.id}
-                  className="border-b border-[#f0ebe0] transition hover:bg-[#faf6ef]"
+                  className="border-b border-[#f0ebe0] transition hover:bg-slate-50"
                 >
                   <td className="py-3 pr-3 align-middle">
-                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-[#e3d6c4] bg-white shadow-sm ring-1 ring-[#0f1f5c]/[0.04]">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ring-1 ring-slate-200">
                       {t.logoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element -- URL pública Supabase Storage
                         <img
@@ -251,19 +251,19 @@ export default async function AdminHomePage({ searchParams }: Props) {
                           className="h-full w-full object-contain p-0.5"
                         />
                       ) : (
-                        <span className="text-[10px] font-semibold text-[#c9a46c]">
+                        <span className="text-[10px] font-semibold text-slate-600">
                           —
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="py-3 pr-3 font-medium text-[#0f1f5c]">
+                  <td className="py-3 pr-3 font-medium text-slate-900">
                     {t.name}
                   </td>
-                  <td className="py-3 pr-3 font-mono text-[12px] text-[#57534e]">
+                  <td className="py-3 pr-3 font-mono text-[12px] text-slate-600">
                     {t.slug}
                   </td>
-                  <td className="py-3 pr-3 text-[#57534e]">{t.plan}</td>
+                  <td className="py-3 pr-3 text-slate-600">{t.plan}</td>
                   <td className="py-3 pr-3 text-right tabular-nums">
                     {t._count.projects}
                   </td>
@@ -276,14 +276,14 @@ export default async function AdminHomePage({ searchParams }: Props) {
                         <input type="hidden" name="tenantId" value={t.id} />
                         <button
                           type="submit"
-                          className="rounded-lg bg-gradient-to-b from-[#152d4f] to-[#0f1f5c] px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm ring-1 ring-[#c9a46c]/30 transition hover:from-[#1a3a63] hover:to-[#12224d] active:scale-[0.99]"
+                          className="rounded-lg bg-slate-800 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-700 active:scale-[0.99]"
                         >
                           Entrar al workspace
                         </button>
                       </form>
                       <Link
                         href={`/admin/invite?tenantId=${encodeURIComponent(t.id)}`}
-                        className="text-center text-[12px] font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                        className="text-center text-[12px] font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
                       >
                         Invitar
                       </Link>
@@ -302,11 +302,11 @@ export default async function AdminHomePage({ searchParams }: Props) {
             </tbody>
           </table>
           {tenants.length === 0 && (
-            <p className="py-10 text-center text-[13px] text-[#a09d98]">
+            <p className="py-10 text-center text-[13px] text-slate-400">
               Aún no hay organizaciones.{" "}
               <Link
                 href="/admin/tenants"
-                className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
               >
                 Crear la primera
               </Link>

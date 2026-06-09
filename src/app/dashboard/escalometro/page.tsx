@@ -8,7 +8,7 @@ export default function EscalometroPage() {
       <iframe
         title="Super-Escalómetro de Proyectos"
         src="/escalometro.html"
-        className="min-h-[920px] w-full flex-1 rounded-xl border border-zinc-200 bg-[#f7f6f3] shadow-sm"
+        className="min-h-[920px] w-full flex-1 rounded-xl border border-slate-200 bg-[#f7f6f3] shadow-sm"
         sandbox="allow-scripts allow-same-origin"
       />
     </main>

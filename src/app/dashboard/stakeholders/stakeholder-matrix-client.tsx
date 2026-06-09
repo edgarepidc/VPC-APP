@@ -39,10 +39,10 @@ const qBorder: Record<QuadrantId, string> = {
 };
 
 const markerClass: Record<QuadrantId, string> = {
-  q1: "bg-gradient-to-br from-green-500 to-green-600 text-white",
-  q2: "bg-gradient-to-br from-yellow-400 to-amber-600 text-white",
-  q3: "bg-gradient-to-br from-blue-400 to-blue-600 text-white",
-  q4: "bg-gradient-to-br from-gray-300 to-gray-500 text-white",
+  q1: "bg-green-600 text-white",
+  q2: "bg-amber-500 text-white",
+  q3: "bg-blue-600 text-white",
+  q4: "bg-slate-500 text-white",
 };
 
 function initials(name: string) {
@@ -109,7 +109,7 @@ export function StakeholderMatrixClient({
                   <circle cx="11" cy="11" r="2" />
                 </svg>
               </div>
-              <span className="text-[13px] font-semibold tracking-tight text-[#1a1916]">
+              <span className="text-[13px] font-semibold tracking-tight text-slate-900">
                 StakeMap
               </span>
             </div>
@@ -122,7 +122,7 @@ export function StakeholderMatrixClient({
                   setProjectFilter(e.target.value);
                   setSelectedId(null);
                 }}
-                className="mt-0.5 max-w-[220px] border-0 bg-transparent text-[13px] font-medium text-[#1a1916] outline-none focus:ring-0"
+                className="mt-0.5 max-w-[220px] border-0 bg-transparent text-[13px] font-medium text-slate-900 outline-none focus:ring-0"
               >
                 <option value="all">Todos los proyectos</option>
                 {projectNames.map((p) => (
@@ -149,7 +149,7 @@ export function StakeholderMatrixClient({
             <span className="text-[11px] font-medium uppercase tracking-wide text-[#6b6860]">
               Matriz poder × interés
             </span>
-            <span className="rounded-full border border-[#e8e6e1] bg-white px-2.5 py-0.5 text-[12px] text-[#a09d98]">
+            <span className="rounded-full border border-[#e8e6e1] bg-white px-2.5 py-0.5 text-[12px] text-slate-400">
               Interesados:{" "}
               <strong className="font-semibold text-[#6b6860]">
                 {visible.length}
@@ -160,7 +160,7 @@ export function StakeholderMatrixClient({
           <div className="flex min-h-[280px] flex-1 gap-0 sm:min-h-[340px]">
             <div className="flex flex-shrink-0 items-center justify-center py-2 pr-1">
               <span
-                className="max-w-[2rem] text-center text-[11px] font-medium uppercase leading-snug tracking-wider text-[#a09d98]"
+                className="max-w-[2rem] text-center text-[11px] font-medium uppercase leading-snug tracking-wider text-slate-400"
                 style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
               >
                 Influencia / poder
@@ -248,7 +248,7 @@ export function StakeholderMatrixClient({
                       >
                         {initials(s.name)}
                       </div>
-                      <span className="pointer-events-none absolute left-1/2 top-[calc(100%+4px)] max-w-[110px] -translate-x-1/2 truncate rounded border border-[#e8e6e1] bg-white px-1.5 py-0.5 text-[10.5px] font-medium text-[#1a1916] shadow-sm">
+                      <span className="pointer-events-none absolute left-1/2 top-[calc(100%+4px)] max-w-[110px] -translate-x-1/2 truncate rounded border border-[#e8e6e1] bg-white px-1.5 py-0.5 text-[10.5px] font-medium text-slate-900 shadow-sm">
                         {s.name}
                       </span>
                     </button>
@@ -260,13 +260,13 @@ export function StakeholderMatrixClient({
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                   <span
                     key={n}
-                    className="font-mono text-[10px] text-[#a09d98]"
+                    className="font-mono text-[10px] text-slate-400"
                   >
                     {n}
                   </span>
                 ))}
               </div>
-              <p className="pt-1 text-center text-[11px] font-medium uppercase tracking-wide text-[#a09d98]">
+              <p className="pt-1 text-center text-[11px] font-medium uppercase tracking-wide text-slate-400">
                 Interés / apoyo →
               </p>
             </div>
@@ -277,19 +277,19 @@ export function StakeholderMatrixClient({
       {/* Sidebar playbook */}
       <aside className="flex w-full flex-shrink-0 flex-col border-t border-[#e8e6e1] bg-white lg:w-[320px] lg:border-l lg:border-t-0">
         <div className="border-b border-[#f0ede8] px-5 py-4">
-          <p className="text-[12px] font-semibold uppercase tracking-wider text-[#a09d98]">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-slate-400">
             Playbook tactico
           </p>
-          <p className="mt-0.5 text-[13px] font-medium text-[#1a1916]">
+          <p className="mt-0.5 text-[13px] font-medium text-slate-900">
             {selected ? selected.name : "Selecciona un interesado"}
           </p>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {!selected && (
-            <div className="flex flex-col items-center justify-center gap-2.5 py-8 text-center text-[#a09d98]">
+            <div className="flex flex-col items-center justify-center gap-2.5 py-8 text-center text-slate-400">
               <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#e8e6e1] bg-[#f2f1ee]">
                 <svg
-                  className="h-[18px] w-[18px] text-[#a09d98]"
+                  className="h-[18px] w-[18px] text-slate-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -316,7 +316,7 @@ export function StakeholderMatrixClient({
                   borderColor: qBorder[playbook.id],
                 }}
               >
-                <p className="text-[15px] font-semibold text-[#1a1916]">
+                <p className="text-[15px] font-semibold text-slate-900">
                   {selected.name}
                 </p>
                 <p className="mt-0.5 text-[12px] text-[#6b6860]">
@@ -336,17 +336,17 @@ export function StakeholderMatrixClient({
               </div>
 
               <div>
-                <p className="mb-1.5 flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-wide text-[#a09d98]">
+                <p className="mb-1.5 flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-wide text-slate-400">
                   Estrategia
                   <span className="h-px flex-1 bg-[#f0ede8]" />
                 </p>
-                <div className="rounded-md border border-[#e8e6e1] bg-[#f2f1ee] px-3 py-2.5 text-[13px] font-semibold text-[#1a1916]">
+                <div className="rounded-md border border-[#e8e6e1] bg-[#f2f1ee] px-3 py-2.5 text-[13px] font-semibold text-slate-900">
                   {playbook.strategy}
                 </div>
               </div>
 
               <div>
-                <p className="mb-1.5 flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-wide text-[#a09d98]">
+                <p className="mb-1.5 flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-wide text-slate-400">
                   Tacticas
                   <span className="h-px flex-1 bg-[#f0ede8]" />
                 </p>
@@ -354,7 +354,7 @@ export function StakeholderMatrixClient({
                   {playbook.tactics.map((t, i) => (
                     <li
                       key={i}
-                      className="flex gap-2 rounded-md border border-[#f0ede8] bg-[#f2f1ee] px-2.5 py-2 text-[12px] leading-snug text-[#57534e]"
+                      className="flex gap-2 rounded-md border border-[#f0ede8] bg-[#f2f1ee] px-2.5 py-2 text-[12px] leading-snug text-slate-600"
                     >
                       <span
                         className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#2563eb]"
@@ -368,14 +368,14 @@ export function StakeholderMatrixClient({
 
               <div className="flex items-center gap-2 rounded-md border border-[#e8e6e1] bg-[#f2f1ee] px-3 py-2">
                 <span aria-hidden>{playbook.freqIcon}</span>
-                <span className="text-[12px] text-[#57534e]">
+                <span className="text-[12px] text-slate-600">
                   Comunicacion:{" "}
-                  <strong className="text-[#1a1916]">{playbook.freq}</strong>
+                  <strong className="text-slate-900">{playbook.freq}</strong>
                 </span>
               </div>
 
               {selected.observation && (
-                <div className="rounded-md border border-[#e8e6e1] bg-[#f2f1ee] px-2.5 py-2 text-[12px] italic leading-relaxed text-[#57534e]">
+                <div className="rounded-md border border-[#e8e6e1] bg-[#f2f1ee] px-2.5 py-2 text-[12px] italic leading-relaxed text-slate-600">
                   {selected.observation}
                 </div>
               )}

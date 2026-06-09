@@ -75,11 +75,11 @@ export function AdminNav() {
             href={href}
             className={
               active
-                ? "flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0f1f5c] to-[#1a3560] px-3.5 py-2 text-sm font-semibold text-white shadow-md shadow-[#0f1f5c]/25 ring-1 ring-[#c9a46c]/35 transition hover:brightness-110"
-                : "flex items-center gap-2 rounded-xl border border-[#e3d6c4] bg-[linear-gradient(180deg,#ffffff,#faf8f4)] px-3.5 py-2 text-sm font-medium text-[#3d4a5c] shadow-sm transition hover:border-[#c9a46c]/55 hover:shadow"
+                ? "flex items-center gap-2 rounded-lg bg-slate-800 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700"
+                : "flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
             }
           >
-            <span className={active ? "text-white/95" : "text-[#6b5c48]"}>{icon}</span>
+            <span className={active ? "text-white/90" : "text-slate-500"}>{icon}</span>
             {label}
           </Link>
         );

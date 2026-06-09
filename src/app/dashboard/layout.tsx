@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Lora } from "next/font/google";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -8,14 +7,7 @@ import type { RoleKey } from "@/lib/types";
 
 import { DashboardChrome } from "./dashboard-chrome";
 
-/** Auth + cookies: do not prerender at build without Supabase env. */
 export const dynamic = "force-dynamic";
-
-const dashSerif = Lora({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  variable: "--font-dash-serif",
-});
 
 function roleLabelEs(role: RoleKey): string {
   const map: Record<RoleKey, string> = {
@@ -70,9 +62,7 @@ export default async function DashboardLayout({
   const tenantInitials = tenantInitialsFromName(tenant?.name ?? "Org");
 
   return (
-    <div
-      className={`${dashSerif.variable} dash-shell mx-auto flex w-full max-w-[1680px] flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8`}
-    >
+    <div className="dash-shell mx-auto flex w-full max-w-[1680px] flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <DashboardChrome
         personDisplayName={personDisplayName}
         roleLabel={roleLabelEs(session.role)}
@@ -84,16 +74,16 @@ export default async function DashboardLayout({
         showPlatformAdmin={session.isSuperAdmin}
         mainBanner={
           session.isPlatformVisit ? (
-            <div className="mb-5 rounded-xl border border-[#c9a46c]/40 bg-[linear-gradient(135deg,#faf6ef_0%,#f3ead8_100%)] px-4 py-3 text-[13px] leading-relaxed text-[#3d2a12] ring-1 ring-[#0f1f5c]/[0.06]">
-              <p className="font-semibold text-[#0f1f5c]">
+            <div className="mb-5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-[13px] leading-relaxed text-slate-700">
+              <p className="font-semibold text-slate-900">
                 Modo consultora (sin membresía en este cliente)
               </p>
-              <p className="mt-1 text-[#4a4234]">
+              <p className="mt-1">
                 Estás operando este workspace como dueño de plataforma. Los cambios afectan datos del
                 cliente; úsalo con criterio interno. Para volver a la cartera:{" "}
                 <Link
                   href="/admin"
-                  className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/60 underline-offset-2"
+                  className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2"
                 >
                   Vista consultora
                 </Link>

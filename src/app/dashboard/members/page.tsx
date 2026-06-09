@@ -131,11 +131,11 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       </section>
 
       <section className="pmo-card p-6">
-        <h2 className="text-lg font-semibold text-zinc-900">Miembros actuales</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Miembros actuales</h2>
         <div className="mt-4 overflow-x-auto">
           <table className="pmo-table pmo-row-hover w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-left text-zinc-500">
+              <tr className="border-b border-slate-200 text-left text-slate-500">
                 <th>Nombre</th>
                 <th>Email</th>
                 <th>Rol</th>
@@ -144,7 +144,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
             <tbody>
               {members.map((member) => (
                 <tr key={member.id}>
-                  <td className="font-medium text-zinc-900">{member.user.name ?? "-"}</td>
+                  <td className="font-medium text-slate-900">{member.user.name ?? "-"}</td>
                   <td>{member.user.email}</td>
                   <td>
                     <span className="pmo-badge pmo-badge--blue">
@@ -155,7 +155,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
               ))}
               {members.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="py-8 text-center text-zinc-500">
+                  <td colSpan={3} className="py-8 text-center text-slate-500">
                     Aun no hay miembros en este tenant.
                   </td>
                 </tr>
@@ -166,8 +166,8 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       </section>
 
       <section className="pmo-card p-6">
-        <h2 className="text-lg font-semibold text-zinc-900">Invitar o actualizar rol</h2>
-        <p className="mt-1 text-sm text-zinc-600">
+        <h2 className="text-lg font-semibold text-slate-900">Invitar o actualizar rol</h2>
+        <p className="mt-1 text-sm text-slate-600">
           Si el usuario no existe, se envia invitacion por email y se asigna al aceptar.
         </p>
         {appUrl.needsAttention && (
@@ -208,7 +208,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
             </select>
             <button
               type="submit"
-              className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 sm:col-span-3"
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 sm:col-span-3"
             >
               Guardar acceso
             </button>

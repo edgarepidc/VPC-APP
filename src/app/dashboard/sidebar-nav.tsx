@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { uiSectionLabel } from "@/lib/ui-classes";
+
 import { DASHBOARD_NAV_ITEMS } from "./nav-config";
 
 type SidebarNavProps = {
@@ -15,9 +17,7 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
 
   return (
     <nav className="mt-6 space-y-1.5 text-sm">
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#8a8278]">
-        Acceso rápido
-      </p>
+      <p className={uiSectionLabel}>Acceso rápido</p>
       {DASHBOARD_NAV_ITEMS.map((item) => {
         const active = pathname === item.href;
         return (
@@ -26,8 +26,8 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
             href={item.href}
             onClick={onLinkClick}
             className={[
-              "dash-nav-link flex items-center gap-2.5 rounded-xl px-3 py-2.5 font-medium transition-colors",
-              active ? "dash-nav-link--active text-[#0f1f5c]" : "text-[#5c5346]",
+              "dash-nav-link flex items-center gap-2.5 rounded-lg px-3 py-2.5 font-medium transition-colors",
+              active ? "dash-nav-link--active text-slate-900" : "text-slate-600",
             ].join(" ")}
             aria-current={active ? "page" : undefined}
           >
@@ -41,7 +41,7 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
 
       {showPlatformAdmin && (
         <Link
-          className="mt-2 flex items-center gap-2.5 rounded-xl border border-[#c9a46c]/45 bg-[linear-gradient(135deg,#faf6ef_0%,#f3ead8_100%)] px-3 py-2.5 text-sm font-semibold text-[#3d2a12] shadow-sm ring-1 ring-[#0f1f5c]/8 transition hover:border-[#c9a46c]/70"
+          className="mt-2 flex items-center gap-2.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-400 hover:bg-slate-100"
           href="/admin"
           onClick={onLinkClick}
         >

@@ -208,12 +208,12 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
       </div>
 
       <VpcAdminInsetShell innerClassName="p-4 sm:p-5">
-        <p className="text-sm leading-relaxed text-[#4a4234]">
-          Este módulo es el <strong className="text-[#0f1f5c]">alta de cliente</strong> en la
+        <p className="text-sm leading-relaxed text-slate-700">
+          Este módulo es el <strong className="text-slate-900">alta de cliente</strong> en la
           plataforma. Para operar dentro del cliente usa{" "}
           <Link
             href="/admin"
-            className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+            className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
           >
             Cartera de clientes
           </Link>
@@ -227,7 +227,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
         </p>
       )}
       {params.ok && !newTenantRow && (
-        <p className="rounded-md border border-[#c9a46c]/40 bg-[linear-gradient(135deg,#faf8f4_0%,#f3ead8_100%)] p-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-[#0f1f5c]/[0.05]">
+        <p className="rounded-md border border-slate-300 bg-white p-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-slate-200">
           {params.ok === "logo_subido"
             ? "Logo del cliente actualizado. Se mostrará en el menú del workspace al entrar a esa organización."
             : params.ok === "logo_quitado"
@@ -238,7 +238,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
 
       {newTenantRow && (
         <VpcAdminInsetShell innerClassName="p-5 text-sm text-[#2a2412]">
-          <p className="font-semibold text-[#0f1f5c]">Organización creada</p>
+          <p className="font-semibold text-slate-900">Organización creada</p>
           {logoWarnMessage ? (
             <p className="mt-3 rounded-lg border border-amber-400/60 bg-amber-50 px-3 py-2.5 text-[13px] leading-relaxed text-amber-950">
               El logo no se pudo subir: {logoWarnMessage} Podés volver a intentarlo en la tabla de
@@ -246,10 +246,10 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
             </p>
           ) : null}
           <p className="mt-2">
-            <span className="font-medium text-[#1a3052]">{newTenantRow.name}</span>{" "}
-            <span className="text-[#6b5c48]">({newTenantRow.slug})</span>
+            <span className="font-medium text-slate-800">{newTenantRow.name}</span>{" "}
+            <span className="text-slate-600">({newTenantRow.slug})</span>
           </p>
-          <p className="mt-2 text-[#4a4234]">
+          <p className="mt-2 text-slate-700">
             Puedes entrar ya al workspace como consultora, o ir a la cartera para
             seguir creando clientes.
           </p>
@@ -258,14 +258,14 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
               <input type="hidden" name="tenantId" value={newTenantRow.id} />
               <button
                 type="submit"
-                className="rounded-md bg-[#0f1f5c] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#152d4f] active:scale-[0.99]"
+                className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#152d4f] active:scale-[0.99]"
               >
                 Entrar al workspace ahora
               </button>
             </form>
             <Link
               href="/admin"
-              className="inline-flex items-center rounded-md border border-[#c9a46c]/55 bg-white px-4 py-2 text-sm font-medium text-[#0f1f5c] shadow-sm transition hover:bg-[#faf8f4]"
+              className="inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50"
             >
               Ir a la cartera
             </Link>
@@ -274,13 +274,13 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
       )}
 
       <VpcAdminInsetShell innerClassName="p-6">
-        <h2 className="text-base font-semibold text-[#0f1f5c]">
+        <h2 className="text-base font-semibold text-slate-900">
           Nueva organización (tenant)
         </h2>
-        <p className="mt-1 text-sm text-[#5c5346]">
+        <p className="mt-1 text-sm text-slate-600">
           Se crean roles base (owner, admin, etc.) vacíos. Los usuarios entran por invitación desde{" "}
           <strong>Miembros</strong> en el workspace. Podés adjuntar un{" "}
-          <strong className="text-[#0f1f5c]">logo del cliente</strong> aquí (opcional): se muestra en
+          <strong className="text-slate-900">logo del cliente</strong> aquí (opcional): se muestra en
           el menú lateral junto al usuario. También podés subirlo o cambiarlo después en la tabla de
           organizaciones.
         </p>
@@ -289,10 +289,10 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
           encType="multipart/form-data"
           className="mt-4 grid gap-3 sm:grid-cols-2"
         >
-          <div className="sm:col-span-2 rounded-xl border-2 border-dashed border-[#0f1f5c]/25 bg-[linear-gradient(145deg,#f0f4fb_0%,#faf8f4_100%)] p-4 ring-1 ring-[#c9a46c]/30">
-            <p className="text-sm font-semibold text-[#0f1f5c]">Imagen del cliente (opcional)</p>
-            <p className="mt-1 text-[12px] leading-snug text-[#5c5346]">
-              Se muestra en el <strong className="text-[#0f1f5c]">menú lateral</strong> del workspace
+          <div className="sm:col-span-2 rounded-xl border-2 border-dashed border-slate-300 bg-white p-4 ring-1 ring-slate-200">
+            <p className="text-sm font-semibold text-slate-900">Imagen del cliente (opcional)</p>
+            <p className="mt-1 text-[12px] leading-snug text-slate-600">
+              Se muestra en el <strong className="text-slate-900">menú lateral</strong> del workspace
               junto al usuario. Formatos: PNG, JPEG o WebP · máximo 2 MB.
             </p>
             <input
@@ -301,37 +301,37 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
               name="logo"
               accept="image/png,image/jpeg,image/webp"
               aria-label="Archivo de imagen del logo del cliente"
-              className="mt-3 block w-full min-w-0 max-w-lg text-[13px] text-[#1a1916] file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-gradient-to-b file:from-[#152d4f] file:to-[#0f1f5c] file:px-4 file:py-2.5 file:text-xs file:font-semibold file:text-white file:shadow-sm"
+              className="mt-3 block w-full min-w-0 max-w-lg text-[13px] text-slate-900 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-800 file:px-4 file:py-2.5 file:text-xs file:font-semibold file:text-white file:shadow-sm"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-[#6b5c48]">Nombre</label>
+            <label className="text-xs font-medium text-slate-600">Nombre</label>
             <input
               name="name"
               required
-              className="mt-1 w-full rounded-lg border border-[#e3d6c4] bg-white px-3 py-2 text-sm text-[#1a1916] focus:border-[#0f1f5c]/40 focus:outline-none focus:ring-2 focus:ring-[#0f1f5c]/15"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
               placeholder="Mobility ADO"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-[#6b5c48]">Slug</label>
+            <label className="text-xs font-medium text-slate-600">Slug</label>
             <input
               name="slug"
               required
               pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              className="mt-1 w-full rounded-lg border border-[#e3d6c4] bg-white px-3 py-2 text-sm text-[#1a1916] focus:border-[#0f1f5c]/40 focus:outline-none focus:ring-2 focus:ring-[#0f1f5c]/15"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
               placeholder="mobility-ado"
             />
-            <p className="mt-1 text-xs text-[#8a7d6f]">
+            <p className="mt-1 text-xs text-slate-500">
               URL interna; minúsculas y guiones. Único en toda la plataforma.
             </p>
           </div>
           <div className="sm:col-span-2">
-            <label className="text-xs font-medium text-[#6b5c48]">Plan</label>
+            <label className="text-xs font-medium text-slate-600">Plan</label>
             <select
               name="plan"
               defaultValue="starter"
-              className="mt-1 w-full max-w-xs rounded-lg border border-[#e3d6c4] bg-white px-3 py-2 text-sm sm:w-auto"
+              className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm sm:w-auto"
             >
               {TENANT_PLAN_KEYS.map((key) => (
                 <option key={key} value={key}>
@@ -339,7 +339,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-[#8a7d6f]">
+            <p className="mt-1 text-xs text-slate-500">
               Límites actuales por plan (proyectos / puestos miembro+invitaciones):{" "}
               {TENANT_PLAN_KEYS.map((k) => (
                 <span key={k} className="mr-2 inline-block">
@@ -352,7 +352,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
           <div className="sm:col-span-2">
             <button
               type="submit"
-              className="rounded-lg bg-gradient-to-b from-[#152d4f] to-[#0f1f5c] px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-[#c9a46c]/35 transition hover:from-[#1a3a63] hover:to-[#12224d] active:scale-[0.99]"
+              className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-700 active:scale-[0.99]"
             >
               Crear organización
             </button>
@@ -361,42 +361,42 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
       </VpcAdminInsetShell>
 
       <VpcAdminInsetShell innerClassName="overflow-hidden p-0">
-        <h2 className="border-b border-[#e8dfd0] bg-[linear-gradient(180deg,#faf8f4,#ffffff)] px-5 py-3.5 text-base font-semibold text-[#0f1f5c]">
+        <h2 className="border-b border-slate-200 bg-white px-5 py-3.5 text-base font-semibold text-slate-900">
           Organizaciones ({tenants.length})
         </h2>
         <div className="overflow-x-auto px-1 pb-1">
           <table className="w-full min-w-[860px] border-collapse text-[13px]">
             <thead>
-              <tr className="border-b border-[#e8dfd0] text-left">
-                <th className="px-4 py-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+              <tr className="border-b border-slate-200 text-left">
+                <th className="px-4 py-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Logo cliente
                 </th>
-                <th className="px-4 py-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="px-4 py-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Nombre
                 </th>
-                <th className="px-4 py-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="px-4 py-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Slug
                 </th>
-                <th className="px-4 py-3 font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="px-4 py-3 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Plan
                 </th>
-                <th className="px-4 py-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="px-4 py-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Proyectos
                 </th>
-                <th className="px-4 py-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="px-4 py-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Miembros
                 </th>
-                <th className="px-4 py-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-[#a09d98]">
+                <th className="px-4 py-3 text-right font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
                   Eliminar
                 </th>
               </tr>
             </thead>
             <tbody>
               {tenants.map((t) => (
-                <tr key={t.id} className="border-b border-[#f0ebe0] transition hover:bg-[#faf6ef]">
+                <tr key={t.id} className="border-b border-[#f0ebe0] transition hover:bg-slate-50">
                   <td className="max-w-[220px] px-4 py-3 align-top">
                     <div className="flex flex-col gap-2 sm:max-w-[200px]">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#e3d6c4] bg-white shadow-sm ring-1 ring-[#0f1f5c]/[0.05]">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-200">
                         {t.logoUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element -- URL pública Supabase Storage
                           <img
@@ -405,7 +405,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                             className="h-full w-full object-contain p-0.5"
                           />
                         ) : (
-                          <span className="text-[9px] font-semibold uppercase tracking-wide text-[#c9a46c]">
+                          <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-600">
                             Sin logo
                           </span>
                         )}
@@ -416,11 +416,11 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                           type="file"
                           name="logo"
                           accept="image/png,image/jpeg,image/webp"
-                          className="w-full min-w-0 text-[11px] text-[#57534e] file:mr-1 file:rounded-md file:border-0 file:bg-gradient-to-b file:from-[#152d4f] file:to-[#0f1f5c] file:px-2 file:py-1 file:text-[11px] file:font-semibold file:text-white"
+                          className="w-full min-w-0 text-[11px] text-slate-600 file:mr-1 file:rounded-md file:border-0 file:bg-slate-800 file:px-2 file:py-1 file:text-[11px] file:font-semibold file:text-white"
                         />
                         <button
                           type="submit"
-                          className="w-fit rounded-lg bg-gradient-to-b from-[#152d4f] to-[#0f1f5c] px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm ring-1 ring-[#c9a46c]/30 hover:from-[#1a3a63] hover:to-[#12224d]"
+                          className="w-fit rounded-lg bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm ring-1 ring-slate-200 hover:bg-slate-700"
                         >
                           Subir imagen
                         </button>
@@ -436,21 +436,21 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                           </button>
                         </form>
                       ) : null}
-                      <p className="text-[10px] leading-snug text-[#9a8b78]">
+                      <p className="text-[10px] leading-snug text-slate-400">
                         Visible en el menú lateral del workspace junto al usuario.
                       </p>
                     </div>
                   </td>
-                  <td className="px-4 py-3 font-medium text-[#0f1f5c]">{t.name}</td>
-                  <td className="px-4 py-3 font-mono text-[12px] text-[#57534e]">{t.slug}</td>
-                  <td className="px-4 py-3 text-[#57534e]">{t.plan}</td>
+                  <td className="px-4 py-3 font-medium text-slate-900">{t.name}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-slate-600">{t.slug}</td>
+                  <td className="px-4 py-3 text-slate-600">{t.plan}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{t._count.projects}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{t._count.memberships}</td>
                   <td className="px-4 py-3 text-right align-top">
                     <div className="flex flex-col items-end gap-2">
                       <Link
                         href={`/admin/invite?tenantId=${encodeURIComponent(t.id)}`}
-                        className="text-[12px] font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                        className="text-[12px] font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
                       >
                         Invitar
                       </Link>

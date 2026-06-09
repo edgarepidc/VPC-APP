@@ -59,47 +59,47 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
     return (
       <main className="space-y-4">
         <section className="pmo-card p-6">
-          <h1 className="text-lg font-semibold text-zinc-900">No se pudieron cargar los entregables</h1>
-          <p className="mt-2 text-sm text-zinc-600">
+          <h1 className="text-lg font-semibold text-slate-900">No se pudieron cargar los entregables</h1>
+          <p className="mt-2 text-sm text-slate-600">
             La app ya está desplegada, pero la consulta a la base de datos falló. Suele pasar cuando{" "}
             <strong>falta aplicar migraciones Prisma</strong> en la misma base que usa Vercel
             (columnas nuevas del tracker).
           </p>
           {looksLikeSchema ? (
-            <ul className="mt-4 list-inside list-disc space-y-2 text-sm text-zinc-700">
+            <ul className="mt-4 list-inside list-disc space-y-2 text-sm text-slate-700">
               <li>
                 En GitHub → <strong>Actions</strong> → workflow <strong>Database migrate</strong>:
-                confirma que el último run sea verde (secreto <code className="rounded bg-zinc-100 px-1">DATABASE_URL</code>{" "}
+                confirma que el último run sea verde (secreto <code className="rounded bg-slate-100 px-1">DATABASE_URL</code>{" "}
                 apuntando a <strong>esta misma</strong> base que Vercel).
               </li>
               <li>
                 En Vercel → proyecto → <strong>Settings → Environment Variables</strong>:{" "}
-                <code className="rounded bg-zinc-100 px-1">DATABASE_URL</code> debe ser la misma instancia
+                <code className="rounded bg-slate-100 px-1">DATABASE_URL</code> debe ser la misma instancia
                 donde aplicaste migraciones.
               </li>
               <li>
                 Alternativa: en Supabase → <strong>SQL Editor</strong>, ejecuta el SQL de{" "}
-                <code className="rounded bg-zinc-100 px-1 text-xs">
+                <code className="rounded bg-slate-100 px-1 text-xs">
                   prisma/migrations/20260513100000_deliverable_tracker_fields/migration.sql
                 </code>{" "}
                 (y la de tareas si aún no:{" "}
-                <code className="rounded bg-zinc-100 px-1 text-xs">
+                <code className="rounded bg-slate-100 px-1 text-xs">
                   20260512120000_task_assignee_fk
                 </code>
                 ).
               </li>
             </ul>
           ) : null}
-          <details className="mt-4 rounded-md border border-zinc-200 bg-zinc-50 p-3">
-            <summary className="cursor-pointer text-sm font-medium text-zinc-800">
+          <details className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+            <summary className="cursor-pointer text-sm font-medium text-slate-800">
               Detalle técnico (para soporte / logs)
             </summary>
-            <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all text-xs text-zinc-700">
+            <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all text-xs text-slate-700">
               {loadError}
             </pre>
           </details>
           <p className="mt-4 text-sm">
-            <Link href="/dashboard/pmo" className="font-medium text-zinc-700 underline">
+            <Link href="/dashboard/pmo" className="font-medium text-slate-700 underline">
               ← Volver al tablero PMO
             </Link>
           </p>
@@ -132,7 +132,7 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
   return (
     <main className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-        <Link href="/dashboard/pmo" className="font-medium text-zinc-600 underline">
+        <Link href="/dashboard/pmo" className="font-medium text-slate-600 underline">
           ← Volver al tablero PMO
         </Link>
       </div>
@@ -150,7 +150,7 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
 
       {projects.length === 0 ? (
         <section className="pmo-card p-6">
-          <p className="text-sm text-zinc-700">
+          <p className="text-sm text-slate-700">
             No hay proyectos.{" "}
             <Link href="/dashboard/projects" className="font-medium underline">
               Crea un proyecto

@@ -27,7 +27,7 @@ export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
       <div className="overflow-x-auto">
         <table className="pmo-table pmo-row-hover w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-b border-zinc-200 text-left text-zinc-500">
+            <tr className="border-b border-slate-200 text-left text-slate-500">
               <th>Tarea</th>
               <th>Estado</th>
               <th>Proyecto</th>
@@ -41,20 +41,20 @@ export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
               const st = normalizeTaskStatus(task.status);
               return (
                 <tr key={task.id}>
-                  <td className="font-medium text-zinc-900">{task.title}</td>
+                  <td className="font-medium text-slate-900">{task.title}</td>
                   <td>
                     <span className="pmo-badge">
                       {TASK_STATUS_LABEL[st as TaskKanbanStatus]}
                     </span>
                   </td>
-                  <td className="text-zinc-700">{task.projectName}</td>
-                  <td className="text-zinc-600">
+                  <td className="text-slate-700">{task.projectName}</td>
+                  <td className="text-slate-600">
                     {task.assigneeName?.trim() ||
                       (task.assigneeEmail
                         ? task.assigneeEmail.split("@")[0]
                         : "—")}
                   </td>
-                  <td className="text-zinc-600">
+                  <td className="text-slate-600">
                     {task.dueDate
                       ? new Date(task.dueDate).toLocaleDateString()
                       : "—"}
@@ -64,7 +64,7 @@ export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
                       <button
                         type="button"
                         onClick={() => setEditTask(task)}
-                        className="text-xs font-medium text-zinc-700 underline"
+                        className="text-xs font-medium text-slate-700 underline"
                       >
                         Editar
                       </button>
@@ -77,7 +77,7 @@ export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
               <tr>
                 <td
                   colSpan={canWrite ? 6 : 5}
-                  className="py-8 text-center text-zinc-500"
+                  className="py-8 text-center text-slate-500"
                 >
                   No hay tareas con los filtros actuales.
                 </td>

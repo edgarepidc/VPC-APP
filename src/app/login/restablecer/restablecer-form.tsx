@@ -4,6 +4,13 @@ import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  uiAlertError,
+  uiAlertWarning,
+  uiButtonPrimary,
+  uiInput,
+  uiLink,
+} from "@/lib/ui-classes";
 import { supabaseAuthCookieOptions } from "@/utils/supabase/cookie-options";
 
 type RestablecerFormProps = {
@@ -62,11 +69,7 @@ export function RestablecerForm({
           }
           return;
         }
-        window.history.replaceState(
-          null,
-          "",
-          `${window.location.pathname}`,
-        );
+        window.history.replaceState(null, "", `${window.location.pathname}`);
       }
 
       const {
@@ -118,35 +121,22 @@ export function RestablecerForm({
   }
 
   if (!envOk) {
-    return (
-      <p className="rounded-md border border-amber-200 bg-amber-50 p-2 text-sm text-amber-900">
-        No hay configuracion publica de Supabase. Revisa variables de entorno.
-      </p>
-    );
+    return <p className={uiAlertWarning}>No hay configuracion publica de Supabase. Revisa variables de entorno.</p>;
   }
 
   if (phase === "loading") {
-    return (
-      <p className="text-sm text-zinc-600">Comprobando enlace de recuperacion…</p>
-    );
+    return <p className="text-sm text-slate-600">Comprobando enlace de recuperacion…</p>;
   }
 
   if (phase === "no-session") {
     return (
       <div className="space-y-3">
-        {error && (
-          <p className="rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
-            {error}
-          </p>
-        )}
-        <p className="text-sm text-zinc-600">
+        {error && <p className={uiAlertError}>{error}</p>}
+        <p className="text-sm text-slate-600">
           No hay sesion de recuperacion activa. El enlace puede haber expirado o
           ya se uso.
         </p>
-        <Link
-          className="inline-block text-sm font-medium text-zinc-900 underline"
-          href="/login/olvido"
-        >
+        <Link className={uiLink} href="/login/olvido">
           Solicitar un correo nuevo
         </Link>
       </div>
@@ -161,11 +151,7 @@ export function RestablecerForm({
         void handleSubmit(new FormData(e.currentTarget));
       }}
     >
-      {error && (
-        <p className="rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
-          {error}
-        </p>
-      )}
+      {error && <p className={uiAlertError}>{error}</p>}
       <input
         name="password"
         type="password"
@@ -174,7 +160,7 @@ export function RestablecerForm({
         disabled={pending}
         autoComplete="new-password"
         placeholder="Nueva contrasena (min. 8 caracteres)"
-        className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+        className={uiInput}
       />
       <input
         name="confirm"
@@ -184,13 +170,9 @@ export function RestablecerForm({
         disabled={pending}
         autoComplete="new-password"
         placeholder="Repite la contrasena"
-        className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+        className={uiInput}
       />
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-60"
-      >
+      <button type="submit" disabled={pending} className={uiButtonPrimary}>
         {pending ? "Guardando…" : "Guardar contrasena"}
       </button>
     </form>

@@ -7,7 +7,7 @@ export default function RoiMeetingsPage() {
       <iframe
         title="ROI de Reuniones — Calculadora de Inversión"
         src="/roi-meetings.html"
-        className="min-h-[920px] w-full flex-1 rounded-xl border border-zinc-200 bg-[#f9f9f8] shadow-sm"
+        className="min-h-[920px] w-full flex-1 rounded-xl border border-slate-200 bg-[#f9f9f8] shadow-sm"
         sandbox="allow-scripts allow-same-origin"
       />
     </main>

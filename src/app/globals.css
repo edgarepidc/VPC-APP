@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  /* Alineado con mini-herramientas HTML (stakeholder-matrix, risk-manager) */
-  --background: #f7f6f3;
-  --foreground: #1a1916;
-  --pmo-navy: #0f1f5c;
-  --pmo-navy-2: #1b2a6b;
-  --pmo-border: #cbd5e1;
-  --pmo-muted: #64748b;
-  --pmo-card: #ffffff;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --muted: #64748b;
+  --primary: #1e293b;
+  --primary-hover: #334155;
 }
 
 @theme inline {
@@ -24,41 +24,41 @@ body {
   font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
+/* ─── Shell de aplicación (slate, plano) ─── */
+.app-shell {
+  min-height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.app-panel {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.app-hero {
+  border-radius: 0.75rem;
+  border: 1px solid #334155;
+  background: var(--primary);
+  color: #f8fafc;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+
 .pmo-hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid rgba(201, 164, 108, 0.4);
-  background: linear-gradient(135deg, #0f1f5c 0%, #152d4f 52%, #261c16 100%);
-  color: #fff;
-  box-shadow:
-    0 16px 48px -18px rgba(15, 31, 92, 0.45),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
-}
-
-.pmo-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 85% 55% at 88% 8%,
-    rgba(201, 164, 108, 0.22) 0%,
-    transparent 52%
-  );
-}
-
-.pmo-hero > * {
-  position: relative;
-  z-index: 1;
+  border-radius: 0.75rem;
+  border: 1px solid #334155;
+  background: var(--primary);
+  color: #f8fafc;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 
 .pmo-card {
-  border-radius: 12px;
-  border: 1px solid var(--pmo-border);
-  background: var(--pmo-card);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
 .pmo-title {
@@ -68,13 +68,13 @@ body {
 }
 
 .pmo-sub {
-  color: var(--pmo-muted);
+  color: var(--muted);
   font-size: 0.9rem;
 }
 
 .pmo-table thead tr {
-  border-bottom: 1px solid #e2e8f0;
-  color: #64748b;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
 }
 
 .pmo-table tbody tr {
@@ -129,67 +129,46 @@ body {
 .pmo-textarea {
   width: 100%;
   border-radius: 0.5rem;
-  border: 1px solid #d4d4d8;
+  border: 1px solid var(--border-strong);
   background: #fff;
   padding: 0.55rem 0.75rem;
   font-size: 0.875rem;
-  color: #18181b;
+  color: var(--foreground);
 }
 
 .pmo-input:focus,
 .pmo-select:focus,
 .pmo-textarea:focus {
   outline: 2px solid transparent;
-  border-color: #1e3a8a;
-  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.14);
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.15);
 }
 
-/* ─── Dashboard shell: paleta VPC (pergamino + acentos navy / bronce) ─── */
+/* ─── Dashboard shell (alias .dash-shell → slate plano) ─── */
 .dash-shell {
   position: relative;
   min-height: 100%;
-  isolation: isolate;
-  background: radial-gradient(
-      900px 420px at 88% 0%,
-      rgba(201, 164, 108, 0.18),
-      transparent 50%
-    ),
-    radial-gradient(720px 380px at 0% 100%, rgba(15, 31, 92, 0.08), transparent 55%),
-    linear-gradient(175deg, #faf8f4 0%, #f5f0e8 40%, #eef1f6 100%);
-  color: #3d3419;
+  background: var(--background);
+  color: var(--foreground);
 }
 
-.dash-shell::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: radial-gradient(
-    420px 260px at 12% 18%,
-    rgba(15, 31, 92, 0.06),
-    transparent 70%
-  );
-}
-
-/* Panel lateral / hoja móvil */
 .dash-nav-panel {
   position: relative;
   z-index: 1;
-  border-radius: 1.25rem;
-  border: 1px solid rgba(201, 164, 108, 0.28);
-  background: linear-gradient(165deg, #ffffff 0%, #faf8f4 100%);
-  box-shadow: 0 12px 40px rgba(15, 31, 92, 0.08);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
   color: var(--foreground);
 }
 
 .dash-content-shell {
   position: relative;
   z-index: 1;
-  border-radius: 1.25rem;
-  border: 1px solid rgba(201, 164, 108, 0.22);
-  background: linear-gradient(165deg, #ffffff 0%, #faf8f4 100%);
-  box-shadow: 0 16px 44px rgba(15, 31, 92, 0.09);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
   color: var(--foreground);
 }
 
@@ -198,19 +177,18 @@ body {
 }
 
 .dash-nav-panel .dash-nav-link:hover {
-  background: rgba(201, 164, 108, 0.12);
-  border-color: rgba(201, 164, 108, 0.35);
+  background: #f1f5f9;
+  border-color: var(--border);
 }
 
 .dash-nav-panel .dash-nav-link--active {
-  background: linear-gradient(135deg, rgba(15, 31, 92, 0.1) 0%, rgba(21, 45, 79, 0.12) 100%);
-  border-color: rgba(201, 164, 108, 0.45);
-  box-shadow: 0 0 0 1px rgba(15, 31, 92, 0.08);
-  color: #0f1f5c;
+  background: #f1f5f9;
+  border-color: var(--border-strong);
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .dash-identity-name {
-  font-family: var(--font-dash-serif), ui-serif, Georgia, serif;
   letter-spacing: -0.02em;
 }
 
@@ -245,12 +223,10 @@ body {
   gap: 0.5rem;
   padding: 0.55rem 1rem;
   border-radius: 9999px;
-  border: 1px solid rgba(201, 164, 108, 0.35);
-  background: linear-gradient(180deg, #ffffff 0%, #faf8f4 100%);
-  color: #0f1f5c;
-  box-shadow: 0 8px 24px rgba(15, 31, 92, 0.12);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -258,6 +234,6 @@ body {
 }
 
 .dash-menu-fab:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #f3ead8 100%);
+  background: #f8fafc;
   transform: translateY(-1px);
 }

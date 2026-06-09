@@ -102,10 +102,8 @@ export function DashboardChrome({
 
   const panelBody = (opts: { onNav?: () => void; showCollapseHint?: boolean }) => (
     <>
-      <div className="flex items-start gap-3 border-b border-[#e8dfd0] pb-4">
-        <div
-          className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#c9a46c]/45 bg-[linear-gradient(165deg,#ffffff_0%,#faf8f4_100%)] p-1 shadow-sm ring-1 ring-[#0f1f5c]/[0.05]"
-        >
+      <div className="flex items-start gap-3 border-b border-slate-200 pb-4">
+        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
           {tenantLogoUrl ? (
             <Image
               src={tenantLogoUrl}
@@ -116,23 +114,20 @@ export function DashboardChrome({
               unoptimized
             />
           ) : (
-            <div
-              className="flex h-full w-full items-center justify-center rounded-lg text-xs font-bold leading-tight tracking-tight text-[#c9a46c]"
-              style={{ background: "linear-gradient(145deg,#0f1f5c 0%,#152d4f 100%)" }}
-            >
+            <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-800 text-xs font-bold leading-tight tracking-tight text-slate-100">
               {tenantInitials}
             </div>
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="dash-identity-name text-lg font-semibold leading-tight text-[#0f1f5c]">
+          <p className="dash-identity-name text-lg font-semibold leading-tight text-slate-900">
             {personDisplayName}
           </p>
-          <p className="mt-1 text-[13px] font-medium text-[#5c5346]">{roleLabel}</p>
-          <p className="mt-0.5 truncate text-[12px] text-[#6b5c48]">
+          <p className="mt-1 text-[13px] font-medium text-slate-600">{roleLabel}</p>
+          <p className="mt-0.5 truncate text-[12px] text-slate-500">
             {tenantName} · {tenantSlug}
           </p>
-          <p className="mt-1 text-[11px] font-medium capitalize leading-snug text-[#8a8278]">
+          <p className="mt-1 text-[11px] font-medium capitalize leading-snug text-slate-500">
             {dateLabel}
           </p>
         </div>
@@ -145,7 +140,7 @@ export function DashboardChrome({
           <button
             type="button"
             onClick={() => persistSidebarHidden(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#e3d6c4] bg-[#faf8f4] px-3 py-2.5 text-sm font-medium text-[#0f1f5c] transition hover:border-[#c9a46c]/60 hover:bg-[#f5efe3]"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:border-slate-300 hover:bg-slate-100"
           >
             <span aria-hidden>⤢</span>
             Ocultar menú
@@ -156,7 +151,7 @@ export function DashboardChrome({
       <form action={signOutAction} className="mt-4">
         <button
           type="submit"
-          className="w-full rounded-xl border border-[#e3d6c4] bg-white px-3 py-2.5 text-sm font-medium text-[#0f1f5c] transition hover:border-[#c9a46c]/55 hover:bg-[#faf8f4]"
+          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:border-slate-300 hover:bg-slate-50"
         >
           Cerrar sesión
         </button>
@@ -190,7 +185,7 @@ export function DashboardChrome({
             aria-labelledby={sheetTitleId}
             className="dash-bottom-sheet dash-nav-panel absolute bottom-0 left-0 right-0 max-h-[min(85dvh,640px)] overflow-y-auto rounded-t-2xl border-b-0 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl"
           >
-            <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-[#d4c4b0]" aria-hidden />
+            <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-slate-300" aria-hidden />
             <p id={sheetTitleId} className="sr-only">
               Menú y accesos
             </p>
@@ -202,7 +197,7 @@ export function DashboardChrome({
       <button
         type="button"
         className={[
-          "dash-menu-fab inline-flex items-center gap-2 rounded-full border border-[#c9a46c]/35 px-4 py-2 text-sm font-semibold text-[#0f1f5c] shadow-md backdrop-blur-sm",
+          "dash-menu-fab inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md",
           "left-4 top-[max(1rem,env(safe-area-inset-top))] md:top-[6.5rem]",
           mobileMenuOpen ? "max-md:hidden" : "max-md:inline-flex",
           desktopSidebarHidden ? "md:inline-flex" : "md:hidden",

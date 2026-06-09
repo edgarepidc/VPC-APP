@@ -140,14 +140,14 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
   return (
     <main className="space-y-6">
       <section className="pmo-card p-6">
-        <h1 className="pmo-title text-zinc-900">Proyectos</h1>
-        <p className="mt-1 text-sm text-zinc-600">
+        <h1 className="pmo-title text-slate-900">Proyectos</h1>
+        <p className="mt-1 text-sm text-slate-600">
           Organización:{" "}
-          <span className="font-medium text-zinc-800">
+          <span className="font-medium text-slate-800">
             {tenant?.name ?? "—"}
           </span>
           {tenant?.slug ? (
-            <span className="text-zinc-500"> ({tenant.slug})</span>
+            <span className="text-slate-500"> ({tenant.slug})</span>
           ) : null}
         </p>
         {usage && (
@@ -172,23 +172,23 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
         )}
 
         {canWrite && (
-          <section className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50/80 p-4">
-            <h2 className="text-sm font-semibold text-zinc-900">
+          <section className="mt-6 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+            <h2 className="text-sm font-semibold text-slate-900">
               Nuevo proyecto
             </h2>
             <form action={createProjectAction} className="mt-3 grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-zinc-600">Nombre</label>
+                <label className="text-xs font-medium text-slate-600">Nombre</label>
                 <input
                   name="name"
                   required
                   maxLength={200}
                   placeholder="Ej. Implementación PMO"
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-zinc-600">
+                <label className="text-xs font-medium text-slate-600">
                   Descripción (opcional)
                 </label>
                 <textarea
@@ -196,13 +196,13 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
                   rows={2}
                   maxLength={2000}
                   placeholder="Objetivo o alcance breve"
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
               <div className="sm:col-span-2">
                 <button
                   type="submit"
-                  className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+                  className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
                 >
                   Crear proyecto
                 </button>
@@ -221,10 +221,10 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
 
       <section className="pmo-card overflow-hidden p-0">
         <div className="overflow-x-auto p-6 pt-4">
-          <h2 className="text-sm font-semibold text-zinc-800">Listado</h2>
+          <h2 className="text-sm font-semibold text-slate-800">Listado</h2>
           <table className="pmo-table pmo-row-hover mt-3 w-full min-w-[680px] text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-left text-zinc-500">
+              <tr className="border-b border-slate-200 text-left text-slate-500">
                 <th>Proyecto</th>
                 <th>Estado</th>
                 <th>Descripción</th>
@@ -238,13 +238,13 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
                 const statusBadge = getProjectStatusBadge(project.status);
                 return (
                   <tr key={project.id}>
-                    <td className="font-medium text-zinc-900">{project.name}</td>
+                    <td className="font-medium text-slate-900">{project.name}</td>
                     <td>
                       <span className={statusBadge.className}>
                         {statusBadge.label}
                       </span>
                     </td>
-                    <td className="text-zinc-600">
+                    <td className="text-slate-600">
                       {project.description?.trim() ? project.description : "—"}
                     </td>
                     {canWrite ? (
@@ -272,7 +272,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
                 <tr>
                   <td
                     colSpan={colCount}
-                    className="py-8 text-center text-zinc-500"
+                    className="py-8 text-center text-slate-500"
                   >
                     Aún no hay proyectos.{" "}
                     {canWrite

@@ -251,7 +251,7 @@ ${D}`;
     <div className="space-y-6 text-[#1a1917]">
       <header className="sticky top-0 z-10 -mx-1 flex items-center justify-between border-b border-[#e4e2dc] bg-[#fafaf8]/95 px-1 py-3 backdrop-blur sm:py-4">
         <div className="flex items-center gap-2.5">
-          <div className="grid h-7 w-7 place-items-center rounded-md bg-zinc-900 font-mono text-[11px] font-medium text-white">
+          <div className="grid h-7 w-7 place-items-center rounded-md bg-slate-900 font-mono text-[11px] font-medium text-white">
             RC
           </div>
           <div>
@@ -532,7 +532,7 @@ ${D}`;
               <div className="flex flex-wrap gap-2">
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
+                  className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
                 >
                   + Agregar riesgo
                 </button>
@@ -621,7 +621,7 @@ ${D}`;
                   >
                     <td className="px-3 py-3 align-middle text-stone-700">{risk.project.name}</td>
                     <td className="max-w-[200px] px-3 py-3 align-middle">
-                      <div className="font-medium leading-snug text-zinc-900">
+                      <div className="font-medium leading-snug text-slate-900">
                         {risk.title.length > 80 ? `${risk.title.slice(0, 80)}…` : risk.title}
                       </div>
                     </td>
@@ -726,7 +726,7 @@ ${D}`;
             >
               ✕
             </button>
-            <h2 className="pr-10 text-lg font-semibold tracking-tight text-zinc-900">
+            <h2 className="pr-10 text-lg font-semibold tracking-tight text-slate-900">
               {detail.title.length > 90 ? `${detail.title.slice(0, 90)}…` : detail.title}
             </h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -817,7 +817,7 @@ ${D}`;
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
                 onClick={() => {
                   void navigator.clipboard.writeText(memoText).then(() => window.alert("Memo copiado al portapapeles"));
                 }}

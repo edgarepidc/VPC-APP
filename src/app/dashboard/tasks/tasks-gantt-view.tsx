@@ -10,7 +10,7 @@ type Props = {
 export function TasksGanttView({ tasks }: Props) {
   if (tasks.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-zinc-500">
+      <p className="py-8 text-center text-sm text-slate-500">
         No hay tareas para mostrar en el diagrama.
       </p>
     );
@@ -30,13 +30,13 @@ export function TasksGanttView({ tasks }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-zinc-600">
+      <p className="text-sm text-slate-600">
         Cada fila es una tarea. La barra va desde la <strong>creación</strong>{" "}
         hasta la <strong>fecha límite</strong> (si no hay, se asume un tramo de
         unos días). Esto es un sustituto ligero de un Gantt completo (sin
         dependencias ni hitos).
       </p>
-      <div className="space-y-2 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3">
+      <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
         {ranges.map(({ task, start, end }) => {
           const left = ((start - min) / span) * 100;
           const width = Math.max(((end - start) / span) * 100, 2);
@@ -45,10 +45,10 @@ export function TasksGanttView({ tasks }: Props) {
               key={task.id}
               className="grid grid-cols-[minmax(0,1fr)_minmax(120px,2fr)] items-center gap-2 text-sm"
             >
-              <p className="truncate font-medium text-zinc-900" title={task.title}>
+              <p className="truncate font-medium text-slate-900" title={task.title}>
                 {task.title}
               </p>
-              <div className="relative h-7 rounded bg-zinc-200/80">
+              <div className="relative h-7 rounded bg-slate-200/80">
                 <div
                   className="absolute top-1 h-5 rounded bg-sky-600/90"
                   style={{

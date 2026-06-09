@@ -66,7 +66,7 @@ export function KanbanBoard({ tasks, projects, members, canWrite }: Props) {
         {TASK_KANBAN_STATUSES.map((col) => (
           <section
             key={col}
-            className="flex w-[min(100%,280px)] shrink-0 flex-col rounded-lg border border-zinc-200 bg-zinc-50/80"
+            className="flex w-[min(100%,280px)] shrink-0 flex-col rounded-lg border border-slate-200 bg-slate-50/80"
             onDragOver={(e) => {
               e.preventDefault();
               e.dataTransfer.dropEffect = "move";
@@ -76,11 +76,11 @@ export function KanbanBoard({ tasks, projects, members, canWrite }: Props) {
               moveTo(col);
             }}
           >
-            <header className="border-b border-zinc-200 px-3 py-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-600">
+            <header className="border-b border-slate-200 px-3 py-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">
                 {TASK_STATUS_LABEL[col]}
               </h3>
-              <p className="text-[11px] text-zinc-500">
+              <p className="text-[11px] text-slate-500">
                 {byColumn[col].length} tarjeta
                 {byColumn[col].length === 1 ? "" : "s"}
               </p>
@@ -97,12 +97,12 @@ export function KanbanBoard({ tasks, projects, members, canWrite }: Props) {
                     e.dataTransfer.setData("text/task-id", task.id);
                   }}
                   onDragEnd={() => setDragId(null)}
-                  className={`cursor-grab rounded-md border border-zinc-200 bg-white p-3 shadow-sm active:cursor-grabbing ${
-                    dragId === task.id ? "ring-2 ring-zinc-400" : ""
+                  className={`cursor-grab rounded-md border border-slate-200 bg-white p-3 shadow-sm active:cursor-grabbing ${
+                    dragId === task.id ? "ring-2 ring-slate-400" : ""
                   }`}
                 >
-                  <p className="text-sm font-medium text-zinc-900">{task.title}</p>
-                  <p className="mt-1 text-[11px] text-zinc-500">{task.projectName}</p>
+                  <p className="text-sm font-medium text-slate-900">{task.title}</p>
+                  <p className="mt-1 text-[11px] text-slate-500">{task.projectName}</p>
                   {(task.assigneeName?.trim() || task.assigneeEmail) && (
                     <p className="mt-0.5 text-[11px] text-sky-900">
                       {task.assigneeName?.trim() ||
@@ -122,7 +122,7 @@ export function KanbanBoard({ tasks, projects, members, canWrite }: Props) {
                     <button
                       type="button"
                       onClick={() => setEditTask(task)}
-                      className="mt-2 text-[11px] font-medium text-zinc-700 underline"
+                      className="mt-2 text-[11px] font-medium text-slate-700 underline"
                     >
                       Editar
                     </button>
@@ -130,7 +130,7 @@ export function KanbanBoard({ tasks, projects, members, canWrite }: Props) {
                 </article>
               ))}
               {byColumn[col].length === 0 && (
-                <p className="py-6 text-center text-[12px] text-zinc-400">
+                <p className="py-6 text-center text-[12px] text-slate-400">
                   {canWrite
                     ? "Arrastra tarjetas aquí"
                     : "Sin tareas en esta columna"}

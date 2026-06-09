@@ -121,7 +121,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
         </p>
       )}
       {params.ok && (
-        <p className="rounded-xl border border-[#c9a46c]/40 bg-[linear-gradient(135deg,#faf8f4_0%,#f3ead8_100%)] px-4 py-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-[#0f1f5c]/[0.05]">
+        <p className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-[#2a2412] shadow-sm ring-1 ring-slate-200">
           {params.ok}
         </p>
       )}
@@ -201,13 +201,13 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
         <div className="space-y-6 lg:col-span-2">
           {tenants.length === 0 ? (
             <VpcAdminInsetShell innerClassName="p-6">
-              <h2 className="text-base font-semibold text-[#0f1f5c]">
+              <h2 className="text-base font-semibold text-slate-900">
                 Aún no hay organizaciones
               </h2>
-              <p className="mt-2 text-sm text-[#5c5346]">
+              <p className="mt-2 text-sm text-slate-600">
                 Crea un tenant en{" "}
                 <Link
-                  className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                  className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
                   href="/admin/tenants"
                 >
                   Organizaciones
@@ -217,46 +217,46 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
             </VpcAdminInsetShell>
           ) : !inviteTarget ? (
             <VpcAdminInsetShell innerClassName="p-6">
-              <h2 className="text-base font-semibold text-[#0f1f5c]">
+              <h2 className="text-base font-semibold text-slate-900">
                 Elegir organización
               </h2>
-              <p className="mt-2 text-sm leading-relaxed text-[#5c5346]">
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">
                 Para enviar una invitación, abre primero la{" "}
                 <Link
                   href="/admin"
-                  className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                  className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
                 >
                   Cartera de clientes
                 </Link>{" "}
-                y pulsa <strong className="text-[#0f1f5c]">Invitar</strong> en la fila del cliente.
+                y pulsa <strong className="text-slate-900">Invitar</strong> en la fila del cliente.
                 También puedes usar{" "}
                 <Link
                   href="/admin/tenants"
-                  className="font-semibold text-[#0f1f5c] underline decoration-[#c9a46c]/55 underline-offset-2 hover:decoration-[#c9a46c]"
+                  className="font-semibold text-slate-900 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-600"
                 >
                   Organizaciones
                 </Link>
                 .
               </p>
-              <p className="mt-3 text-[13px] leading-relaxed text-[#6b5c48]">
-                Tienes <strong className="text-[#0f1f5c]">{tenants.length}</strong> organizaciones:
+              <p className="mt-3 text-[13px] leading-relaxed text-slate-600">
+                Tienes <strong className="text-slate-900">{tenants.length}</strong> organizaciones:
                 en la cartera, cada fila incluye el enlace <strong>Invitar</strong> para abrir este
                 formulario ya con ese cliente.
               </p>
             </VpcAdminInsetShell>
           ) : (
             <VpcAdminInsetShell innerClassName="p-6">
-              <h2 className="text-base font-semibold text-[#0f1f5c]">
+              <h2 className="text-base font-semibold text-slate-900">
                 Nueva invitación
               </h2>
-              <p className="mt-1 text-[13px] leading-relaxed text-[#5c5346]">
+              <p className="mt-1 text-[13px] leading-relaxed text-slate-600">
                 Si el correo ya tiene cuenta en Auth, la invitación queda pendiente
                 y al iniciar sesión se unirá al tenant con el rol indicado.
               </p>
-              <p className="mt-3 rounded-lg border border-[#e8dfd0] bg-[#faf8f4] px-3 py-2 text-[13px] text-[#4a4234]">
-                <span className="font-medium text-[#6b5c48]">Cliente:</span>{" "}
-                <span className="font-semibold text-[#0f1f5c]">{inviteTarget.name}</span>{" "}
-                <span className="text-[#a09d98]">({inviteTarget.slug})</span>
+              <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-700">
+                <span className="font-medium text-slate-600">Cliente:</span>{" "}
+                <span className="font-semibold text-slate-900">{inviteTarget.name}</span>{" "}
+                <span className="text-slate-400">({inviteTarget.slug})</span>
               </p>
               <form
                 action={platformInviteAction}
@@ -264,21 +264,21 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
               >
                 <input type="hidden" name="tenantId" value={inviteTarget.id} />
                 <label className="grid gap-1.5 text-sm">
-                  <span className="font-medium text-[#0f1f5c]">Correo</span>
+                  <span className="font-medium text-slate-900">Correo</span>
                   <input
                     name="email"
                     type="email"
                     required
                     placeholder="usuario@empresa.com"
-                    className="rounded-lg border border-[#e3d6c4] bg-white px-3 py-2.5 text-sm text-[#1a1916] outline-none transition placeholder:text-[#a09d98] focus:border-[#0f1f5c]/40 focus:ring-2 focus:ring-[#0f1f5c]/15"
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                   />
                 </label>
                 <label className="grid gap-1.5 text-sm">
-                  <span className="font-medium text-[#0f1f5c]">Rol en el tenant</span>
+                  <span className="font-medium text-slate-900">Rol en el tenant</span>
                   <select
                     name="role"
                     defaultValue="member"
-                    className="rounded-lg border border-[#e3d6c4] bg-white px-3 py-2.5 text-sm text-[#1a1916] outline-none transition focus:border-[#0f1f5c]/40 focus:ring-2 focus:ring-[#0f1f5c]/15"
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                   >
                     {(Object.keys(ROLE_LABELS) as RoleKey[]).map((key) => (
                       <option key={key} value={key}>
@@ -289,7 +289,7 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                 </label>
                 <button
                   type="submit"
-                  className="mt-1 rounded-lg bg-gradient-to-b from-[#152d4f] to-[#0f1f5c] px-4 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-[#c9a46c]/35 transition hover:from-[#1a3a63] hover:to-[#12224d] active:scale-[0.99]"
+                  className="mt-1 rounded-lg bg-slate-800 px-4 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-700 active:scale-[0.99]"
                 >
                   Enviar invitación
                 </button>
@@ -298,24 +298,24 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
           )}
         </div>
 
-        <section className="flex flex-col overflow-hidden rounded-xl border border-[#e3d6c4] bg-[linear-gradient(168deg,#ffffff_0%,#faf8f4_100%)] shadow-sm ring-1 ring-[#0f1f5c]/[0.04] lg:col-span-3">
-          <div className="border-b border-[#e8dfd0] bg-[linear-gradient(180deg,#faf8f4,#ffffff)] px-5 py-4">
-            <h2 className="text-base font-semibold text-[#0f1f5c]">
+        <section className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-200 lg:col-span-3">
+          <div className="border-b border-slate-200 bg-white px-5 py-4">
+            <h2 className="text-base font-semibold text-slate-900">
               Invitaciones recientes
             </h2>
-            <p className="mt-0.5 text-[13px] text-[#6b5c48]">
+            <p className="mt-0.5 text-[13px] text-slate-600">
               Últimas 50 en todos los clientes (pendientes y aceptadas).
             </p>
           </div>
-          <div className="min-h-0 flex-1 overflow-x-auto bg-[linear-gradient(168deg,#ffffff_0%,#faf8f4_100%)]">
+          <div className="min-h-0 flex-1 overflow-x-auto bg-white">
             {recentInvites.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-[#8a7d6f]">
+              <p className="px-5 py-10 text-center text-sm text-slate-500">
                 Aún no hay invitaciones registradas en la base de datos.
               </p>
             ) : (
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-[#e8dfd0] bg-[#faf8f4]/90 text-[11px] font-semibold uppercase tracking-wide text-[#8a7d6f]">
+                  <tr className="border-b border-slate-200 bg-slate-50/90 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                     <th className="px-4 py-3">Correo</th>
                     <th className="px-4 py-3">Organización</th>
                     <th className="px-4 py-3">Rol</th>
@@ -332,34 +332,34 @@ export default async function AdminInvitePage({ searchParams }: PageProps) {
                     return (
                       <tr
                         key={row.id}
-                        className="transition hover:bg-[#faf6ef]"
+                        className="transition hover:bg-slate-50"
                       >
-                        <td className="px-4 py-3 font-medium text-[#0f1f5c]">
+                        <td className="px-4 py-3 font-medium text-slate-900">
                           {row.email}
                         </td>
-                        <td className="px-4 py-3 text-[#57534e]">
-                          <span className="font-medium text-[#0f1f5c]">{row.tenant.name}</span>
-                          <span className="text-[#a09d98]"> · {row.tenant.slug}</span>
+                        <td className="px-4 py-3 text-slate-600">
+                          <span className="font-medium text-slate-900">{row.tenant.name}</span>
+                          <span className="text-slate-400"> · {row.tenant.slug}</span>
                         </td>
-                        <td className="px-4 py-3 text-[#57534e]">{roleLabel}</td>
-                        <td className="max-w-[140px] truncate px-4 py-3 text-[#57534e]" title={row.sender.email}>
+                        <td className="px-4 py-3 text-slate-600">{roleLabel}</td>
+                        <td className="max-w-[140px] truncate px-4 py-3 text-slate-600" title={row.sender.email}>
                           {row.sender.name?.trim() || row.sender.email}
                         </td>
                         <td className="px-4 py-3">
                           {isAccepted ? (
-                            <span className="inline-flex items-center rounded-full border border-[#c9a46c]/40 bg-[#faf6ef] px-2.5 py-0.5 text-xs font-medium text-[#5c4a2a] ring-1 ring-[#0f1f5c]/10">
+                            <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200">
                               Aceptada
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full border border-[#e3d6c4] bg-white px-2.5 py-0.5 text-xs font-medium text-[#57534e] ring-1 ring-[#0f1f5c]/8">
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
                               Pendiente
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-[#6b5c48] tabular-nums">
+                        <td className="px-4 py-3 text-slate-600 tabular-nums">
                           <span className="block">{formatShortDate(row.createdAt)}</span>
                           {isAccepted && row.acceptedAt ? (
-                            <span className="mt-0.5 block text-[11px] text-[#a09d98]">
+                            <span className="mt-0.5 block text-[11px] text-slate-400">
                               Aceptada: {formatShortDate(row.acceptedAt)}
                             </span>
                           ) : null}
