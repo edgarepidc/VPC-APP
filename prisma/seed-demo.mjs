@@ -16,10 +16,11 @@ const daysFromNow = (days) => {
 };
 
 async function upsertProject(id, tenantId, createdBy, data) {
+  const { parentProjectId = null, sortOrder = 0, ...rest } = data;
   return prisma.project.upsert({
     where: { id },
-    update: { tenantId, createdBy, ...data },
-    create: { id, tenantId, createdBy, ...data },
+    update: { tenantId, createdBy, parentProjectId, sortOrder, ...rest },
+    create: { id, tenantId, createdBy, parentProjectId, sortOrder, ...rest },
   });
 }
 
@@ -173,12 +174,64 @@ async function main() {
 
   const pEmbus = existingProjects.find((p) => p.name === "EMBUS") ?? existingProjects[0] ?? null;
 
-  // --- Entregables proyecto App ---
+  const spAppMobile = await upsertProject(
+    "00000000-0000-4000-8010-000000000001",
+    tenant.id,
+    createdBy,
+    {
+      name: "App móvil pasajeros",
+      description: "iOS / Android — reservas, pagos y seguimiento de rutas.",
+      status: "active",
+      parentProjectId: pApp.id,
+      sortOrder: 1,
+    },
+  );
+
+  const spAppBack = await upsertProject(
+    "00000000-0000-4000-8010-000000000002",
+    tenant.id,
+    createdBy,
+    {
+      name: "Backoffice operativo",
+      description: "Consola de operaciones, reportes y configuración.",
+      status: "active",
+      parentProjectId: pApp.id,
+      sortOrder: 2,
+    },
+  );
+
+  const spErp = await upsertProject(
+    "00000000-0000-4000-8010-000000000003",
+    tenant.id,
+    createdBy,
+    {
+      name: "Integración SAP / ERP",
+      description: "Interfaces contables y maestros de flota.",
+      status: "active",
+      parentProjectId: pIntegracion.id,
+      sortOrder: 1,
+    },
+  );
+
+  const spTelemetria = await upsertProject(
+    "00000000-0000-4000-8010-000000000004",
+    tenant.id,
+    createdBy,
+    {
+      name: "Telemetría y tableros",
+      description: "GPS, KPIs operativos y alertas en tiempo real.",
+      status: "active",
+      parentProjectId: pIntegracion.id,
+      sortOrder: 2,
+    },
+  );
+
+  // --- Entregables subproyecto App móvil ---
   const dMatriz = await prisma.deliverable.upsert({
     where: { id: "00000000-0000-4000-8000-000000000201" },
     update: {
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Matriz de interesados v1",
       cell: "PMO",
       ownerName: "Ana Ruiz",
@@ -191,7 +244,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000201",
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Matriz de interesados v1",
       cell: "PMO",
       ownerName: "Ana Ruiz",
@@ -207,7 +260,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000202" },
     update: {
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Prototipo UI reservas",
       cell: "Diseño",
       ownerName: "Carlos Méndez",
@@ -219,7 +272,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000202",
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Prototipo UI reservas",
       cell: "Diseño",
       ownerName: "Carlos Méndez",
@@ -234,7 +287,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000203" },
     update: {
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Plan de pruebas UAT",
       cell: "QA",
       ownerName: "Ana Ruiz",
@@ -245,7 +298,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000203",
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Plan de pruebas UAT",
       cell: "QA",
       ownerName: "Ana Ruiz",
@@ -259,7 +312,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000204" },
     update: {
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Manual de operación call center",
       cell: "Operaciones",
       ownerName: "Laura Vega",
@@ -270,7 +323,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000204",
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Manual de operación call center",
       cell: "Operaciones",
       ownerName: "Laura Vega",
@@ -285,7 +338,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000205" },
     update: {
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Contrato API telemetría",
       cell: "TI",
       ownerName: "Roberto Sánchez",
@@ -296,7 +349,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000205",
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Contrato API telemetría",
       cell: "TI",
       ownerName: "Roberto Sánchez",
@@ -310,7 +363,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000206" },
     update: {
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Migración maestro de rutas",
       cell: "Datos",
       ownerName: "Roberto Sánchez",
@@ -321,7 +374,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000206",
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Migración maestro de rutas",
       cell: "Datos",
       ownerName: "Roberto Sánchez",
@@ -335,7 +388,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000207" },
     update: {
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Dashboard KPI flota",
       cell: "BI",
       ownerName: "Laura Vega",
@@ -346,7 +399,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000207",
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Dashboard KPI flota",
       cell: "BI",
       ownerName: "Laura Vega",
@@ -361,7 +414,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000301" },
     update: {
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       deliverableId: dMatriz.id,
       title: "Retraso en disponibilidad del equipo SME de operaciones",
       category: "Operativo",
@@ -377,7 +430,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000301",
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       deliverableId: dMatriz.id,
       title: "Retraso en disponibilidad del equipo SME de operaciones",
       category: "Operativo",
@@ -396,7 +449,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000302" },
     update: {
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Rechazo en tiendas Apple / Google por políticas de pagos",
       category: "Regulatorio",
       ownerName: "Carlos Méndez",
@@ -412,7 +465,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000302",
       tenantId: tenant.id,
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Rechazo en tiendas Apple / Google por políticas de pagos",
       category: "Regulatorio",
       ownerName: "Carlos Méndez",
@@ -431,7 +484,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000303" },
     update: {
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       deliverableId: dApi.id,
       title: "Calidad de datos en sistema fuente SAP",
       category: "Técnico",
@@ -448,7 +501,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000303",
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       deliverableId: dApi.id,
       title: "Calidad de datos en sistema fuente SAP",
       category: "Técnico",
@@ -468,7 +521,7 @@ async function main() {
     where: { id: "00000000-0000-4000-8000-000000000304" },
     update: {
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Ventana de mantenimiento ERP no disponible",
       category: "Operativo",
       ownerName: "Laura Vega",
@@ -482,7 +535,7 @@ async function main() {
     create: {
       id: "00000000-0000-4000-8000-000000000304",
       tenantId: tenant.id,
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Ventana de mantenimiento ERP no disponible",
       category: "Operativo",
       ownerName: "Laura Vega",
@@ -499,7 +552,7 @@ async function main() {
   const stakeholderRows = [
     {
       id: "00000000-0000-4000-8000-000000000401",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       name: "Dirección Mobility ADO",
       role: "Patrocinador",
       influence: 9,
@@ -508,7 +561,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000402",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       name: "Operaciones campo",
       role: "Usuario clave",
       influence: 7,
@@ -517,7 +570,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000403",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       name: "Marketing digital",
       role: "Comunicación",
       influence: 6,
@@ -526,7 +579,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000404",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       name: "TI Corporativo",
       role: "Integración",
       influence: 8,
@@ -535,7 +588,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000405",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       name: "Proveedor telemetría",
       role: "Externo",
       influence: 5,
@@ -544,7 +597,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000406",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       name: "Finanzas",
       role: "Control",
       influence: 7,
@@ -565,25 +618,25 @@ async function main() {
   const taskRows = [
     {
       id: "00000000-0000-4000-8000-000000000101",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Workshop kickoff con stakeholders",
       status: "in_progress",
     },
     {
       id: "00000000-0000-4000-8000-000000000102",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Validar flujos de pago con legal",
       status: "todo",
     },
     {
       id: "00000000-0000-4000-8000-000000000103",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Mapeo de interfaces API SAP",
       status: "in_progress",
     },
     {
       id: "00000000-0000-4000-8000-000000000104",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Prueba de carga telemetría 500 buses",
       status: "todo",
     },
@@ -601,7 +654,7 @@ async function main() {
   const escalationRows = [
     {
       id: "00000000-0000-4000-8000-000000000501",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       topic: "Go-live regional",
       tier: "green",
       title: "Ritmo de entregables estable",
@@ -612,7 +665,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000502",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       topic: "UAT pasajeros",
       tier: "orange",
       title: "Retraso en validación operativa",
@@ -623,7 +676,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000503",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       topic: "Migración datos",
       tier: "orange",
       title: "Calidad de datos en staging",
@@ -634,7 +687,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000504",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       topic: "API telemetría",
       tier: "red",
       title: "Bloqueo por política de seguridad TI",
@@ -681,7 +734,7 @@ async function main() {
   const meetingRows = [
     {
       id: "00000000-0000-4000-8000-000000000601",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       sessionName: "Comité semanal MVP",
       objective: "decision",
       totalCost: 18500,
@@ -697,7 +750,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000602",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       sessionName: "Revisión legal pagos",
       objective: "tecnica",
       totalCost: 9200,
@@ -713,7 +766,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000603",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       sessionName: "War room migración SAP",
       objective: "crisis",
       totalCost: 42000,
@@ -729,7 +782,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000604",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       sessionName: "Sync proveedor telemetría",
       objective: "informativa",
       totalCost: 7800,
@@ -1017,7 +1070,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000216",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Integración pasarela OpenPay",
       cell: "Desarrollo",
       ownerName: "Carlos Méndez",
@@ -1027,7 +1080,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000217",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Runbook contingencia SAP",
       cell: "Operaciones",
       ownerName: "Roberto Sánchez",
@@ -1102,7 +1155,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000309",
-      projectId: pApp.id,
+      projectId: spAppMobile.id,
       title: "Caída de servicio en pico de Semana Santa",
       category: "Técnico",
       ownerName: "Carlos Méndez",
@@ -1116,7 +1169,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000310",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Multa por incumplimiento normativo de datos de pasajeros",
       category: "Regulatorio",
       ownerName: "Laura Vega",
@@ -1130,7 +1183,7 @@ async function main() {
     },
     {
       id: "00000000-0000-4000-8000-000000000311",
-      projectId: pIntegracion.id,
+      projectId: spErp.id,
       title: "Latencia API telemetría en corredor montañoso",
       category: "Técnico",
       ownerName: "Roberto Sánchez",
@@ -1157,10 +1210,10 @@ async function main() {
     { id: "00000000-0000-4000-8000-000000000410", projectId: pCapacitacion.id, name: "Líderes de turno", role: "Usuario clave", influence: 5, interest: 9, observation: "Canal principal para cascada de capacitación." },
     { id: "00000000-0000-4000-8000-000000000411", projectId: pCapacitacion.id, name: "Sindicato choferes", role: "Gremio", influence: 9, interest: 2, observation: null },
     { id: "00000000-0000-4000-8000-000000000412", projectId: pCapacitacion.id, name: "RH corporativo", role: "Patrocinador", influence: 8, interest: 7, observation: "Aprueba presupuesto de capacitación." },
-    { id: "00000000-0000-4000-8000-000000000413", projectId: pApp.id, name: "Regulador transporte", role: "Regulatorio", influence: 9, interest: 4, observation: null },
-    { id: "00000000-0000-4000-8000-000000000414", projectId: pApp.id, name: "Atención a clientes", role: "Operaciones", influence: 4, interest: 9, observation: "Primer contacto en reclamaciones de app." },
-    { id: "00000000-0000-4000-8000-000000000415", projectId: pIntegracion.id, name: "CISO corporativo", role: "Seguridad", influence: 9, interest: 6, observation: "Exige cifrado E2E en APIs expuestas." },
-    { id: "00000000-0000-4000-8000-000000000416", projectId: pIntegracion.id, name: "Compras", role: "Administración", influence: 3, interest: 2, observation: "Bajo involucramiento salvo renovaciones." },
+    { id: "00000000-0000-4000-8000-000000000413", projectId: spAppMobile.id, name: "Regulador transporte", role: "Regulatorio", influence: 9, interest: 4, observation: null },
+    { id: "00000000-0000-4000-8000-000000000414", projectId: spAppMobile.id, name: "Atención a clientes", role: "Operaciones", influence: 4, interest: 9, observation: "Primer contacto en reclamaciones de app." },
+    { id: "00000000-0000-4000-8000-000000000415", projectId: spErp.id, name: "CISO corporativo", role: "Seguridad", influence: 9, interest: 6, observation: "Exige cifrado E2E en APIs expuestas." },
+    { id: "00000000-0000-4000-8000-000000000416", projectId: spErp.id, name: "Compras", role: "Administración", influence: 3, interest: 2, observation: "Bajo involucramiento salvo renovaciones." },
   ];
 
   for (const row of stakeholderExtras) {
@@ -1176,9 +1229,9 @@ async function main() {
     { id: "00000000-0000-4000-8000-000000000106", projectId: pTerminales.id, title: "Validar diagrama de red con proveedor ISP", status: "todo" },
     { id: "00000000-0000-4000-8000-000000000107", projectId: pCapacitacion.id, title: "Agendar calendario de talleres por corredor", status: "in_progress" },
     { id: "00000000-0000-4000-8000-000000000108", projectId: pCapacitacion.id, title: "Publicar FAQ en intranet", status: "done" },
-    { id: "00000000-0000-4000-8000-000000000109", projectId: pApp.id, title: "Prueba de penetración OWASP", status: "todo" },
-    { id: "00000000-0000-4000-8000-000000000110", projectId: pIntegracion.id, title: "Solicitar ventana de cambio SAP", status: "in_progress" },
-    { id: "00000000-0000-4000-8000-000000000111", projectId: pIntegracion.id, title: "Documentar mapeo de campos PII", status: "todo" },
+    { id: "00000000-0000-4000-8000-000000000109", projectId: spAppMobile.id, title: "Prueba de penetración OWASP", status: "todo" },
+    { id: "00000000-0000-4000-8000-000000000110", projectId: spErp.id, title: "Solicitar ventana de cambio SAP", status: "in_progress" },
+    { id: "00000000-0000-4000-8000-000000000111", projectId: spErp.id, title: "Documentar mapeo de campos PII", status: "todo" },
   ];
 
   for (const row of taskExtras) {
@@ -1190,15 +1243,15 @@ async function main() {
   }
 
   const escalationExtras = [
-    { id: "00000000-0000-4000-8000-000000000506", projectId: pApp.id, topic: "Store review", tier: "green", title: "Publicación en tiendas en curso", levelLabel: "Verde", daysAgo: 5, indicators: { schedule: "low", budget: "low", scope: "low" }, actions: ["Seguir checklist de publicación."] },
-    { id: "00000000-0000-4000-8000-000000000507", projectId: pApp.id, topic: "Store review", tier: "red", title: "Rechazo Apple por metadata incompleta", levelLabel: "Rojo — escalamiento", daysAgo: 2, indicators: { schedule: "high", budget: "medium", scope: "medium" }, actions: ["Escalar a legal y marketing.", "Corregir metadata en 48h."] },
+    { id: "00000000-0000-4000-8000-000000000506", projectId: spAppMobile.id, topic: "Store review", tier: "green", title: "Publicación en tiendas en curso", levelLabel: "Verde", daysAgo: 5, indicators: { schedule: "low", budget: "low", scope: "low" }, actions: ["Seguir checklist de publicación."] },
+    { id: "00000000-0000-4000-8000-000000000507", projectId: spAppMobile.id, topic: "Store review", tier: "red", title: "Rechazo Apple por metadata incompleta", levelLabel: "Rojo — escalamiento", daysAgo: 2, indicators: { schedule: "high", budget: "medium", scope: "medium" }, actions: ["Escalar a legal y marketing.", "Corregir metadata en 48h."] },
     { id: "00000000-0000-4000-8000-000000000508", projectId: pTerminales.id, topic: "Despliegue Monterrey", tier: "green", title: "Avance según plan", levelLabel: "Verde", daysAgo: 18, indicators: { schedule: "low", budget: "low", scope: "low" }, actions: ["Mantener ritmo semanal."] },
     { id: "00000000-0000-4000-8000-000000000509", projectId: pTerminales.id, topic: "Despliegue Monterrey", tier: "orange", title: "Retraso en instalación POS", levelLabel: "Naranja", daysAgo: 6, indicators: { schedule: "medium", budget: "low", scope: "medium" }, actions: ["Refuerzo de cuadrilla en fin de semana."] },
     { id: "00000000-0000-4000-8000-000000000510", projectId: pTerminales.id, topic: "Conectividad", tier: "orange", title: "Pruebas satelitales inconclusas", levelLabel: "Naranja", daysAgo: 1, indicators: { schedule: "medium", budget: "medium", scope: "high" }, actions: ["Sesión con proveedor ISP.", "Plan B con backup 4G."] },
     { id: "00000000-0000-4000-8000-000000000511", projectId: pCapacitacion.id, topic: "Adopción", tier: "green", title: "Asistencia inicial aceptable", levelLabel: "Verde", daysAgo: 12, indicators: { schedule: "low", budget: "low", scope: "low" }, actions: ["Continuar talleres presenciales."] },
     { id: "00000000-0000-4000-8000-000000000512", projectId: pCapacitacion.id, topic: "Simulacro L1", tier: "orange", title: "Simulacro reprogramado dos veces", levelLabel: "Naranja", daysAgo: 4, indicators: { schedule: "medium", budget: "low", scope: "medium" }, actions: ["Fijar fecha con operaciones.", "Grabar sesión de respaldo."] },
-    { id: "00000000-0000-4000-8000-000000000513", projectId: pIntegracion.id, topic: "Seguridad", tier: "green", title: "Controles de acceso validados", levelLabel: "Verde", daysAgo: 6, indicators: { schedule: "low", budget: "low", scope: "low" }, actions: ["Documentar excepciones aprobadas."] },
-    { id: "00000000-0000-4000-8000-000000000514", projectId: pIntegracion.id, topic: "Seguridad", tier: "red", title: "Bloqueo firewall sin fecha de resolución", levelLabel: "Rojo", daysAgo: 1, indicators: { schedule: "high", budget: "medium", scope: "high" }, actions: ["Comité ejecutivo con CISO.", "Ambiente alterno temporal."] },
+    { id: "00000000-0000-4000-8000-000000000513", projectId: spErp.id, topic: "Seguridad", tier: "green", title: "Controles de acceso validados", levelLabel: "Verde", daysAgo: 6, indicators: { schedule: "low", budget: "low", scope: "low" }, actions: ["Documentar excepciones aprobadas."] },
+    { id: "00000000-0000-4000-8000-000000000514", projectId: spErp.id, topic: "Seguridad", tier: "red", title: "Bloqueo firewall sin fecha de resolución", levelLabel: "Rojo", daysAgo: 1, indicators: { schedule: "high", budget: "medium", scope: "high" }, actions: ["Comité ejecutivo con CISO.", "Ambiente alterno temporal."] },
   ];
 
   for (const row of escalationExtras) {
@@ -1206,14 +1259,14 @@ async function main() {
   }
 
   const meetingExtras = [
-    { id: "00000000-0000-4000-8000-000000000605", projectId: pApp.id, sessionName: "Status app — viernes", objective: "informativa", totalCost: 11200, costLevel: "Moderado", costPerMinute: 560, totalParticipants: 10, durationMinutes: 20, diagnosisTitle: "Demasiados asistentes", diagnosisText: "Podría ser un reporte async; 4 personas sin intervención.", daysAgo: 3, participants: { junior: 3, senior: 4, director: 2, tech: 1 }, roleCosts: ROLE_COSTS },
-    { id: "00000000-0000-4000-8000-000000000606", projectId: pApp.id, sessionName: "War room store rejection", objective: "crisis", totalCost: 38500, costLevel: "Crítico", costPerMinute: 1283, totalParticipants: 9, durationMinutes: 30, diagnosisTitle: "Crisis sin agenda", diagnosisText: "Directores convocados sin decisión documentada al cierre.", daysAgo: 1, participants: { junior: 0, senior: 3, director: 4, tech: 2 }, roleCosts: ROLE_COSTS },
+    { id: "00000000-0000-4000-8000-000000000605", projectId: spAppMobile.id, sessionName: "Status app — viernes", objective: "informativa", totalCost: 11200, costLevel: "Moderado", costPerMinute: 560, totalParticipants: 10, durationMinutes: 20, diagnosisTitle: "Demasiados asistentes", diagnosisText: "Podría ser un reporte async; 4 personas sin intervención.", daysAgo: 3, participants: { junior: 3, senior: 4, director: 2, tech: 1 }, roleCosts: ROLE_COSTS },
+    { id: "00000000-0000-4000-8000-000000000606", projectId: spAppMobile.id, sessionName: "War room store rejection", objective: "crisis", totalCost: 38500, costLevel: "Crítico", costPerMinute: 1283, totalParticipants: 9, durationMinutes: 30, diagnosisTitle: "Crisis sin agenda", diagnosisText: "Directores convocados sin decisión documentada al cierre.", daysAgo: 1, participants: { junior: 0, senior: 3, director: 4, tech: 2 }, roleCosts: ROLE_COSTS },
     { id: "00000000-0000-4000-8000-000000000607", projectId: pTerminales.id, sessionName: "Kickoff proveedor POS", objective: "decision", totalCost: 15600, costLevel: "Moderado", costPerMinute: 780, totalParticipants: 6, durationMinutes: 20, diagnosisTitle: "Decisiones claras", diagnosisText: "Se cerraron 3 acuerdos de instalación con responsables.", daysAgo: 15, participants: { junior: 1, senior: 3, director: 1, tech: 1 }, roleCosts: ROLE_COSTS },
     { id: "00000000-0000-4000-8000-000000000608", projectId: pTerminales.id, sessionName: "Sync instalación — daily", objective: "informativa", totalCost: 9600, costLevel: "Bajo", costPerMinute: 480, totalParticipants: 6, durationMinutes: 20, diagnosisTitle: "Daily costoso", diagnosisText: "Mismo grupo 5 días; evaluar standup de 15 min.", daysAgo: 2, participants: { junior: 2, senior: 2, director: 1, tech: 1 }, roleCosts: ROLE_COSTS },
     { id: "00000000-0000-4000-8000-000000000609", projectId: pCapacitacion.id, sessionName: "Comité adopción", objective: "decision", totalCost: 22400, costLevel: "Alto", costPerMinute: 1120, totalParticipants: 8, durationMinutes: 20, diagnosisTitle: "Alto costo por directores", diagnosisText: "4 directores en tema operativo; delegar a managers.", daysAgo: 5, participants: { junior: 0, senior: 2, director: 4, tech: 2 }, roleCosts: ROLE_COSTS },
     { id: "00000000-0000-4000-8000-000000000610", projectId: pCapacitacion.id, sessionName: "Demo plataforma instructores", objective: "tecnica", totalCost: 6400, costLevel: "Bajo", costPerMinute: 320, totalParticipants: 4, durationMinutes: 20, diagnosisTitle: "Sesión eficiente", diagnosisText: "Participantes correctos y demo grabada para replicar.", daysAgo: 8, participants: { junior: 1, senior: 2, director: 0, tech: 1 }, roleCosts: ROLE_COSTS },
-    { id: "00000000-0000-4000-8000-000000000611", projectId: pIntegracion.id, sessionName: "Status integración SAP", objective: "informativa", totalCost: 10500, costLevel: "Moderado", costPerMinute: 525, totalParticipants: 7, durationMinutes: 20, diagnosisTitle: "Status sin bloqueos", diagnosisText: "Candidata a reporte escrito semanal.", daysAgo: 4, participants: { junior: 1, senior: 3, director: 2, tech: 1 }, roleCosts: ROLE_COSTS },
-    { id: "00000000-0000-4000-8000-000000000612", projectId: pIntegracion.id, sessionName: "Comité seguridad datos", objective: "decision", totalCost: 28800, costLevel: "Alto", costPerMinute: 960, totalParticipants: 7, durationMinutes: 30, diagnosisTitle: "Bloqueo sin dueño", diagnosisText: "Discusión circular; falta decisión de CISO documentada.", daysAgo: 6, participants: { junior: 0, senior: 2, director: 3, tech: 2 }, roleCosts: ROLE_COSTS },
+    { id: "00000000-0000-4000-8000-000000000611", projectId: spErp.id, sessionName: "Status integración SAP", objective: "informativa", totalCost: 10500, costLevel: "Moderado", costPerMinute: 525, totalParticipants: 7, durationMinutes: 20, diagnosisTitle: "Status sin bloqueos", diagnosisText: "Candidata a reporte escrito semanal.", daysAgo: 4, participants: { junior: 1, senior: 3, director: 2, tech: 1 }, roleCosts: ROLE_COSTS },
+    { id: "00000000-0000-4000-8000-000000000612", projectId: spErp.id, sessionName: "Comité seguridad datos", objective: "decision", totalCost: 28800, costLevel: "Alto", costPerMinute: 960, totalParticipants: 7, durationMinutes: 30, diagnosisTitle: "Bloqueo sin dueño", diagnosisText: "Discusión circular; falta decisión de CISO documentada.", daysAgo: 6, participants: { junior: 0, senior: 2, director: 3, tech: 2 }, roleCosts: ROLE_COSTS },
   ];
 
   for (const row of meetingExtras) {

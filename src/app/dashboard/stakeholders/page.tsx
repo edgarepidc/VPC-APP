@@ -4,7 +4,12 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { PMO_STAKEHOLDERS } from "@/lib/dashboard-paths";
 import { hasPermission } from "@/lib/rbac";
-import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
+import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
+import {
+  initiativeNameFor,
+  projectDisplayLabel,
+  workScopeProjectIds,
+} from "@/lib/project-hierarchy";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { requireTenantId } from "@/lib/tenancy";
 import {
@@ -50,10 +55,18 @@ export default async function StakeholdersPage({ searchParams }: StakeholdersPag
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
 
-  const [projects, stakeholders] = await Promise.all([
-    listProjectsForSession(session, tenantId),
+  const [hierarchy, stakeholders] = await Promise.all([
+    getProjectHierarchyForSession(session, tenantId),
     listStakeholdersByTenant(tenantId, { restrictToProjectIds: projectIdsFilter }),
   ]);
+  const { projects: hierarchyProjects, groups: projectGroups } = hierarchy;
+  const workIds = new Set(workScopeProjectIds(hierarchyProjects));
+  const projects = hierarchyProjects
+    .filter((p) => workIds.has(p.id))
+    .map((p) => ({
+      id: p.id,
+      name: projectDisplayLabel(p, initiativeNameFor(hierarchyProjects, p.id)),
+    }));
 
   async function assertProjectAccess(projectId: string, tenantIdActive: string) {
     const current = await getSessionUser();
@@ -83,7 +96,7 @@ export default async function StakeholdersPage({ searchParams }: StakeholdersPag
 
     const parsed = parseStakeholderForm(formData);
     if (!parsed.projectId || !parsed.name) {
-      redirect("/dashboard/stakeholders?error=Proyecto+y+nombre+son+obligatorios");
+      redirect("/dashboard/stakeholders?error=Subproyecto+y+nombre+son+obligatorios");
     }
 
     await assertProjectAccess(parsed.projectId, current.activeTenantId);
@@ -149,7 +162,14 @@ export default async function StakeholdersPage({ searchParams }: StakeholdersPag
     interest: item.interest,
     observation: item.observation,
     projectId: item.projectId,
-    projectName: item.project.name,
+    projectName: projectDisplayLabel(
+      hierarchyProjects.find((p) => p.id === item.projectId) ?? {
+        id: item.projectId,
+        name: item.project.name,
+        parentProjectId: null,
+      },
+      initiativeNameFor(hierarchyProjects, item.projectId),
+    ),
   }));
 
   const initialProject = params.project ?? params.projectId;
@@ -158,7 +178,7 @@ export default async function StakeholdersPage({ searchParams }: StakeholdersPag
     <main className={dashPage}>
       <DashboardPageHeader
         title="Interesados"
-        description="Matriz de poder e interés por proyecto."
+        description="Matriz de poder e interés por subproyecto."
       >
         <Link
           href={PMO_STAKEHOLDERS}
@@ -172,7 +192,9 @@ export default async function StakeholdersPage({ searchParams }: StakeholdersPag
 
       <StakeholderManagerView
         stakeholders={matrixItems}
-        projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+        projects={projects}
+        projectGroups={projectGroups}
+        projectHierarchy={hierarchyProjects}
         canEdit={canEdit}
         initial={{
           id: params.id,

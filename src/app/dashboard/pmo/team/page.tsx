@@ -51,7 +51,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const [members, usage, allOrgProjects] = await Promise.all([
     listMembersByTenant(tenantId),
     getTenantUsageSnapshot(tenantId),
-    listProjectsByTenant(tenantId),
+    listProjectsByTenant(tenantId, { initiativesOnly: true }),
   ]);
   const canManage = canManageMembers(session.role);
   const appUrl = getAppUrl();

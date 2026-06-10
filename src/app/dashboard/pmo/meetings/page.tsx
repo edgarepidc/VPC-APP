@@ -2,12 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
 import { RoiSessionHistoryList } from "@/app/dashboard/roi-meetings/roi-session-history-list";
 import { MeetingCostAlerts } from "@/app/dashboard/pmo/meeting-cost-alerts";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
 import { ROI_MEETINGS_HUB } from "@/lib/dashboard-paths";
-import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
+import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
+import { resolveProjectFilterIds } from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
 import { serializeMeetingRoiSessions } from "@/lib/meeting-roi-utils";
 import {
@@ -34,12 +36,18 @@ export default async function PmoMeetingsPage({ searchParams }: PmoMeetingsPageP
   const tenantId = await requireTenantId();
   const canEdit = hasPermission(session.role, "tasks.write");
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
+  const hierarchy = await getProjectHierarchyForSession(session, tenantId);
+  const resolvedFilter = resolveProjectFilterIds(hierarchy.projects, filterProjectId || null);
+  let effectiveRestrict = projectIdsFilter;
+  if (resolvedFilter) {
+    effectiveRestrict = projectIdsFilter
+      ? resolvedFilter.filter((id) => projectIdsFilter.includes(id))
+      : resolvedFilter;
+  }
 
-  const [projects, sessions, alerts] = await Promise.all([
-    listProjectsForSession(session, tenantId),
+  const [sessions, alerts] = await Promise.all([
     listMeetingRoiSessionsByTenant(tenantId, {
-      restrictToProjectIds: projectIdsFilter,
-      projectId: filterProjectId || undefined,
+      restrictToProjectIds: effectiveRestrict,
       limit: 100,
     }),
     findMeetingCostAlerts(tenantId, {
@@ -66,7 +74,7 @@ export default async function PmoMeetingsPage({ searchParams }: PmoMeetingsPageP
     <main className={dashPage}>
       <DashboardPageHeader
         title="Reuniones"
-        description="Historial de sesiones registradas con la calculadora de reuniones por proyecto."
+        description="Historial de sesiones registradas con la calculadora de reuniones por subproyecto."
       >
         <Link
           href={ROI_MEETINGS_HUB}
@@ -81,19 +89,14 @@ export default async function PmoMeetingsPage({ searchParams }: PmoMeetingsPageP
       <section className={`${dashCard} p-4`}>
         <form method="get" className="flex flex-wrap items-end gap-2 border-b border-slate-200 pb-4">
           <label className="block min-w-0 flex-1 sm:flex-none">
-            <span className={uiLabel}>Proyecto</span>
-            <select
+            <span className={uiLabel}>Iniciativa / subproyecto</span>
+            <ProjectHierarchyFilterSelect
               name="projectId"
+              groups={hierarchy.groups}
               defaultValue={filterProjectId}
+              allLabel="Todas las iniciativas"
               className={`${uiInput} mt-1 w-full min-w-0 sm:min-w-[220px]`}
-            >
-              <option value="">Todos</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            />
           </label>
           <button
             type="submit"
@@ -105,7 +108,7 @@ export default async function PmoMeetingsPage({ searchParams }: PmoMeetingsPageP
 
         <p className="mt-3 text-sm text-slate-600">
           {rows.length} sesión{rows.length !== 1 ? "es" : ""}
-          {filterProjectId ? " en este proyecto" : " en total"}
+          {filterProjectId ? " en este alcance" : " en total"}
           {rows.length > 0 && (
             <span className="text-slate-500">
               {" "}

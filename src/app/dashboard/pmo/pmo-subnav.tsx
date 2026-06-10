@@ -19,7 +19,7 @@ import type { PmoNavBadges } from "./pmo-action-utils";
 
 const TABS = [
   { href: PMO_HUB, label: "Resumen", exact: true, badgeKey: "resumen" as const },
-  { href: PMO_PROJECTS, label: "Proyectos", exact: false, badgeKey: null },
+  { href: PMO_PROJECTS, label: "Iniciativas", exact: false, badgeKey: null },
   { href: PMO_DELIVERABLES, label: "Entregables", exact: false, badgeKey: "deliverables" as const },
   { href: PMO_RISKS, label: "Riesgos", exact: false, badgeKey: "risks" as const },
   { href: PMO_ESCALATIONS, label: "Escalamientos", exact: false, badgeKey: "escalations" as const },

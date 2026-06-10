@@ -18,7 +18,14 @@ import {
 import { PMO_HUB, PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
-import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
+import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
+import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
+import {
+  initiativeNameFor,
+  projectDisplayLabel,
+  resolveProjectFilterIds,
+  workScopeProjectIds,
+} from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
 import { normalizeTaskStatus } from "@/modules/tasks/constants";
 import { listMemberUsersForTenant } from "@/modules/memberships/service";
@@ -110,16 +117,37 @@ export default async function TasksPage({ searchParams }: PageProps) {
       : null;
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
+  const hierarchy = await getProjectHierarchyForSession(session, tenantId);
+  const resolvedFilter = resolveProjectFilterIds(hierarchy.projects, pf || null);
+  let effectiveRestrict = projectIdsFilter;
+  if (resolvedFilter) {
+    effectiveRestrict = projectIdsFilter
+      ? resolvedFilter.filter((id) => projectIdsFilter.includes(id))
+      : resolvedFilter;
+  }
 
-  const [items, projects, memberRows] = await Promise.all([
+  const [items, memberRows] = await Promise.all([
     listTasksByTenant(tenantId, {
-      projectId: projectFilter,
       q: qFilter,
-      restrictToProjectIds: projectIdsFilter,
+      restrictToProjectIds: effectiveRestrict,
     }),
-    listProjectsForSession(session, tenantId),
     listMemberUsersForTenant(tenantId),
   ]);
+
+  const workIds = new Set(workScopeProjectIds(hierarchy.projects));
+  const projectOptions = hierarchy.projects
+    .filter((p) => workIds.has(p.id))
+    .map((p) => ({
+      id: p.id,
+      name: projectDisplayLabel(p, initiativeNameFor(hierarchy.projects, p.id)),
+    }));
+  const defaultTaskProjectId =
+    (pf && projectOptions.some((p) => p.id === pf) ? pf : null) ??
+    (pf && resolvedFilter?.[0]) ??
+    projectOptions[0]?.id ??
+    "";
+
+  const hasProjects = projectOptions.length > 0;
 
   const members: TaskMemberOption[] = memberRows.map((u) => ({
     id: u.id,
@@ -132,7 +160,15 @@ export default async function TasksPage({ searchParams }: PageProps) {
     title: t.title,
     status: normalizeTaskStatus(t.status),
     projectId: t.projectId,
-    projectName: t.project.name,
+    projectName: projectDisplayLabel(
+      {
+        id: t.projectId,
+        name: t.project.name,
+        parentProjectId:
+          hierarchy.projects.find((p) => p.id === t.projectId)?.parentProjectId ?? null,
+      },
+      initiativeNameFor(hierarchy.projects, t.projectId),
+    ),
     dueDate: t.dueDate?.toISOString() ?? null,
     createdAt: t.createdAt.toISOString(),
     assigneeUserId: t.assigneeUserId ?? null,
@@ -142,14 +178,11 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
   const undatedTasks = taskCards.filter((t) => !t.dueDate);
 
-  const projectOptions = projects.map((p) => ({ id: p.id, name: p.name }));
-  const hasProjects = projects.length > 0;
-
   return (
     <main className={dashPage}>
       <DashboardPageHeader
         title="Tareas"
-        description="Kanban, tabla, calendario y Gantt. Filtra por proyecto o texto."
+        description="Kanban, tabla, calendario y Gantt. Filtra por iniciativa, subproyecto o texto."
       >
         <Link
           href={PMO_HUB}
@@ -191,19 +224,14 @@ export default async function TasksPage({ searchParams }: PageProps) {
             <input type="hidden" name="month" value={monthQueryValue} />
           ) : null}
           <div>
-            <label className={uiLabel}>Proyecto</label>
-            <select
+            <label className={uiLabel}>Iniciativa / subproyecto</label>
+            <ProjectHierarchyFilterSelect
               name="project"
+              groups={hierarchy.groups}
               defaultValue={pf}
-              className="mt-1 block min-w-[200px] rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-            >
-              <option value="">Todos los proyectos</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+              allLabel="Todas las iniciativas"
+              className="mt-1 block min-w-[220px] rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            />
           </div>
           <div className="min-w-[200px] flex-1">
             <label className={uiLabel}>Buscar</label>
@@ -247,18 +275,14 @@ export default async function TasksPage({ searchParams }: PageProps) {
                 <input type="hidden" name="month" value={monthQueryValue} />
               ) : null}
               <div className="sm:col-span-2">
-                <label className={uiLabel}>Proyecto</label>
+                <label className={uiLabel}>Subproyecto</label>
                 <select
                   name="projectId"
                   required
-                  defaultValue={
-                    pf && projects.some((p) => p.id === pf)
-                      ? pf
-                      : (projects[0]?.id ?? "")
-                  }
+                  defaultValue={defaultTaskProjectId}
                   className="mt-1 w-full max-w-md rounded-md border border-slate-300 px-3 py-2 text-sm"
                 >
-                  {projects.map((p) => (
+                  {projectOptions.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
                     </option>

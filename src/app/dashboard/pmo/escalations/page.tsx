@@ -2,12 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
 import { EscalationHistoryList } from "@/app/dashboard/escalometro/escalation-history-list";
 import { EscalationDeteriorationAlerts } from "@/app/dashboard/pmo/escalation-deterioration-alerts";
 import { getSessionUser } from "@/lib/auth/session";
 import { ESCALOMETRO_HUB } from "@/lib/dashboard-paths";
 import { hasPermission } from "@/lib/rbac";
-import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
+import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
+import { resolveProjectFilterIds } from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
 import { serializeEscalationChecks } from "@/lib/escalation-serialize";
 import {
@@ -34,12 +36,18 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
   const tenantId = await requireTenantId();
   const canCreateRisk = hasPermission(session.role, "tasks.write");
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
+  const hierarchy = await getProjectHierarchyForSession(session, tenantId);
+  const resolvedFilter = resolveProjectFilterIds(hierarchy.projects, filterProjectId || null);
+  let effectiveRestrict = projectIdsFilter;
+  if (resolvedFilter) {
+    effectiveRestrict = projectIdsFilter
+      ? resolvedFilter.filter((id) => projectIdsFilter.includes(id))
+      : resolvedFilter;
+  }
 
-  const [projects, checks, alerts] = await Promise.all([
-    listProjectsForSession(session, tenantId),
+  const [checks, alerts] = await Promise.all([
     listEscalationChecksByTenant(tenantId, {
-      restrictToProjectIds: projectIdsFilter,
-      projectId: filterProjectId || undefined,
+      restrictToProjectIds: effectiveRestrict,
       limit: 100,
     }),
     findGreenToRedDeteriorations(tenantId, {
@@ -62,7 +70,7 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
     <main className={dashPage}>
       <DashboardPageHeader
         title="Escalamientos"
-        description="Historial completo de evaluaciones del Escalómetro por proyecto."
+        description="Historial completo de evaluaciones del Escalómetro por subproyecto."
       >
         <Link
           href={ESCALOMETRO_HUB}
@@ -77,19 +85,14 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
       <section className={`${dashCard} p-4`}>
         <form method="get" className="flex flex-wrap items-end gap-2 border-b border-slate-200 pb-4">
           <label className="block">
-            <span className={uiLabel}>Proyecto</span>
-            <select
+            <span className={uiLabel}>Iniciativa / subproyecto</span>
+            <ProjectHierarchyFilterSelect
               name="projectId"
+              groups={hierarchy.groups}
               defaultValue={filterProjectId}
+              allLabel="Todas las iniciativas"
               className={`${uiInput} mt-1 min-w-[220px]`}
-            >
-              <option value="">Todos</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            />
           </label>
           <button
             type="submit"
@@ -101,7 +104,7 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
 
         <p className="mt-3 text-sm text-slate-600">
           {rows.length} evaluación{rows.length !== 1 ? "es" : ""}
-          {filterProjectId ? " en este proyecto" : " en total"}
+          {filterProjectId ? " en este alcance" : " en total"}
         </p>
 
         <ul className="mt-3 space-y-2">

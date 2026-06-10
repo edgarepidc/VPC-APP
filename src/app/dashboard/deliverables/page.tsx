@@ -12,7 +12,12 @@ import {
 import { PMO_DELIVERABLES, PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
-import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
+import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
+import {
+  initiativeNameFor,
+  projectDisplayLabel,
+  workScopeProjectIds,
+} from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
 import { normalizeDeliverableStatus } from "@/modules/deliverables/constants";
 import { parseAcuses, parseActivityLog, parseSupportFiles } from "@/modules/deliverables/json";
@@ -62,14 +67,18 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
 
   let deliverables: Awaited<ReturnType<typeof listDeliverablesByTenant>> = [];
-  let projects: Awaited<ReturnType<typeof listProjectsForSession>> = [];
+  let projects: Awaited<ReturnType<typeof getProjectHierarchyForSession>>["projects"] = [];
+  let projectGroups: Awaited<ReturnType<typeof getProjectHierarchyForSession>>["groups"] = [];
   let loadError: string | null = null;
 
   try {
-    [deliverables, projects] = await Promise.all([
+    const [deliverablesResult, hierarchyResult] = await Promise.all([
       listDeliverablesByTenant(tenantId, { restrictToProjectIds: projectIdsFilter }),
-      listProjectsForSession(session, tenantId),
+      getProjectHierarchyForSession(session, tenantId),
     ]);
+    deliverables = deliverablesResult;
+    projects = hierarchyResult.projects;
+    projectGroups = hierarchyResult.groups;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[deliverables/page]", msg);
@@ -111,7 +120,14 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
     displayId: displayEntId(d.id),
     title: d.title,
     projectId: d.projectId,
-    projectName: d.project.name,
+    projectName: projectDisplayLabel(
+      {
+        id: d.projectId,
+        name: d.project.name,
+        parentProjectId: projects.find((p) => p.id === d.projectId)?.parentProjectId ?? null,
+      },
+      initiativeNameFor(projects, d.projectId),
+    ),
     phase: d.cell,
     ownerName: d.ownerName,
     clientName: d.clientName,
@@ -143,7 +159,13 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
     dependsOnTitle: r.dependsOnId ? titleById.get(r.dependsOnId) ?? null : null,
   }));
 
-  const projectOptions = projects.map((p) => ({ id: p.id, name: p.name }));
+  const workIds = new Set(workScopeProjectIds(projects));
+  const projectOptions = projects
+    .filter((p) => workIds.has(p.id))
+    .map((p) => ({
+      id: p.id,
+      name: projectDisplayLabel(p, initiativeNameFor(projects, p.id)),
+    }));
 
   return (
     <main className={dashPage}>
@@ -164,9 +186,9 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
       {projects.length === 0 ? (
         <section className={`${dashCard} p-4`}>
           <p className="text-sm text-slate-700">
-            No hay proyectos.{" "}
+            No hay iniciativas.{" "}
             <Link href={PMO_PROJECTS} className="font-medium underline">
-              Crea un proyecto
+              Crea una iniciativa
             </Link>{" "}
             para registrar entregables.
           </p>
@@ -175,6 +197,8 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
         <DeliverablesTracker
           rows={rows}
           projects={projectOptions}
+          projectGroups={projectGroups}
+          projectHierarchy={projects}
           canEdit={canEdit}
           initial={{
             id: params.id,

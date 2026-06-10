@@ -19,6 +19,14 @@ import {
 import { uiInput, uiLabel, dashAlertError, dashAlertOk } from "@/lib/ui-classes";
 
 import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
+import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
+import {
+  initiativeNameFor,
+  projectDisplayLabel,
+  resolveProjectFilterIds,
+  type ProjectHierarchyGroup,
+  type ProjectHierarchyRow,
+} from "@/lib/project-hierarchy";
 
 import { CreateDeliverableModal } from "./create-deliverable-modal";
 import {
@@ -88,6 +96,8 @@ type TrackerInitial = {
 type Props = {
   rows: DeliverableTrackerRow[];
   projects: DeliverableTrackerProject[];
+  projectGroups: ProjectHierarchyGroup[];
+  projectHierarchy: ProjectHierarchyRow[];
   canEdit: boolean;
   initial?: TrackerInitial;
 };
@@ -235,7 +245,7 @@ function progressBarColor(pct: number): string {
   return "#e11d48";
 }
 
-export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props) {
+export function DeliverablesTracker({ rows, projects, projectGroups, projectHierarchy, canEdit, initial }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -252,10 +262,11 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
   const [focusId, setFocusId] = useState<string | null>(null);
   const deepLinkOpenedRef = useRef(false);
 
-  const scopeRows = useMemo(
-    () => (projectFilter ? rows.filter((r) => r.projectId === projectFilter) : rows),
-    [rows, projectFilter],
-  );
+  const scopeRows = useMemo(() => {
+    const filterIds = resolveProjectFilterIds(projectHierarchy, projectFilter || null);
+    if (!filterIds) return rows;
+    return rows.filter((r) => filterIds.includes(r.projectId));
+  }, [rows, projectFilter, projectHierarchy]);
 
   const rowById = useMemo(() => new Map(rows.map((r) => [r.id, r])), [rows]);
 
@@ -556,22 +567,18 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <label className="text-xs font-medium text-slate-600">Proyecto</label>
-            <select
+            <label className="text-xs font-medium text-slate-600">Iniciativa / subproyecto</label>
+            <ProjectHierarchySelect
               value={projectFilter}
-              onChange={(e) => {
-                setProjectFilter(e.target.value);
+              onChange={(v) => {
+                setProjectFilter(v);
                 setFocusId(null);
               }}
+              groups={projectGroups}
+              allLabel="Todas las iniciativas"
               className="h-[34px] rounded-lg border border-slate-300 bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
-            >
-              <option value="">Todos los proyectos</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+              aria-label="Filtrar por iniciativa o subproyecto"
+            />
             {weightAssigned !== null ? (
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -895,6 +902,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
         <CreateDeliverableModal
           allRows={rows}
           projects={projects}
+          projectGroups={projectGroups}
           phaseOptions={phases}
           defaultProjectId={projectFilter || undefined}
           onClose={() => setPanel("closed")}
@@ -904,6 +912,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
       {panel === "template" && canEdit ? (
         <DeliverableTemplateModal
           projects={projects}
+          projectGroups={projectGroups}
           defaultProjectId={projectFilter || undefined}
           onClose={() => setPanel("closed")}
           run={run}

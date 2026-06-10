@@ -47,9 +47,9 @@ export function ManagerProjectScopeFields({
 
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-medium text-slate-900">Proyectos del PM</p>
+      <p className="text-sm font-medium text-slate-900">Iniciativas del PM</p>
       <p className="mt-0.5 text-xs text-slate-600">
-        Elige uno o más proyectos, o marca acceso a todos.
+        Elige una o más iniciativas; el PM verá todos sus subproyectos.
       </p>
 
       <label className="mt-3 flex items-center gap-2 text-sm text-slate-800">
@@ -60,15 +60,15 @@ export function ManagerProjectScopeFields({
           onChange={(e) => setAllProjects(e.target.checked)}
           className="rounded border-slate-300"
         />
-        Todos los proyectos de la organización
+        Todas las iniciativas de la organización
       </label>
 
       {!allProjects ? (
         <div className="mt-3">
-          <span className={uiLabel}>Proyectos asignados</span>
+          <span className={uiLabel}>Iniciativas asignadas</span>
           {projects.length === 0 ? (
             <p className="mt-1 text-xs text-amber-700">
-              No hay proyectos en esta organización. Crea proyectos antes de asignar un PM.
+              No hay iniciativas en esta organización. Crea iniciativas antes de asignar un PM.
             </p>
           ) : (
             <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto rounded-md border border-slate-200 bg-white p-2">

@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 import { uiInput, uiLabel } from "@/lib/ui-classes";
+import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
+import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
 import { DELIVERABLE_TEMPLATES } from "@/modules/deliverables/templates";
 
 import { applyDeliverableTemplateAction } from "./actions";
@@ -10,6 +12,7 @@ import type { DeliverableTrackerProject } from "./deliverables-tracker";
 
 type DeliverableTemplateModalProps = {
   projects: DeliverableTrackerProject[];
+  projectGroups: ProjectHierarchyGroup[];
   defaultProjectId?: string;
   onClose: () => void;
   run: (fn: () => Promise<string | void>, okMessage?: string) => void;
@@ -17,6 +20,7 @@ type DeliverableTemplateModalProps = {
 
 export function DeliverableTemplateModal({
   projects,
+  projectGroups,
   defaultProjectId,
   onClose,
   run,
@@ -45,18 +49,16 @@ export function DeliverableTemplateModal({
 
         <div className="mt-4 space-y-3">
           <div>
-            <label className={uiLabel}>Proyecto</label>
-            <select
+            <label className={uiLabel}>Subproyecto</label>
+            <ProjectHierarchySelect
               value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
+              onChange={setProjectId}
+              groups={projectGroups}
+              allowAll={false}
+              workScopeOnly
               className={`${uiInput} mt-1`}
-            >
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+              aria-label="Subproyecto"
+            />
           </div>
           <div>
             <label className={uiLabel}>Plantilla</label>

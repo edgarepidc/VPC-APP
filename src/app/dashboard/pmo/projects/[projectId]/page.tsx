@@ -11,13 +11,15 @@ import {
   DELIVERABLES_PROJECT,
   PMO_ESCALATIONS_PROJECT,
   PMO_MEETINGS_PROJECT,
+  PMO_PROJECT_DETAIL,
   PMO_PROJECTS,
   RISK_DETAIL_IN_PROJECT,
   RISKS_PROJECT,
   STAKEHOLDERS_PROJECT,
 } from "@/lib/dashboard-paths";
 import { getEscalationTierBadge } from "@/lib/escalation-utils";
-import { getSessionProjectIdsFilter } from "@/lib/project-scope";
+import { getSessionProjectIdsFilter, getProjectHierarchyForSession } from "@/lib/project-scope";
+import { resolveProjectFilterIds } from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
 import { getCostLevelBadge, formatMxn } from "@/lib/meeting-roi-utils";
 import { getProjectStatusBadge, getSemaphoreBadge } from "@/lib/ui";
@@ -30,7 +32,7 @@ import {
 } from "@/lib/ui-classes";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { getPmoSnapshot } from "@/modules/pmo/service";
-import { getProjectById } from "@/modules/projects/service";
+import { getProjectById, listSubprojectsByInitiative } from "@/modules/projects/service";
 
 export const dynamic = "force-dynamic";
 
@@ -63,16 +65,28 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
     redirect("/dashboard/pmo/projects?error=Proyecto+fuera+de+tu+alcance");
   }
 
-  const [project, snapshot] = await Promise.all([
+  const [project, hierarchy] = await Promise.all([
     getProjectById(tenantId, projectId),
-    getPmoSnapshot(tenantId, { restrictToProjectIds: [projectId] }),
+    getProjectHierarchyForSession(session, tenantId),
   ]);
 
   if (!project) {
     redirect("/dashboard/pmo/projects?error=Proyecto+no+encontrado");
   }
 
-  const health = snapshot.projectHealth[0];
+  const isInitiative = !project.parentProjectId;
+  const subprojects = isInitiative
+    ? await listSubprojectsByInitiative(tenantId, projectId)
+    : [];
+  const scopeIds = resolveProjectFilterIds(hierarchy.projects, projectId) ?? [projectId];
+  const rollupMode = isInitiative && subprojects.length > 0;
+
+  const snapshot = await getPmoSnapshot(tenantId, { restrictToProjectIds: scopeIds });
+
+  const health = rollupMode
+    ? null
+    : (snapshot.projectHealth.find((h) => h.id === projectId) ?? snapshot.projectHealth[0]);
+  const subprojectHealthRows = rollupMode ? snapshot.projectHealth : [];
   const statusBadge = getProjectStatusBadge(project.status);
   const semaphore = health
     ? getSemaphoreBadge(Math.max(0, health.donePct - Math.min(40, health.risks * 8)))
@@ -96,13 +110,18 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
     <main className={dashPage}>
       <DashboardPageHeader
         title={project.name}
-        description={project.description?.trim() || "Ficha consolidada del proyecto."}
+        description={
+          rollupMode
+            ? `Iniciativa · ${subprojects.length} subproyecto${subprojects.length !== 1 ? "s" : ""}`
+            : project.description?.trim() ||
+              (isInitiative ? "Ficha de la iniciativa." : "Ficha del subproyecto.")
+        }
       >
         <Link
           href={PMO_PROJECTS}
           className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
         >
-          ← Volver a proyectos
+          ← Volver a iniciativas
         </Link>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className={statusBadge.className}>{statusBadge.label}</span>
@@ -159,6 +178,34 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
           <p className={dashKpiValue}>{formatMxn(snapshot.kpis.totalMeetingCostMxn)}</p>
         </div>
       </section>
+
+      {rollupMode ? (
+        <section className={`${dashCard} mb-4 p-4`}>
+          <h2 className={dashSectionTitle}>Subproyectos</h2>
+          <ul className="mt-3 space-y-2">
+            {subprojects.map((sub) => {
+              const subHealth = subprojectHealthRows.find((h) => h.id === sub.id);
+              return (
+                <li
+                  key={sub.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 p-3"
+                >
+                  <Link
+                    href={PMO_PROJECT_DETAIL(sub.id)}
+                    className="font-medium text-slate-900 hover:underline"
+                  >
+                    {sub.name}
+                  </Link>
+                  <span className="text-xs text-slate-600">
+                    Avance {subHealth?.donePct ?? 0}% · {subHealth?.deliverables ?? 0} entregables ·{" "}
+                    {subHealth?.risks ?? 0} riesgos
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
 
       <section className={`${dashCard} mb-4 p-4`}>
         <h2 className={dashSectionTitle}>Acceso rápido</h2>

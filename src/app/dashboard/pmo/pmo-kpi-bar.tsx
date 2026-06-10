@@ -40,7 +40,7 @@ export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
     <section className={dashKpiTilesGrid}>
       <KpiTile
         tone="slate"
-        label={<PmoKpiLabel hint={PMO_KPI_HINTS.projects}>Proyectos</PmoKpiLabel>}
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.projects}>Iniciativas</PmoKpiLabel>}
         value={
           <Link href={PMO_PROJECTS} className={linkValueClass}>
             {kpis.projects}

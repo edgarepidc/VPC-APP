@@ -5,7 +5,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import type { RiskFormPrefill } from "@/lib/escalation-risk-prefill";
-import { DELIVERABLE_DETAIL_IN_PROJECT, DELIVERABLES_PROJECT, RISKS_PROJECT } from "@/lib/dashboard-paths";
+import {
+  DELIVERABLE_DETAIL_IN_PROJECT,
+  RISKS_PROJECT,
+} from "@/lib/dashboard-paths";
+import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
+import { resolveProjectFilterIds, type ProjectHierarchyGroup, type ProjectHierarchyRow } from "@/lib/project-hierarchy";
 
 import { KpiTile } from "@/app/dashboard/_components/kpi-tile";
 import {
@@ -57,6 +62,8 @@ export type RiskClientRow = {
 type RiskManagerViewProps = {
   risks: RiskClientRow[];
   projects: { id: string; name: string }[];
+  projectGroups: ProjectHierarchyGroup[];
+  projectHierarchy: ProjectHierarchyRow[];
   deliverables: { id: string; title: string; projectId: string }[];
   canEdit: boolean;
   prefill?: RiskFormPrefill | null;
@@ -161,6 +168,8 @@ function HeatmapBlock({
 export function RiskManagerView({
   risks,
   projects,
+  projectGroups,
+  projectHierarchy,
   deliverables,
   canEdit,
   prefill = null,
@@ -227,8 +236,9 @@ export function RiskManagerView({
 
   const scopedRisks = useMemo(() => {
     const ql = q.trim().toLowerCase();
+    const filterIds = resolveProjectFilterIds(projectHierarchy, projectFilter || null);
     return risks.filter((r) => {
-      const projectOk = !projectFilter || r.project.id === projectFilter;
+      const projectOk = !filterIds || filterIds.includes(r.project.id);
       const hay =
         !ql ||
         r.title.toLowerCase().includes(ql) ||
@@ -237,7 +247,7 @@ export function RiskManagerView({
         r.category.toLowerCase().includes(ql);
       return projectOk && hay;
     });
-  }, [risks, projectFilter, q]);
+  }, [risks, projectFilter, projectHierarchy, q]);
 
   const actionItems = useMemo(() => buildRiskActionItems(scopedRisks), [scopedRisks]);
 
@@ -426,19 +436,15 @@ ${D}`;
         />
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <label className={uiLabel}>Proyecto</label>
-          <select
+          <label className={uiLabel}>Iniciativa / subproyecto</label>
+          <ProjectHierarchySelect
             value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-            className={`h-9 ${uiInput} w-auto min-w-[140px] py-1.5`}
-          >
-            <option value="">Todos</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            onChange={setProjectFilter}
+            groups={projectGroups}
+            allLabel="Todas"
+            className={`h-9 ${uiInput} w-auto min-w-[180px] py-1.5`}
+            aria-label="Filtrar por iniciativa o subproyecto"
+          />
           <input
             type="search"
             value={q}
@@ -738,6 +744,7 @@ ${D}`;
         <CreateRiskModal
           key={prefill ? `prefill-${prefill.projectId}` : "new"}
           projects={projects}
+          projectGroups={projectGroups}
           deliverables={deliverables}
           prefill={prefill}
           createAction={createAction}

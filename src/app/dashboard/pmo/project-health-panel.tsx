@@ -36,7 +36,7 @@ export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealth
   return (
     <div className={`${dashCard} p-4 lg:col-span-2`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-slate-900">Salud por proyecto</h2>
+        <h2 className="text-base font-semibold text-slate-900">Salud por iniciativa / subproyecto</h2>
         <Link
           href={DELIVERABLES_HUB}
           className="text-sm text-slate-600 hover:text-slate-900 hover:underline"

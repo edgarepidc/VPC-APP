@@ -2,12 +2,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
 import { PMO_MEETINGS } from "@/lib/dashboard-paths";
 import { RoiMeetingsClient } from "@/app/dashboard/roi-meetings/roi-meetings-client";
 import { RoiSessionHistoryList } from "@/app/dashboard/roi-meetings/roi-session-history-list";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/rbac";
-import { listProjectsForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
+import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
+import {
+  initiativeNameFor,
+  projectDisplayLabel,
+  resolveProjectFilterIds,
+  workScopeProjectIds,
+} from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
 import { serializeMeetingRoiSessions } from "@/lib/meeting-roi-utils";
 import { meetingRoiTableMissingMessage } from "@/lib/prisma-errors";
@@ -37,11 +44,26 @@ export default async function RoiMeetingsPage({ searchParams }: RoiMeetingsPageP
   const canSave = hasPermission(session.role, "tasks.write");
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
-  const [projects, recentSessions, storageReady] = await Promise.all([
-    listProjectsForSession(session, tenantId),
+  const hierarchy = await getProjectHierarchyForSession(session, tenantId);
+  const resolvedFilter = resolveProjectFilterIds(hierarchy.projects, filterProjectId || null);
+  let effectiveRestrict = projectIdsFilter;
+  if (resolvedFilter) {
+    effectiveRestrict = projectIdsFilter
+      ? resolvedFilter.filter((id) => projectIdsFilter.includes(id))
+      : resolvedFilter;
+  }
+
+  const workIds = new Set(workScopeProjectIds(hierarchy.projects));
+  const projects = hierarchy.projects
+    .filter((p) => workIds.has(p.id))
+    .map((p) => ({
+      id: p.id,
+      name: projectDisplayLabel(p, initiativeNameFor(hierarchy.projects, p.id)),
+    }));
+
+  const [recentSessions, storageReady] = await Promise.all([
     listMeetingRoiSessionsByTenant(tenantId, {
-      restrictToProjectIds: projectIdsFilter,
-      projectId: filterProjectId || undefined,
+      restrictToProjectIds: effectiveRestrict,
       limit: 20,
     }),
     isMeetingRoiStorageReady(),
@@ -53,7 +75,7 @@ export default async function RoiMeetingsPage({ searchParams }: RoiMeetingsPageP
     <main className={dashPage}>
       <DashboardPageHeader
         title="ROI de reuniones"
-        description="Calcula el costo de tus sesiones y registra el resultado por proyecto."
+        description="Calcula el costo de tus sesiones y registra el resultado por subproyecto."
       >
         <Link
           href={PMO_MEETINGS}
@@ -70,31 +92,26 @@ export default async function RoiMeetingsPage({ searchParams }: RoiMeetingsPageP
         </p>
       )}
 
-      <RoiMeetingsClient projects={projects} canSave={canSave} />
+      <RoiMeetingsClient projects={projects} projectGroups={hierarchy.groups} canSave={canSave} />
 
       <section className={`${dashCard} p-4`}>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-slate-900">Registros recientes</h2>
             <span className="text-xs text-slate-500">
-              Historial de sesiones registradas por proyecto
+              Historial de sesiones registradas por subproyecto
             </span>
           </div>
           <form method="get" className="flex w-full flex-wrap items-end gap-2 sm:w-auto">
             <label className="block min-w-0 flex-1 sm:flex-none">
-              <span className={uiLabel}>Filtrar por proyecto</span>
-              <select
+              <span className={uiLabel}>Filtrar por iniciativa / subproyecto</span>
+              <ProjectHierarchyFilterSelect
                 name="projectId"
+                groups={hierarchy.groups}
                 defaultValue={filterProjectId}
-                className={`${uiInput} mt-1 w-full min-w-0 sm:min-w-[200px]`}
-              >
-                <option value="">Todos los proyectos</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
+                allLabel="Todas las iniciativas"
+                className={`${uiInput} mt-1 w-full min-w-0 sm:min-w-[220px]`}
+              />
             </label>
             <button
               type="submit"
@@ -110,7 +127,7 @@ export default async function RoiMeetingsPage({ searchParams }: RoiMeetingsPageP
           ) : (
             <li className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
               {filterProjectId
-                ? "No hay sesiones registradas para este proyecto."
+                ? "No hay sesiones registradas para este alcance."
                 : "Aún no hay sesiones registradas. Configura la calculadora y pulsa Registrar sesión."}
             </li>
           )}

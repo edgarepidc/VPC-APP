@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
   type QuadrantId,
@@ -21,9 +21,7 @@ export type MatrixStakeholder = {
 
 type Props = {
   stakeholders: MatrixStakeholder[];
-  projectNames: { id: string; name: string }[];
-  projectFilter: string;
-  onProjectFilterChange: (value: string) => void;
+  projectFilterLabel: string;
   selectedId: string | null;
   onSelectId: (id: string | null) => void;
   canEdit?: boolean;
@@ -59,9 +57,7 @@ function initials(name: string) {
 
 export function StakeholderMatrixClient({
   stakeholders,
-  projectNames,
-  projectFilter,
-  onProjectFilterChange,
+  projectFilterLabel,
   selectedId,
   onSelectId,
   canEdit = false,
@@ -70,10 +66,7 @@ export function StakeholderMatrixClient({
 }: Props) {
   const [exportNote, setExportNote] = useState<string | null>(null);
 
-  const visible = useMemo(() => {
-    if (projectFilter === "all") return stakeholders;
-    return stakeholders.filter((s) => s.projectId === projectFilter);
-  }, [stakeholders, projectFilter]);
+  const visible = stakeholders;
 
   const selected = visible.find((s) => s.id === selectedId) ?? null;
   const playbook = selected
@@ -88,7 +81,7 @@ export function StakeholderMatrixClient({
         const q = QUADRANT_PLAYBOOK[getQuadrantId(s.influence, s.interest)];
         return [
           `## ${s.name}`,
-          `- Proyecto: ${s.projectName}`,
+          `- Subproyecto: ${s.projectName}`,
           `- Influencia: ${s.influence} · Interés: ${s.interest}`,
           `- Cuadrante: ${q.fullLabel}`,
           `- Estrategia: ${q.strategy}`,
@@ -127,22 +120,10 @@ export function StakeholderMatrixClient({
             </div>
             <div className="hidden h-[18px] w-px bg-[#e8e6e1] sm:block" />
             <div>
-              <p className="text-sm text-slate-500">Proyecto activo</p>
-              <select
-                value={projectFilter}
-                onChange={(e) => {
-                  onProjectFilterChange(e.target.value);
-                  onSelectId(null);
-                }}
-                className="mt-0.5 max-w-[220px] border-0 bg-transparent text-sm font-medium text-slate-900 outline-none focus:ring-0"
-              >
-                <option value="all">Todos los proyectos</option>
-                {projectNames.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              <p className="text-sm text-slate-500">Alcance activo</p>
+              <p className="mt-0.5 max-w-[220px] truncate text-sm font-medium text-slate-900">
+                {projectFilterLabel}
+              </p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -309,7 +290,7 @@ export function StakeholderMatrixClient({
               >
                 <p className="text-[15px] font-semibold text-slate-900">{selected.name}</p>
                 <p className="mt-0.5 text-[12px] text-slate-500">{selected.role || "Sin cargo"}</p>
-                <p className="mt-2 text-xs text-slate-500">Proyecto: {selected.projectName}</p>
+                <p className="mt-2 text-xs text-slate-500">Subproyecto: {selected.projectName}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <span className="inline-flex rounded-full bg-[#f2f1ee] px-2 py-0.5 font-mono text-[10.5px] text-slate-500">
                     Inf {selected.influence} · Int {selected.interest}

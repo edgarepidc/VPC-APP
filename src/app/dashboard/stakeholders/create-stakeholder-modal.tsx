@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 
+import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
+import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
+
 import {
   QUADRANT_PLAYBOOK,
   getQuadrantId,
@@ -22,6 +25,7 @@ const qPreviewBg: Record<QuadrantId, string> = {
 
 type CreateStakeholderModalProps = {
   projects: { id: string; name: string }[];
+  projectGroups: ProjectHierarchyGroup[];
   editStakeholder?: MatrixStakeholder | null;
   defaultProjectId?: string;
   createAction: (formData: FormData) => void | Promise<void>;
@@ -31,6 +35,7 @@ type CreateStakeholderModalProps = {
 
 export function CreateStakeholderModal({
   projects,
+  projectGroups,
   editStakeholder = null,
   defaultProjectId = "",
   createAction,
@@ -94,22 +99,18 @@ export function CreateStakeholderModal({
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="sm:col-span-2">
                 <StakeholderFieldLabel hint={STAKEHOLDER_FIELD_HINTS.project} required>
-                  Proyecto
+                  Subproyecto
                 </StakeholderFieldLabel>
-                <select
+                <ProjectHierarchySelect
                   name="projectId"
-                  required
                   value={formProjectId}
-                  onChange={(e) => setFormProjectId(e.target.value)}
+                  onChange={setFormProjectId}
+                  groups={projectGroups}
+                  allowAll={false}
+                  workScopeOnly
                   className={uiInput}
-                >
-                  <option value="">Seleccionar…</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+                  aria-label="Subproyecto"
+                />
               </label>
 
               <label>

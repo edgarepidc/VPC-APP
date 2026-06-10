@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 
 import type { RiskFormPrefill } from "@/lib/escalation-risk-prefill";
+import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
+import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
 import { dashAlertWarn, dashKpiLabel, uiInput } from "@/lib/ui-classes";
 
 import { RISK_FIELD_HINTS } from "./risk-field-hints";
@@ -17,6 +19,7 @@ import {
 
 type CreateRiskModalProps = {
   projects: { id: string; name: string }[];
+  projectGroups: ProjectHierarchyGroup[];
   deliverables: { id: string; title: string; projectId: string }[];
   prefill?: RiskFormPrefill | null;
   createAction: (formData: FormData) => void | Promise<void>;
@@ -25,6 +28,7 @@ type CreateRiskModalProps = {
 
 export function CreateRiskModal({
   projects,
+  projectGroups,
   deliverables,
   prefill = null,
   createAction,
@@ -159,22 +163,18 @@ export function CreateRiskModal({
               </label>
               <label className="sm:col-span-2">
                 <RiskFieldLabel hint={RISK_FIELD_HINTS.project} required>
-                  Proyecto
+                  Subproyecto
                 </RiskFieldLabel>
-                <select
+                <ProjectHierarchySelect
                   name="projectId"
-                  required
-                  defaultValue={prefill?.projectId ?? ""}
-                  onChange={(e) => setFormProjectId(e.target.value)}
+                  value={formProjectId}
+                  onChange={setFormProjectId}
+                  groups={projectGroups}
+                  allowAll={false}
+                  workScopeOnly
                   className={uiInput}
-                >
-                  <option value="">Selecciona proyecto</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                  aria-label="Subproyecto"
+                />
               </label>
               <label className="sm:col-span-2">
                 <RiskFieldLabel hint={RISK_FIELD_HINTS.deliverable}>

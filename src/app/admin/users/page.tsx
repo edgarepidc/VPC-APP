@@ -108,6 +108,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
 
   const tenantOptions = tenants.map((t) => ({ id: t.id, name: t.name, slug: t.slug }));
   const allProjects = await db.project.findMany({
+    where: { parentProjectId: null },
     select: { id: true, name: true, tenantId: true },
     orderBy: { name: "asc" },
   });

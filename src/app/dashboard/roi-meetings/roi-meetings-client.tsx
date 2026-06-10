@@ -3,8 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
 import { saveMeetingRoiSessionAction } from "@/app/dashboard/roi-meetings/actions";
 import type { MeetingCalculatorSnapshot } from "@/lib/meeting-roi-calculator";
+import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
 import {
   dashAlertError,
   dashAlertOk,
@@ -18,10 +20,11 @@ type ProjectOption = { id: string; name: string };
 
 type RoiMeetingsClientProps = {
   projects: ProjectOption[];
+  projectGroups: ProjectHierarchyGroup[];
   canSave: boolean;
 };
 
-export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps) {
+export function RoiMeetingsClient({ projects, projectGroups, canSave }: RoiMeetingsClientProps) {
   const router = useRouter();
   const [projectId, setProjectId] = useState("");
   const [sessionName, setSessionName] = useState("");
@@ -30,13 +33,15 @@ export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps)
   );
   const [pending, startTransition] = useTransition();
 
+  const selectedProject = projects.find((p) => p.id === projectId);
+
   function register(snapshot: MeetingCalculatorSnapshot) {
     if (!canSave) {
       setFeedback({ type: "error", message: "No tienes permiso para registrar sesiones." });
       return;
     }
     if (!projectId) {
-      setFeedback({ type: "error", message: "Selecciona un proyecto antes de registrar." });
+      setFeedback({ type: "error", message: "Selecciona un subproyecto antes de registrar." });
       return;
     }
 
@@ -64,23 +69,22 @@ export function RoiMeetingsClient({ projects, canSave }: RoiMeetingsClientProps)
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <span className={uiLabel}>Proyecto *</span>
-            <select
+            <span className={uiLabel}>Subproyecto *</span>
+            <ProjectHierarchySelect
               value={projectId}
-              onChange={(e) => {
-                setProjectId(e.target.value);
+              onChange={(v) => {
+                setProjectId(v);
                 setFeedback(null);
               }}
-              required
+              groups={projectGroups}
+              allowAll={false}
+              workScopeOnly
               className={`${uiInput} mt-1`}
-            >
-              <option value="">Selecciona proyecto</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+              aria-label="Subproyecto"
+            />
+            {selectedProject ? (
+              <span className="mt-1 block text-xs text-slate-500">{selectedProject.name}</span>
+            ) : null}
           </label>
           <label className="block">
             <span className={uiLabel}>Nombre de la sesión</span>

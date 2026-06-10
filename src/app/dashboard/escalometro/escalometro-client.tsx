@@ -15,14 +15,18 @@ import type { EscalationIndicators } from "@/modules/escalations/service";
 
 import { EscalometroCalculator } from "./escalometro-calculator";
 
+import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
+import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
+
 type ProjectOption = { id: string; name: string };
 
 type EscalometroClientProps = {
   projects: ProjectOption[];
+  projectGroups: ProjectHierarchyGroup[];
   canSave: boolean;
 };
 
-export function EscalometroClient({ projects, canSave }: EscalometroClientProps) {
+export function EscalometroClient({ projects, projectGroups, canSave }: EscalometroClientProps) {
   const router = useRouter();
   const [projectId, setProjectId] = useState("");
   const [topic, setTopic] = useState("");
@@ -44,7 +48,7 @@ export function EscalometroClient({ projects, canSave }: EscalometroClientProps)
     if (!projectId) {
       setFeedback({
         type: "error",
-        message: "Selecciona un proyecto antes de evaluar.",
+        message: "Selecciona un subproyecto antes de evaluar.",
       });
       return;
     }
@@ -80,26 +84,22 @@ export function EscalometroClient({ projects, canSave }: EscalometroClientProps)
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <span className={uiLabel}>Proyecto *</span>
-            <select
+            <span className={uiLabel}>Subproyecto *</span>
+            <ProjectHierarchySelect
               value={projectId}
-              onChange={(e) => {
-                setProjectId(e.target.value);
+              onChange={(v) => {
+                setProjectId(v);
                 setFeedback(null);
               }}
-              required
+              groups={projectGroups}
+              allowAll={false}
+              workScopeOnly
               className={`${uiInput} mt-1`}
-            >
-              <option value="">Selecciona proyecto</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+              aria-label="Subproyecto"
+            />
           </label>
           <label className="block">
-            <span className={uiLabel}>Subproyecto o tema específico</span>
+            <span className={uiLabel}>Tema o situación (opcional)</span>
             <input
               type="text"
               value={topic}
@@ -120,7 +120,7 @@ export function EscalometroClient({ projects, canSave }: EscalometroClientProps)
         ) : null}
         {!projectId ? (
           <p className="mt-2 text-xs text-slate-500">
-            Elige el proyecto al que corresponde esta evaluación antes de pulsar Evaluar.
+            Elige el subproyecto al que corresponde esta evaluación antes de pulsar Evaluar.
           </p>
         ) : null}
       </div>

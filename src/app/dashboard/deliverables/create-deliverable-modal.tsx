@@ -9,6 +9,8 @@ import {
 } from "@/modules/deliverables/constants";
 import { clampWeight, TARGET_SUM } from "@/lib/deliverable-weight-utils";
 import { uiInput, uiLabel } from "@/lib/ui-classes";
+import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
+import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
 
 import { createDeliverableAction } from "./actions";
 import { DeliverableWeightField } from "./deliverable-weight-field";
@@ -18,6 +20,7 @@ import { uploadDeliverablePdfAction } from "./support-actions";
 type CreateDeliverableModalProps = {
   allRows: DeliverableTrackerRow[];
   projects: DeliverableTrackerProject[];
+  projectGroups: ProjectHierarchyGroup[];
   phaseOptions: string[];
   defaultProjectId?: string;
   onClose: () => void;
@@ -27,6 +30,7 @@ type CreateDeliverableModalProps = {
 export function CreateDeliverableModal({
   allRows,
   projects,
+  projectGroups,
   phaseOptions,
   defaultProjectId,
   onClose,
@@ -93,12 +97,12 @@ export function CreateDeliverableModal({
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             <div className="space-y-4">
               <div>
-                <label className={uiLabel}>Proyecto *</label>
-                <select
+                <label className={uiLabel}>Subproyecto *</label>
+                <ProjectHierarchySelect
                   value={projectId}
-                  onChange={(e) => {
-                    setProjectId(e.target.value);
-                    const siblings = allRows.filter((r) => r.projectId === e.target.value);
+                  onChange={(v) => {
+                    setProjectId(v);
+                    const siblings = allRows.filter((r) => r.projectId === v);
                     setWeight(
                       Math.max(
                         1,
@@ -108,14 +112,12 @@ export function CreateDeliverableModal({
                       ),
                     );
                   }}
+                  groups={projectGroups}
+                  allowAll={false}
+                  workScopeOnly
                   className={`${uiInput} mt-1`}
-                >
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                  aria-label="Subproyecto"
+                />
               </div>
               <DeliverableWeightField
                 value={weight}

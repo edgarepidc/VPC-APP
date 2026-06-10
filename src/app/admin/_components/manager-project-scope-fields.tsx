@@ -63,7 +63,7 @@ export function AdminManagerProjectScopeFields({
 
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
-      <p className="text-sm font-medium text-slate-900">Proyectos del PM</p>
+      <p className="text-sm font-medium text-slate-900">Iniciativas del PM</p>
       <label className="mt-2 flex items-center gap-2 text-sm text-slate-800">
         <input
           type="checkbox"
@@ -72,13 +72,13 @@ export function AdminManagerProjectScopeFields({
           onChange={(e) => setAllProjects(e.target.checked)}
           className="rounded border-slate-300"
         />
-        Todos los proyectos
+        Todas las iniciativas
       </label>
       {!allProjects ? (
         <div className="mt-2">
-          <span className={uiLabel}>Proyectos</span>
+          <span className={uiLabel}>Iniciativas</span>
           {projects.length === 0 ? (
-            <p className="mt-1 text-xs text-amber-700">Sin proyectos en esta org.</p>
+            <p className="mt-1 text-xs text-amber-700">Sin iniciativas en esta org.</p>
           ) : (
             <ul className="mt-1 max-h-32 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-2 text-xs">
               {projects.map((p) => (

@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getPlanLimits, normalizeTenantPlan } from "@/modules/platform/plans";
+import { countInitiativesByTenant } from "@/modules/projects/service";
 
 export class PlanLimitError extends Error {
   readonly code = "PLAN_LIMIT" as const;
@@ -32,7 +33,7 @@ export async function getTenantUsageSnapshot(
   const limits = getPlanLimits(plan);
 
   const [projectCount, activeMembers, pendingInvites] = await Promise.all([
-    db.project.count({ where: { tenantId } }),
+    countInitiativesByTenant(tenantId),
     db.membership.count({ where: { tenantId, status: "active" } }),
     db.invitation.count({ where: { tenantId, status: "pending" } }),
   ]);
@@ -55,7 +56,7 @@ export async function canCreateProject(tenantId: string): Promise<LimitCheck> {
   if (snap.projectCount >= snap.limits.maxProjects) {
     return {
       ok: false,
-      message: `Límite del plan ${snap.plan}: máximo ${snap.limits.maxProjects} proyectos. Sube de plan (administración global) o archiva proyectos.`,
+      message: `Límite del plan ${snap.plan}: máximo ${snap.limits.maxProjects} iniciativas. Sube de plan (administración global) o archiva iniciativas.`,
     };
   }
   return { ok: true };

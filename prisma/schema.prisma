@@ -126,7 +126,12 @@ model Project {
   description String?
   status      String   @default("active")
   createdBy   String
+  /** null = iniciativa (contenedor); con valor = subproyecto de trabajo. */
+  parentProjectId String?
+  sortOrder   Int      @default(0)
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parentProject Project?  @relation("ProjectHierarchy", fields: [parentProjectId], references: [id], onDelete: Cascade)
+  subProjects   Project[] @relation("ProjectHierarchy")
   deliverables Deliverable[]
   risks       Risk[]
   stakeholders Stakeholder[]
@@ -136,6 +141,8 @@ model Project {
   membershipAccess MembershipProject[]
   invitationAccess InvitationProject[]
   createdAt   DateTime @default(now())
+
+  @@index([tenantId, parentProjectId])
 }
 
 model Task {

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { expandProjectIdsWithDescendants } from "@/lib/project-hierarchy";
 import type { RoleKey } from "@/lib/types";
 
 export type ManagerProjectScopeInput = {
@@ -78,9 +79,19 @@ export async function assertCanAccessProject(input: {
 }) {
   const scope = await getMembershipProjectScope(input);
   if (scope.type === "all") return;
-  if (!scope.projectIds.includes(input.projectId)) {
-    throw new Error("No tienes acceso a este proyecto.");
-  }
+
+  const all = await db.project.findMany({
+    where: { tenantId: input.tenantId },
+    select: { id: true, name: true, parentProjectId: true },
+  });
+  const expanded = new Set(expandProjectIdsWithDescendants(all, scope.projectIds));
+
+  if (expanded.has(input.projectId)) return;
+
+  const row = all.find((p) => p.id === input.projectId);
+  if (row?.parentProjectId && expanded.has(row.parentProjectId)) return;
+
+  throw new Error("No tienes acceso a este proyecto.");
 }
 
 export async function setMembershipProjectAccess(
@@ -198,10 +209,10 @@ export function formatProjectScopeLabel(input: {
   projects: { id: string; name: string }[];
 }): string {
   if (input.roleKey !== "manager") return "—";
-  if (input.managerAllProjects) return "Todos los proyectos";
-  if (input.projects.length === 0) return "Sin proyectos asignados";
+  if (input.managerAllProjects) return "Todas las iniciativas";
+  if (input.projects.length === 0) return "Sin iniciativas asignadas";
   if (input.projects.length <= 2) {
     return input.projects.map((p) => p.name).join(", ");
   }
-  return `${input.projects.length} proyectos`;
+  return `${input.projects.length} iniciativas`;
 }

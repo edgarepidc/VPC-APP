@@ -4,7 +4,12 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { PMO_RISKS } from "@/lib/dashboard-paths";
 import { hasPermission } from "@/lib/rbac";
-import { getSessionProjectIdsFilter, listProjectsForSession } from "@/lib/project-scope";
+import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
+import {
+  initiativeNameFor,
+  projectDisplayLabel,
+  workScopeProjectIds,
+} from "@/lib/project-hierarchy";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { requireTenantId } from "@/lib/tenancy";
 import { createRisk, deleteRisk, getRiskById, listRisksByTenant, updateRisk } from "@/modules/risks/service";
@@ -47,11 +52,19 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
 
-  const [projects, deliverables, risks] = await Promise.all([
-    listProjectsForSession(session, tenantId),
+  const [hierarchy, deliverables, risks] = await Promise.all([
+    getProjectHierarchyForSession(session, tenantId),
     listDeliverablesByTenant(tenantId, { restrictToProjectIds: projectIdsFilter }),
     listRisksByTenant(tenantId, { restrictToProjectIds: projectIdsFilter }),
   ]);
+  const { projects: hierarchyProjects, groups: projectGroups } = hierarchy;
+  const workIds = new Set(workScopeProjectIds(hierarchyProjects));
+  const projects = hierarchyProjects
+    .filter((p) => workIds.has(p.id))
+    .map((p) => ({
+      id: p.id,
+      name: projectDisplayLabel(p, initiativeNameFor(hierarchyProjects, p.id)),
+    }));
 
   async function createAction(formData: FormData) {
     "use server";
@@ -200,7 +213,18 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
     contingency: r.contingency,
     trigger: r.trigger,
     dueDate: r.dueDate ? r.dueDate.toISOString() : null,
-    project: r.project,
+    project: {
+      id: r.project.id,
+      name: projectDisplayLabel(
+        {
+          id: r.project.id,
+          name: r.project.name,
+          parentProjectId:
+            hierarchyProjects.find((p) => p.id === r.project.id)?.parentProjectId ?? null,
+        },
+        initiativeNameFor(hierarchyProjects, r.project.id),
+      ),
+    },
     deliverable: r.deliverable,
   }));
 
@@ -223,6 +247,8 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
       <RiskManagerView
         risks={risksClient}
         projects={projects}
+        projectGroups={projectGroups}
+        projectHierarchy={hierarchyProjects}
         deliverables={deliverables.map((d) => ({
           id: d.id,
           title: d.title,

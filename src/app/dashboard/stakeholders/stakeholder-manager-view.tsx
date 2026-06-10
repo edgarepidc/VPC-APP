@@ -14,6 +14,13 @@ import {
   uiLabel,
 } from "@/lib/ui-classes";
 
+import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
+import {
+  resolveProjectFilterIds,
+  type ProjectHierarchyGroup,
+  type ProjectHierarchyRow,
+} from "@/lib/project-hierarchy";
+
 import { CreateStakeholderModal } from "./create-stakeholder-modal";
 import {
   StakeholderMatrixClient,
@@ -30,6 +37,8 @@ import { StakeholdersActionQueue } from "./stakeholders-action-queue";
 type StakeholderManagerViewProps = {
   stakeholders: MatrixStakeholder[];
   projects: { id: string; name: string }[];
+  projectGroups: ProjectHierarchyGroup[];
+  projectHierarchy: ProjectHierarchyRow[];
   canEdit: boolean;
   initial?: { id?: string; project?: string; q?: string };
   createAction: (formData: FormData) => void | Promise<void>;
@@ -40,6 +49,8 @@ type StakeholderManagerViewProps = {
 export function StakeholderManagerView({
   stakeholders,
   projects,
+  projectGroups,
+  projectHierarchy,
   canEdit,
   initial,
   createAction,
@@ -52,10 +63,10 @@ export function StakeholderManagerView({
 
   const [selectedId, setSelectedId] = useState<string | null>(initial?.id ?? null);
   const [projectFilter, setProjectFilter] = useState(() => {
-    if (initial?.project && projects.some((p) => p.id === initial.project)) {
+    if (initial?.project && projectHierarchy.some((p) => p.id === initial.project)) {
       return initial.project;
     }
-    return "all";
+    return "";
   });
   const [q, setQ] = useState(initial?.q ?? "");
   const [createOpen, setCreateOpen] = useState(false);
@@ -91,7 +102,7 @@ export function StakeholderManagerView({
 
   useEffect(() => {
     syncUrl({
-      project: projectFilter === "all" ? null : projectFilter,
+      project: projectFilter || null,
       q: q.trim() || null,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sync filters only
@@ -99,8 +110,9 @@ export function StakeholderManagerView({
 
   const scopedStakeholders = useMemo(() => {
     const ql = q.trim().toLowerCase();
+    const filterIds = resolveProjectFilterIds(projectHierarchy, projectFilter || null);
     return stakeholders.filter((s) => {
-      const projectOk = projectFilter === "all" || s.projectId === projectFilter;
+      const projectOk = !filterIds || filterIds.includes(s.projectId);
       const hay =
         !ql ||
         s.name.toLowerCase().includes(ql) ||
@@ -109,12 +121,14 @@ export function StakeholderManagerView({
         getQuadrantId(s.influence, s.interest).includes(ql);
       return projectOk && hay;
     });
-  }, [stakeholders, projectFilter, q]);
+  }, [stakeholders, projectFilter, projectHierarchy, q]);
 
   const scopedProjects = useMemo(() => {
-    if (projectFilter === "all") return projects;
+    if (!projectFilter) return projects;
+    const filterIds = resolveProjectFilterIds(projectHierarchy, projectFilter);
+    if (filterIds) return projects.filter((p) => filterIds.includes(p.id));
     return projects.filter((p) => p.id === projectFilter);
-  }, [projects, projectFilter]);
+  }, [projects, projectFilter, projectHierarchy]);
 
   const actionRows = useMemo(
     () =>
@@ -149,9 +163,7 @@ export function StakeholderManagerView({
   }, [scopedStakeholders, actionItems]);
 
   function handleActionSelect(item: StakeholderActionItem) {
-    if (projectFilter !== item.projectId && projectFilter !== "all") {
-      setProjectFilter(item.projectId);
-    } else if (projectFilter === "all") {
+    if (projectFilter !== item.projectId) {
       setProjectFilter(item.projectId);
     }
     if (item.stakeholderId) openDetail(item.stakeholderId);
@@ -222,11 +234,29 @@ export function StakeholderManagerView({
           </div>
         </div>
 
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <label className={uiLabel}>Iniciativa / subproyecto</label>
+          <ProjectHierarchySelect
+            value={projectFilter}
+            onChange={setProjectFilter}
+            groups={projectGroups}
+            allLabel="Todas"
+            className={`h-9 ${uiInput} w-auto min-w-[180px] py-1.5`}
+            aria-label="Filtrar por iniciativa o subproyecto"
+          />
+        </div>
+
         <StakeholderMatrixClient
           stakeholders={scopedStakeholders}
-          projectNames={projects}
-          projectFilter={projectFilter}
-          onProjectFilterChange={setProjectFilter}
+          projectFilterLabel={
+            !projectFilter
+              ? "Todas las iniciativas"
+              : projects.find((p) => p.id === projectFilter)?.name ??
+                projectGroups
+                  .flatMap((g) => [g.initiative, ...g.subprojects])
+                  .find((p) => p.id === projectFilter)?.name ??
+                "Alcance seleccionado"
+          }
           selectedId={selectedId}
           onSelectId={(id) => (id ? openDetail(id) : closeDetail())}
           canEdit={canEdit}
@@ -241,8 +271,9 @@ export function StakeholderManagerView({
       {createOpen ? (
         <CreateStakeholderModal
           projects={projects}
+          projectGroups={projectGroups}
           editStakeholder={editTarget}
-          defaultProjectId={projectFilter === "all" ? "" : projectFilter}
+          defaultProjectId={projectFilter || ""}
           createAction={createAction}
           updateAction={updateAction}
           onClose={() => {
