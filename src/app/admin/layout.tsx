@@ -1,52 +1,62 @@
-import Image from "next/image";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import { adminShell, uiButtonSecondary } from "@/lib/ui-classes";
-import { PMO_HUB } from "@/lib/dashboard-paths";
+import { dashShell } from "@/lib/ui-classes";
 import { requirePlatformSuperAdmin } from "@/lib/auth/platform-admin";
+import { getSessionUser } from "@/lib/auth/session";
+import { db } from "@/lib/db";
+import { personInitialsFromName } from "@/lib/role-labels";
 
-import { AdminNav } from "./admin-nav";
+import { AdminChrome } from "./admin-chrome";
 
 export const dynamic = "force-dynamic";
+
+function displayPersonName(name: string, email: string): string {
+  const n = name?.trim();
+  if (n && n !== email) return n;
+  return email;
+}
+
+function formatTodayEs(): string {
+  const raw = new Intl.DateTimeFormat("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
 
 export default async function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   await requirePlatformSuperAdmin();
+  const session = await getSessionUser();
+  if (!session) redirect("/login");
+
+  const user = await db.user.findUnique({
+    where: { id: session.userId },
+    select: { name: true, email: true, avatarUrl: true },
+  });
+
+  const personDisplayName = displayPersonName(
+    user?.name ?? session.name,
+    session.email,
+  );
+  const personInitials = personInitialsFromName(
+    user?.name ?? session.name,
+    session.email,
+  );
 
   return (
-    <div className={adminShell}>
-      <header className="border-b border-slate-200 pb-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-4">
-            <div className="shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-2">
-              <Image
-                src="/branding/vpc-logo.png"
-                alt="Value Project Consulting"
-                width={331}
-                height={331}
-                className="h-11 w-11 object-contain sm:h-12 sm:w-12"
-                priority
-              />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg font-semibold text-slate-900">
-                Administración global
-              </h1>
-              <p className="text-sm text-slate-600">
-                Cartera de clientes y accesos de la plataforma.
-              </p>
-            </div>
-          </div>
-          <Link className={uiButtonSecondary} href={PMO_HUB}>
-            Volver al tablero
-          </Link>
-        </div>
-        <div className="mt-4">
-          <AdminNav />
-        </div>
-      </header>
-      {children}
+    <div className={dashShell}>
+      <AdminChrome
+        personDisplayName={personDisplayName}
+        personInitials={personInitials}
+        personAvatarUrl={user?.avatarUrl ?? null}
+        dateLabel={formatTodayEs()}
+      >
+        {children}
+      </AdminChrome>
     </div>
   );
 }

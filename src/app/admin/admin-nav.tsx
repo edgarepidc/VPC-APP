@@ -7,35 +7,48 @@ const links = [
   {
     href: "/admin",
     label: "Clientes",
+    emoji: "🏢",
     match: (pathname: string) =>
       pathname === "/admin" || pathname.startsWith("/admin/tenants"),
   },
   {
     href: "/admin/users",
     label: "Usuarios",
+    emoji: "👥",
     match: (pathname: string) =>
       pathname.startsWith("/admin/users") || pathname.startsWith("/admin/invite"),
   },
 ] as const;
 
-export function AdminNav() {
+type AdminNavProps = {
+  onLinkClick?: () => void;
+};
+
+export function AdminNav({ onLinkClick }: AdminNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-wrap gap-2" aria-label="Administración global">
-      {links.map(({ href, label, match }) => {
+    <nav className="mt-6 space-y-1.5 text-sm" aria-label="Administración global">
+      <p className="dash-nav-section-label mb-2 text-xs font-semibold uppercase tracking-wider">
+        Plataforma
+      </p>
+      {links.map(({ href, label, emoji, match }) => {
         const active = match(pathname);
         return (
           <Link
             key={href}
             href={href}
-            className={
-              active
-                ? "rounded-lg bg-slate-800 px-3.5 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-                : "rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            }
+            onClick={onLinkClick}
+            className={[
+              "dash-nav-link flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
+              active ? "dash-nav-link--active" : "",
+            ].join(" ")}
+            aria-current={active ? "page" : undefined}
           >
-            {label}
+            <span className="text-base leading-none" aria-hidden>
+              {emoji}
+            </span>
+            <span>{label}</span>
           </Link>
         );
       })}

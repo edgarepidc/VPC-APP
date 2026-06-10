@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { UserMembershipManager } from "../_components/user-membership-manager";
+import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { UserPasswordReset } from "../_components/user-password-reset";
 import {
   IconMail,
@@ -127,6 +128,11 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
 
   return (
     <div className={adminPage}>
+      <DashboardPageHeader
+        title="Usuarios de plataforma"
+        description="Alta, membresías, invitaciones y auditoría de accesos."
+      />
+
       {params.error && (
         <p className={adminAlertError}>
           {decodeURIComponent(params.error.replace(/\+/g, " "))}

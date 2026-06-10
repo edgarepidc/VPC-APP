@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CreateTenantPanel } from "./_components/create-tenant-panel";
+import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import {
   IconOrg,
   IconPeople,
@@ -31,6 +32,7 @@ import {
   adminTd,
   adminTh,
   uiButtonPrimary,
+  uiInput,
 } from "@/lib/ui-classes";
 import { PMO_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser, setActiveTenantAsPlatformOwner } from "@/lib/auth/session";
@@ -118,6 +120,11 @@ export default async function AdminHomePage({ searchParams }: Props) {
 
   return (
     <div className={adminPage}>
+      <DashboardPageHeader
+        title="Cartera de clientes"
+        description="Organizaciones, planes y acceso a workspaces de la plataforma."
+      />
+
       {errorMsg && <p className={adminAlertError}>{errorMsg}</p>}
       {okMsg && <p className={adminAlertOk}>{okMsg}</p>}
 
@@ -182,7 +189,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
             type="search"
             placeholder="Nombre o slug…"
             defaultValue={rawQ}
-            className="min-w-[180px] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100"
+            className={`min-w-[180px] flex-1 ${uiInput}`}
           />
           <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
             Buscar
