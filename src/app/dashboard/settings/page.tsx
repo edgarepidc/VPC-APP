@@ -13,7 +13,7 @@ import {
 } from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { personInitialsFromName } from "@/lib/role-labels";
+import { personInitialsFromName, ROLE_LABELS, ROLE_SIDEBAR_LABELS } from "@/lib/role-labels";
 import { flashMessageFromParam } from "@/lib/server-action-errors";
 import { PMO_TEAM } from "@/lib/dashboard-paths";
 import { requireTenantId } from "@/lib/tenancy";
@@ -66,6 +66,34 @@ export default async function DashboardSettingsPage({
 
       {errorMessage ? <p className={dashAlertError}>{errorMessage}</p> : null}
       {okMessage ? <p className={dashAlertOk}>{okMessage}</p> : null}
+
+      <section className={`${dashCard} p-4`}>
+        <h2 className="text-base font-semibold text-slate-900">Tu acceso</h2>
+        <dl className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Rol en esta organización
+            </dt>
+            <dd className="mt-0.5 font-medium text-slate-900">
+              {ROLE_LABELS[session.role]} ({ROLE_SIDEBAR_LABELS[session.role]})
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Administración global (/admin)
+            </dt>
+            <dd className="mt-0.5 font-medium text-slate-900">
+              {session.isSuperAdmin ? "Sí — consultora VPC" : "No"}
+            </dd>
+          </div>
+        </dl>
+        {session.isSuperAdmin && !session.isSuperAdminFromDb && session.isSuperAdminFromEnv ? (
+          <p className="mt-3 text-xs text-amber-800">
+            Tu acceso a la administración global viene de la configuración de plataforma
+            (correo autorizado en Vercel), no del rol PM/admin del cliente.
+          </p>
+        ) : null}
+      </section>
 
       <section className={`${dashCard} p-4`}>
         <h2 className="text-base font-semibold text-slate-900">Datos personales</h2>

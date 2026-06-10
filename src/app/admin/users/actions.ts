@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { requirePlatformSuperAdmin } from "@/lib/auth/platform-admin";
 import type { RoleKey } from "@/lib/types";
 import { parseManagerProjectScopeFromForm } from "@/modules/memberships/project-access";
 import { PlanLimitError } from "@/modules/platform";
@@ -38,9 +39,7 @@ function usersQuery(params: {
 }
 
 async function requireSuperAdmin() {
-  const s = await getSessionUser();
-  if (!s?.isSuperAdmin) redirect("/admin/users?error=Sin+permiso");
-  return s;
+  return requirePlatformSuperAdmin("/admin/users?error=Sin+permiso");
 }
 
 export async function createUserAction(formData: FormData) {
@@ -112,6 +111,7 @@ export async function updateUserAction(formData: FormData) {
   const jobTitle = String(formData.get("jobTitle") ?? "").trim();
   const department = String(formData.get("department") ?? "").trim();
   const isActive = formData.get("isActive") === "on";
+  const isSuperAdmin = formData.get("isSuperAdmin") === "on";
   const filterQ = String(formData.get("filterQ") ?? "").trim();
   const filterTenant = String(formData.get("filterTenant") ?? "").trim();
 
@@ -125,6 +125,7 @@ export async function updateUserAction(formData: FormData) {
       jobTitle,
       department,
       isActive,
+      isSuperAdmin,
       actorUserId: s.userId,
     });
     revalidatePath("/admin/users");

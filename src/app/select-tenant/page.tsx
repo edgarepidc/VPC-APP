@@ -1,17 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AuthShell } from "@/components/auth-shell";
-import {
-  uiAlertError,
-  uiAlertWarning,
-  uiButtonGhost,
-  uiButtonPrimary,
-  uiInput,
-  uiLabel,
-} from "@/lib/ui-classes";
+import { uiAlertError, uiAlertWarning, uiButtonGhost } from "@/lib/ui-classes";
 import { PMO_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser, setActiveTenant } from "@/lib/auth/session";
-import { createFirstOrganizationAsAdmin } from "@/modules/tenancy/first-tenant";
 import { listTenantsForUser } from "@/modules/tenancy/service";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +26,7 @@ export default async function SelectTenantPage({
 
   const tenants = await listTenantsForUser(session.userId);
 
-  if (!session.isSuperAdmin && tenants.length === 1) {
+  if (tenants.length === 1) {
     await setActiveTenant(tenants[0].id);
     redirect(PMO_HUB);
   }
@@ -43,24 +36,6 @@ export default async function SelectTenantPage({
     const tenantId = String(formData.get("tenantId") ?? "");
     if (!tenantId) return;
     await setActiveTenant(tenantId);
-    redirect(PMO_HUB);
-  }
-
-  async function createFirstTenantAction(formData: FormData) {
-    "use server";
-    const s = await getSessionUser();
-    if (!s) redirect("/login");
-    const name = String(formData.get("orgName") ?? "");
-    const slug = String(formData.get("orgSlug") ?? "");
-    const result = await createFirstOrganizationAsAdmin({
-      userId: s.userId,
-      name,
-      slug,
-    });
-    if (!result.ok) {
-      redirect(`/select-tenant?error=${encodeURIComponent(result.message)}`);
-    }
-    await setActiveTenant(result.tenantId);
     redirect(PMO_HUB);
   }
 
@@ -79,36 +54,18 @@ export default async function SelectTenantPage({
 
       {tenants.length === 0 ? (
         <div className={`mt-6 space-y-4 ${uiAlertWarning}`}>
-          <p>No hay organizaciones asignadas. Crea la primera (serás administrador).</p>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 text-slate-800">
-            <p className="mb-3 font-medium text-slate-900">Nueva organizacion</p>
-            <form action={createFirstTenantAction} className="space-y-3">
-              <div>
-                <label className={uiLabel}>Nombre visible</label>
-                <input
-                  name="orgName"
-                  required
-                  minLength={2}
-                  defaultValue="Mobility ADO"
-                  className={`mt-1 ${uiInput}`}
-                />
-              </div>
-              <div>
-                <label className={uiLabel}>Identificador (slug, sin espacios)</label>
-                <input
-                  name="orgSlug"
-                  required
-                  pattern="[a-z0-9]+(-[a-z0-9]+)*"
-                  defaultValue="mobility-ado"
-                  className={`mt-1 ${uiInput}`}
-                  title="Minusculas, numeros y guiones"
-                />
-              </div>
-              <button type="submit" className={uiButtonPrimary}>
-                Crear y entrar al tablero
-              </button>
-            </form>
-          </div>
+          <p>
+            No tienes organizaciones asignadas. Un administrador de VPC debe darte acceso
+            desde la administración global (alta de usuario o invitación al equipo).
+          </p>
+          <p className="text-sm text-slate-700">
+            Si acabas de recibir credenciales, cierra sesión e inicia de nuevo. Si el
+            problema continúa, contacta a soporte con tu correo:{" "}
+            <strong>{session.email}</strong>.
+          </p>
+          <Link href="/login" className="inline-block text-sm font-medium text-slate-800 underline">
+            Volver al inicio de sesión
+          </Link>
         </div>
       ) : (
         <form action={selectTenantAction} className="mt-6 space-y-3">

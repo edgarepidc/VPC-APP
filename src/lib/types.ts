@@ -16,6 +16,8 @@ export type SessionUser = {
   isSuperAdmin: boolean;
   /** true si `User.isSuperAdmin` en Postgres (no incluye solo variables de entorno). */
   isSuperAdminFromDb: boolean;
+  /** true si el correo está en PLATFORM_OWNER_EMAIL o PLATFORM_SUPERADMIN_EMAILS. */
+  isSuperAdminFromEnv: boolean;
   /**
    * Superadmin entró con “Entrar al workspace” sin membresía en ese tenant.
    * Rol efectivo admin; útil para avisos de gobernanza en UI.

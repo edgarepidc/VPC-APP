@@ -1,10 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { adminShell, uiButtonSecondary } from "@/lib/ui-classes";
 import { PMO_HUB } from "@/lib/dashboard-paths";
-import { getSessionUser } from "@/lib/auth/session";
+import { requirePlatformSuperAdmin } from "@/lib/auth/platform-admin";
 
 import { AdminNav } from "./admin-nav";
 
@@ -13,9 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await getSessionUser();
-  if (!session) redirect("/login");
-  if (!session.isSuperAdmin) redirect(PMO_HUB);
+  await requirePlatformSuperAdmin();
 
   return (
     <div className={adminShell}>

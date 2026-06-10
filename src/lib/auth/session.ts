@@ -4,6 +4,10 @@ import { redirect } from "next/navigation";
 
 import type { SessionUser } from "@/lib/types";
 import {
+  isEmailGrantedSuperAdminByEnv,
+  isPlatformSuperadminEnvConfigured,
+} from "@/lib/auth/platform-admin";
+import {
   db,
   getDatabaseUrlDiagnostics,
   hintsForDatabaseUrl,
@@ -18,22 +22,7 @@ export type GetSessionUserOptions = {
   redirectOnDbFailure?: boolean;
 };
 
-function parsePlatformSuperadminEmailsFromEnv(): string[] {
-  return (
-    process.env.PLATFORM_SUPERADMIN_EMAILS?.split(/[,;]/)
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean) ?? []
-  );
-}
-
-/**
- * True when PLATFORM_OWNER_EMAIL or PLATFORM_SUPERADMIN_EMAILS is set in the
- * runtime environment (same notion as getSessionUser uses for env-based access).
- */
-export function isPlatformSuperadminEnvConfigured(): boolean {
-  if (process.env.PLATFORM_OWNER_EMAIL?.trim()) return true;
-  return parsePlatformSuperadminEmailsFromEnv().length > 0;
-}
+export { isPlatformSuperadminEnvConfigured } from "@/lib/auth/platform-admin";
 
 function envDatabaseHints(): string {
   const raw = process.env.DATABASE_URL?.trim() ?? "";
@@ -272,12 +261,8 @@ export async function getSessionUser(
     /* columna aun no migrada */
   }
 
-  const envSuperList = parsePlatformSuperadminEmailsFromEnv();
-  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
-  const isSuperAdmin =
-    isSuperAdminDb ||
-    envSuperList.includes(authEmail) ||
-    (!!ownerEmail && ownerEmail === authEmail);
+  const isSuperAdminFromEnv = isEmailGrantedSuperAdminByEnv(authEmail);
+  const isSuperAdmin = isSuperAdminDb || isSuperAdminFromEnv;
 
   const cookieStore = await cookies();
   const cookieTenantId = cookieStore.get(TENANT_COOKIE)?.value ?? null;
@@ -299,6 +284,7 @@ export async function getSessionUser(
     activeTenantId: tenantContext.activeTenantId,
     isSuperAdmin,
     isSuperAdminFromDb: isSuperAdminDb,
+    isSuperAdminFromEnv,
     isPlatformVisit: tenantContext.isPlatformVisit,
   };
 }

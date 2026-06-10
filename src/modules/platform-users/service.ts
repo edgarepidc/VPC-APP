@@ -217,6 +217,7 @@ export async function createPlatformUserDirect(input: {
       jobTitle,
       department,
       isActive: true,
+      isSuperAdmin: false,
       lastSignInAt: data.user.last_sign_in_at
         ? new Date(data.user.last_sign_in_at)
         : null,
@@ -360,6 +361,7 @@ export async function updatePlatformUserProfile(input: {
   jobTitle?: string;
   department?: string;
   isActive?: boolean;
+  isSuperAdmin?: boolean;
   actorUserId?: string;
 }) {
   const name = input.name?.trim() || null;
@@ -369,7 +371,7 @@ export async function updatePlatformUserProfile(input: {
 
   const user = await db.user.findUnique({
     where: { id: input.userId },
-    select: { id: true, email: true, isActive: true },
+    select: { id: true, email: true, isActive: true, isSuperAdmin: true },
   });
   if (!user) throw new Error("Usuario no encontrado.");
 
@@ -381,6 +383,7 @@ export async function updatePlatformUserProfile(input: {
       jobTitle,
       department,
       ...(typeof input.isActive === "boolean" ? { isActive: input.isActive } : {}),
+      ...(typeof input.isSuperAdmin === "boolean" ? { isSuperAdmin: input.isSuperAdmin } : {}),
     },
   });
 
@@ -414,6 +417,16 @@ export async function updatePlatformUserProfile(input: {
       userId: input.userId,
       actorUserId: input.actorUserId,
       action: input.isActive ? USER_AUDIT_ACTIONS.ACTIVATED : USER_AUDIT_ACTIONS.DEACTIVATED,
+    });
+  }
+
+  if (typeof input.isSuperAdmin === "boolean" && input.isSuperAdmin !== user.isSuperAdmin) {
+    await logUserAudit({
+      userId: input.userId,
+      actorUserId: input.actorUserId,
+      action: input.isSuperAdmin
+        ? USER_AUDIT_ACTIONS.SUPERADMIN_GRANTED
+        : USER_AUDIT_ACTIONS.SUPERADMIN_REVOKED,
     });
   }
 }

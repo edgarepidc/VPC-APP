@@ -10,6 +10,8 @@ export const USER_AUDIT_ACTIONS = {
   MEMBERSHIP_ADDED: "membership_added",
   MEMBERSHIP_ROLE_CHANGED: "membership_role_changed",
   MEMBERSHIP_REMOVED: "membership_removed",
+  SUPERADMIN_GRANTED: "superadmin_granted",
+  SUPERADMIN_REVOKED: "superadmin_revoked",
 } as const;
 
 export type UserAuditAction = (typeof USER_AUDIT_ACTIONS)[keyof typeof USER_AUDIT_ACTIONS];
@@ -61,6 +63,8 @@ export function auditActionLabel(action: string): string {
     membership_added: "Asignado a organización",
     membership_role_changed: "Rol cambiado",
     membership_removed: "Removido de organización",
+    superadmin_granted: "Superadmin plataforma otorgado",
+    superadmin_revoked: "Superadmin plataforma revocado",
   };
   return map[action] ?? action;
 }

@@ -26,6 +26,7 @@ import {
   uiLabel,
 } from "@/lib/ui-classes";
 import { PMO_HUB } from "@/lib/dashboard-paths";
+import { isEmailGrantedSuperAdminByEnv } from "@/lib/auth/platform-admin";
 import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { ROLE_LABELS } from "@/lib/role-labels";
@@ -379,16 +380,39 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                       />
                     </td>
                     <td className={adminTd}>
-                      <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-                        <input
-                          form={formId}
-                          type="checkbox"
-                          name="isActive"
-                          defaultChecked={u.isActive}
-                          className="rounded border-slate-300"
-                        />
-                        Activo
-                      </label>
+                      <div className="space-y-2">
+                        <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            form={formId}
+                            type="checkbox"
+                            name="isActive"
+                            defaultChecked={u.isActive}
+                            className="rounded border-slate-300"
+                          />
+                          Activo
+                        </label>
+                        <label className="flex items-start gap-2 text-sm text-slate-700">
+                          <input
+                            form={formId}
+                            type="checkbox"
+                            name="isSuperAdmin"
+                            defaultChecked={u.isSuperAdmin}
+                            className="mt-0.5 rounded border-slate-300"
+                          />
+                          <span>
+                            Superadmin plataforma
+                            <span className="mt-0.5 block text-[11px] font-normal text-slate-500">
+                              Acceso a /admin (consultora VPC). No uses para PMs ni clientes.
+                            </span>
+                          </span>
+                        </label>
+                        {isEmailGrantedSuperAdminByEnv(u.email) ? (
+                          <p className="text-[11px] font-medium text-amber-800">
+                            Este correo también tiene acceso por variable de entorno en Vercel
+                            (PLATFORM_OWNER_EMAIL / PLATFORM_SUPERADMIN_EMAILS).
+                          </p>
+                        ) : null}
+                      </div>
                     </td>
                     <td className={`${adminTd} tabular-nums text-sm text-slate-600`}>
                       {formatShortDate(u.lastSignInAt)}
