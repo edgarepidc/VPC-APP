@@ -248,8 +248,9 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
   const [projectFilter, setProjectFilter] = useState(initial?.project ?? "");
   const [sort, setSort] = useState<"fecha" | "peso" | "estado" | "fase">("fecha");
   const [panel, setPanel] = useState<"closed" | "detail" | "create" | "template">("closed");
-  const [selectedId, setSelectedId] = useState<string | null>(initial?.id ?? null);
-  const [focusId, setFocusId] = useState<string | null>(initial?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const deepLinkOpenedRef = useRef(false);
 
   const scopeRows = useMemo(
     () => (projectFilter ? rows.filter((r) => r.projectId === projectFilter) : rows),
@@ -374,11 +375,12 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
   }, [panel]);
 
   useEffect(() => {
-    if (initial?.id && rows.some((r) => r.id === initial.id)) {
-      setPanel("detail");
-      setSelectedId(initial.id);
-      setFocusId(initial.id);
-    }
+    if (!initial?.id || deepLinkOpenedRef.current) return;
+    if (!rows.some((r) => r.id === initial.id)) return;
+    deepLinkOpenedRef.current = true;
+    setPanel("detail");
+    setSelectedId(initial.id);
+    setFocusId(initial.id);
   }, [initial?.id, rows]);
 
   useEffect(() => {
@@ -586,7 +588,8 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
           <DeliverablesActionQueue
             items={actionItems}
             activeId={focusId}
-            onSelect={(id) => focusDeliverable(id, true)}
+            onHighlight={setFocusId}
+            onOpen={openDetail}
           />
 
           <div className="min-w-0 overflow-x-auto overflow-y-visible">

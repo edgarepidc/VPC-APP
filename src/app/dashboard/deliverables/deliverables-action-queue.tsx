@@ -13,13 +13,15 @@ const kindStyle: Record<DeliverableActionKind, { badge: string; label: string }>
 type DeliverablesActionQueueProps = {
   items: ConsolidatedActionItem[];
   activeId: string | null;
-  onSelect: (id: string) => void;
+  onHighlight: (id: string) => void;
+  onOpen: (id: string) => void;
 };
 
 export function DeliverablesActionQueue({
   items,
   activeId,
-  onSelect,
+  onHighlight,
+  onOpen,
 }: DeliverablesActionQueueProps) {
   if (items.length === 0) {
     return (
@@ -44,9 +46,9 @@ export function DeliverablesActionQueue({
             <button
               key={item.row.id}
               type="button"
-              onMouseEnter={() => onSelect(item.row.id)}
-              onFocus={() => onSelect(item.row.id)}
-              onClick={() => onSelect(item.row.id)}
+              onMouseEnter={() => onHighlight(item.row.id)}
+              onFocus={() => onHighlight(item.row.id)}
+              onClick={() => onOpen(item.row.id)}
               className={`flex min-w-[220px] max-w-[280px] shrink-0 flex-col rounded-lg border px-3 py-2 text-left transition ${
                 isActive
                   ? "border-slate-800 bg-white shadow-sm"
