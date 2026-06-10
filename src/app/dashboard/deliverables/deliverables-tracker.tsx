@@ -18,6 +18,8 @@ import {
 } from "@/lib/deliverable-weight-utils";
 import { uiInput, uiLabel, dashAlertError, dashAlertOk } from "@/lib/ui-classes";
 
+import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
+
 import { CreateDeliverableModal } from "./create-deliverable-modal";
 import {
   buildConsolidatedActionItems,
@@ -231,39 +233,6 @@ function progressBarColor(pct: number): string {
   if (pct >= 70) return "#059669";
   if (pct >= 40) return "#d97706";
   return "#e11d48";
-}
-
-const KPI_TONES = {
-  slate: "border-slate-200 bg-gradient-to-br from-slate-50 to-white",
-  emerald: "border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-white",
-  sky: "border-sky-200/80 bg-gradient-to-br from-sky-50/90 to-white",
-  rose: "border-rose-200/80 bg-gradient-to-br from-rose-50/90 to-white",
-  amber: "border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-white",
-  accent: "border-slate-300 bg-gradient-to-br from-slate-100 to-white ring-1 ring-slate-200/80",
-} as const;
-
-function KpiCard({
-  label,
-  value,
-  sub,
-  tone,
-  valueClass = "",
-}: {
-  label: string;
-  value: ReactNode;
-  sub: string;
-  tone: keyof typeof KPI_TONES;
-  valueClass?: string;
-}) {
-  return (
-    <div className={`rounded-lg border px-3.5 py-2.5 ${KPI_TONES[tone]}`}>
-      <div className="mb-0.5 text-xs font-medium text-slate-600">{label}</div>
-      <div className={`text-lg font-semibold tabular-nums leading-none text-slate-900 ${valueClass}`}>
-        {value}
-      </div>
-      <div className="mt-0.5 text-xs text-slate-500">{sub}</div>
-    </div>
-  );
 }
 
 export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props) {
@@ -540,38 +509,38 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
               </button>
             </div>
           ) : null}
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-2">
-            <KpiCard label="Total entregables" value={total} sub="registrados" tone="slate" />
-            <KpiCard
+          <div className={dashKpiTilesGrid}>
+            <KpiTile label="Total entregables" value={total} sub="registrados" tone="slate" />
+            <KpiTile
               label="Completados"
               value={comp}
               sub="aprobados / entregados"
               tone="emerald"
-              valueClass="text-emerald-700"
+              valueClassName="text-emerald-700"
             />
-            <KpiCard label="En proceso" value={pend} sub="pendiente o revisión" tone="sky" />
-            <KpiCard
+            <KpiTile label="En proceso" value={pend} sub="pendiente o revisión" tone="sky" />
+            <KpiTile
               label="Vencidos"
               value={venc}
               sub="fuera de fecha"
               tone="rose"
-              valueClass={venc > 0 ? "text-rose-700" : ""}
+              valueClassName={venc > 0 ? "text-rose-700" : ""}
             />
-            <KpiCard
+            <KpiTile
               label="Acuses pendientes"
               value={acPend}
               sub="sin confirmar"
               tone="amber"
-              valueClass={acPend > 0 ? "text-amber-800" : ""}
+              valueClassName={acPend > 0 ? "text-amber-800" : ""}
             />
-            <KpiCard
+            <KpiTile
               label="Avance ponderado"
               value={`${pct}%`}
               sub={`${projectCount} proyecto${projectCount !== 1 ? "s" : ""} · media ponderada`}
               tone="accent"
-              valueClass="text-slate-800"
+              valueClassName="text-slate-800"
             />
-            <KpiCard
+            <KpiTile
               label="A tiempo"
               value={compliance.onTimePct !== null ? `${compliance.onTimePct}%` : "—"}
               sub={
@@ -580,9 +549,9 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
                   : "sin cierres medibles"
               }
               tone="emerald"
-              valueClass="text-emerald-700"
+              valueClassName="text-emerald-700"
             />
-            <KpiCard
+            <KpiTile
               label="Lead time medio"
               value={compliance.avgLeadDays !== null ? `${compliance.avgLeadDays}d` : "—"}
               sub="registro → entrega"

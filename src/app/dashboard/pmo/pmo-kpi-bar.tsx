@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
 import {
   PMO_DELIVERABLES,
   PMO_ESCALATIONS,
@@ -32,88 +33,117 @@ type PmoKpiBarProps = {
   formatMxn: (value: number) => string;
 };
 
+const linkValueClass = `${dashKpiValue} hover:underline`;
+
 export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
   return (
-    <section className="grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm sm:flex sm:flex-wrap sm:gap-6 sm:px-4">
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.projects}>Proyectos</PmoKpiLabel>
-        <Link href={PMO_PROJECTS} className={`${dashKpiValue} hover:underline`}>
-          {kpis.projects}
-        </Link>
-      </div>
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.deliverables}>Entregables</PmoKpiLabel>
-        <Link href={PMO_DELIVERABLES} className={`${dashKpiValue} hover:underline`}>
-          {kpis.deliverables}
-        </Link>
-        {kpis.overdueDeliverables > 0 ? (
-          <Link href={PMO_DELIVERABLES} className="text-xs text-rose-700 hover:underline">
-            {kpis.overdueDeliverables} vencidos
+    <section className={dashKpiTilesGrid}>
+      <KpiTile
+        tone="slate"
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.projects}>Proyectos</PmoKpiLabel>}
+        value={
+          <Link href={PMO_PROJECTS} className={linkValueClass}>
+            {kpis.projects}
           </Link>
-        ) : (
-          <p className="text-xs text-slate-500">0 vencidos</p>
-        )}
-      </div>
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.onTime}>A tiempo</PmoKpiLabel>
-        <p className={dashKpiValue}>
-          {kpis.deliverableOnTimePct !== null ? `${kpis.deliverableOnTimePct}%` : "—"}
-        </p>
-        <p className="text-xs text-slate-500">cierres con fecha</p>
-      </div>
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.leadTime}>Lead time</PmoKpiLabel>
-        <p className={dashKpiValue}>
-          {kpis.deliverableAvgLeadDays !== null ? `${kpis.deliverableAvgLeadDays}d` : "—"}
-        </p>
-        <p className="text-xs text-slate-500">registro → entrega</p>
-      </div>
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.risks}>Riesgos</PmoKpiLabel>
-        <Link href={PMO_RISKS} className={`${dashKpiValue} hover:underline`}>
-          {kpis.risks}
-        </Link>
-        {kpis.criticalRisks > 0 ? (
-          <Link href={PMO_RISKS} className="text-xs text-amber-700 hover:underline">
-            {kpis.criticalRisks} críticos
+        }
+        sub="activos en cartera"
+      />
+      <KpiTile
+        tone={kpis.overdueDeliverables > 0 ? "rose" : "sky"}
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.deliverables}>Entregables</PmoKpiLabel>}
+        value={
+          <Link href={PMO_DELIVERABLES} className={linkValueClass}>
+            {kpis.deliverables}
           </Link>
-        ) : (
-          <p className="text-xs text-slate-500">0 críticos</p>
-        )}
-      </div>
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.residualVme}>Exposición residual</PmoKpiLabel>
-        <p className={dashKpiValue}>{formatMxn(kpis.totalResidualVme)}</p>
-        <p className="text-xs text-slate-500">VME en pesos</p>
-      </div>
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.escalations}>Escalamientos</PmoKpiLabel>
-        <Link href={PMO_ESCALATIONS} className={`${dashKpiValue} hover:underline`}>
-          {kpis.escalationChecks}
-        </Link>
-        <p className="text-xs text-slate-500">últimos 30 días</p>
-      </div>
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.meetings}>Reuniones</PmoKpiLabel>
-        <Link href={PMO_MEETINGS} className={`${dashKpiValue} hover:underline`}>
-          {kpis.meetingSessions}
-        </Link>
-        <p className="text-xs text-slate-500">
-          {formatMxn(kpis.totalMeetingCostMxn)} · 30 días
-        </p>
-      </div>
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.stakeholders}>Interesados</PmoKpiLabel>
-        <Link href={PMO_STAKEHOLDERS} className={`${dashKpiValue} hover:underline`}>
-          {kpis.stakeholders}
-        </Link>
-      </div>
-      <div>
-        <PmoKpiLabel hint={PMO_KPI_HINTS.team}>Equipo</PmoKpiLabel>
-        <Link href={PMO_TEAM} className={`${dashKpiValue} hover:underline`}>
-          Gestionar
-        </Link>
-      </div>
+        }
+        sub={
+          kpis.overdueDeliverables > 0 ? (
+            <Link href={PMO_DELIVERABLES} className="text-rose-700 hover:underline">
+              {kpis.overdueDeliverables} vencidos
+            </Link>
+          ) : (
+            "0 vencidos"
+          )
+        }
+      />
+      <KpiTile
+        tone="emerald"
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.onTime}>A tiempo</PmoKpiLabel>}
+        value={kpis.deliverableOnTimePct !== null ? `${kpis.deliverableOnTimePct}%` : "—"}
+        valueClassName="text-emerald-700"
+        sub="cierres con fecha"
+      />
+      <KpiTile
+        tone="slate"
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.leadTime}>Lead time</PmoKpiLabel>}
+        value={kpis.deliverableAvgLeadDays !== null ? `${kpis.deliverableAvgLeadDays}d` : "—"}
+        sub="registro → entrega"
+      />
+      <KpiTile
+        tone={kpis.criticalRisks > 0 ? "amber" : "slate"}
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.risks}>Riesgos</PmoKpiLabel>}
+        value={
+          <Link href={PMO_RISKS} className={linkValueClass}>
+            {kpis.risks}
+          </Link>
+        }
+        sub={
+          kpis.criticalRisks > 0 ? (
+            <Link href={PMO_RISKS} className="text-amber-800 hover:underline">
+              {kpis.criticalRisks} críticos
+            </Link>
+          ) : (
+            "0 críticos"
+          )
+        }
+      />
+      <KpiTile
+        tone="red"
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.residualVme}>Exposición residual</PmoKpiLabel>}
+        value={formatMxn(kpis.totalResidualVme)}
+        valueClassName="text-red-700"
+        sub="VME en pesos"
+      />
+      <KpiTile
+        tone="amber"
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.escalations}>Escalamientos</PmoKpiLabel>}
+        value={
+          <Link href={PMO_ESCALATIONS} className={linkValueClass}>
+            {kpis.escalationChecks}
+          </Link>
+        }
+        sub="últimos 30 días"
+      />
+      <KpiTile
+        tone="sky"
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.meetings}>Reuniones</PmoKpiLabel>}
+        value={
+          <Link href={PMO_MEETINGS} className={linkValueClass}>
+            {kpis.meetingSessions}
+          </Link>
+        }
+        sub={`${formatMxn(kpis.totalMeetingCostMxn)} · 30 días`}
+      />
+      <KpiTile
+        tone="emerald"
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.stakeholders}>Interesados</PmoKpiLabel>}
+        value={
+          <Link href={PMO_STAKEHOLDERS} className={linkValueClass}>
+            {kpis.stakeholders}
+          </Link>
+        }
+        sub="registrados"
+      />
+      <KpiTile
+        tone="accent"
+        label={<PmoKpiLabel hint={PMO_KPI_HINTS.team}>Equipo</PmoKpiLabel>}
+        value={
+          <Link href={PMO_TEAM} className={`${linkValueClass} text-base`}>
+            Gestionar
+          </Link>
+        }
+        sub="accesos y roles"
+      />
     </section>
   );
 }

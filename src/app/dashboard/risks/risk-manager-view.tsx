@@ -7,6 +7,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import type { RiskFormPrefill } from "@/lib/escalation-risk-prefill";
 import { DELIVERABLE_DETAIL_IN_PROJECT, DELIVERABLES_PROJECT, RISKS_PROJECT } from "@/lib/dashboard-paths";
 
+import { KpiTile } from "@/app/dashboard/_components/kpi-tile";
 import {
   dashAlertWarn,
   dashCard,
@@ -333,40 +334,54 @@ ${D}`;
   return (
     <div className="space-y-4 text-slate-900">
       <div className={dashKpiGrid}>
-        <div className={`${dashCard} p-4`}>
-          <RiskKpiLabel hint={RISK_KPI_HINTS.grossVme}>Exposición total VME</RiskKpiLabel>
-          <p className={`${dashKpiValue} text-red-600`}>{fmtMoneyMxn(kpis.grossV)}</p>
-          <p className={`mt-2 ${dashKpiLabel}`}>
-            <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" />
-            {kpis.activeCount} riesgos activos
-          </p>
-        </div>
-        <div className={`${dashCard} p-4`}>
-          <RiskKpiLabel hint={RISK_KPI_HINTS.residualVme}>VME residual</RiskKpiLabel>
-          <p className={`${dashKpiValue} text-blue-600`}>{fmtMoneyMxn(kpis.resV)}</p>
-          <p className={`mt-2 ${dashKpiLabel}`}>
-            <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500 align-middle" />
-            tras mitigación
-          </p>
-        </div>
-        <div className={`${dashCard} p-4`}>
-          <RiskKpiLabel hint={RISK_KPI_HINTS.critical}>Riesgos críticos</RiskKpiLabel>
-          <p className={`${dashKpiValue} text-amber-600`}>{kpis.critical}</p>
-          <p className={`mt-2 ${dashKpiLabel}`}>
-            <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle" />
-            score residual &gt; 10
-          </p>
-        </div>
-        <div className={`${dashCard} p-4`}>
-          <RiskKpiLabel hint={RISK_KPI_HINTS.mitigationEff}>Efectividad mitigación</RiskKpiLabel>
-          <p className={`${dashKpiValue} text-emerald-600`}>
-            {kpis.eff !== null ? `${kpis.eff}%` : "—"}
-          </p>
-          <p className={`mt-2 ${dashKpiLabel}`}>
-            <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 align-middle" />
-            reducción de exposición
-          </p>
-        </div>
+        <KpiTile
+          tone="red"
+          label={<RiskKpiLabel hint={RISK_KPI_HINTS.grossVme}>Exposición total VME</RiskKpiLabel>}
+          value={fmtMoneyMxn(kpis.grossV)}
+          valueClassName="text-red-600"
+          sub={
+            <>
+              <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" />
+              {kpis.activeCount} riesgos activos
+            </>
+          }
+        />
+        <KpiTile
+          tone="blue"
+          label={<RiskKpiLabel hint={RISK_KPI_HINTS.residualVme}>VME residual</RiskKpiLabel>}
+          value={fmtMoneyMxn(kpis.resV)}
+          valueClassName="text-blue-600"
+          sub={
+            <>
+              <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500 align-middle" />
+              tras mitigación
+            </>
+          }
+        />
+        <KpiTile
+          tone="amber"
+          label={<RiskKpiLabel hint={RISK_KPI_HINTS.critical}>Riesgos críticos</RiskKpiLabel>}
+          value={kpis.critical}
+          valueClassName="text-amber-600"
+          sub={
+            <>
+              <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle" />
+              score residual &gt; 10
+            </>
+          }
+        />
+        <KpiTile
+          tone="emerald"
+          label={<RiskKpiLabel hint={RISK_KPI_HINTS.mitigationEff}>Efectividad mitigación</RiskKpiLabel>}
+          value={kpis.eff !== null ? `${kpis.eff}%` : "—"}
+          valueClassName="text-emerald-600"
+          sub={
+            <>
+              <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 align-middle" />
+              reducción de exposición
+            </>
+          }
+        />
       </div>
 
       <section className={`${dashCard} p-4`}>
