@@ -9,6 +9,7 @@ import {
   formatDurationMinutes,
   formatMxn,
   getCostLevelBadge,
+  getMeetingCostLevelCardClass,
   MEETING_OBJECTIVE_LABELS,
   type MeetingRoiDetailRecord,
 } from "@/lib/meeting-roi-utils";
@@ -102,21 +103,13 @@ export function MeetingRoiRadarClient({
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {sorted.slice(0, 6).map((row) => {
             const badge = getCostLevelBadge(row.costLevel);
-            const borderTone =
-              row.costLevel === "Crítico"
-                ? "border-l-rose-500"
-                : row.costLevel === "Alto"
-                  ? "border-l-amber-400"
-                  : row.costLevel === "Moderado"
-                    ? "border-l-sky-500"
-                    : "border-l-emerald-500";
 
             return (
               <button
                 key={row.id}
                 type="button"
                 onClick={() => setSelected(row)}
-                className={`rounded-lg border border-slate-200 border-l-4 ${borderTone} bg-white p-3 text-left transition hover:border-slate-300 hover:shadow-sm active:scale-[0.99]`}
+                className={`rounded-lg p-3 text-left shadow-sm transition hover:shadow-md active:scale-[0.99] ${getMeetingCostLevelCardClass(row.costLevel)}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

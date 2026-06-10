@@ -29,6 +29,22 @@ export function getCostLevelBadge(level: MeetingCostLevel | string) {
   }
 }
 
+/** Marco de tarjeta acorde al nivel de costo de la sesión. */
+export function getMeetingCostLevelCardClass(level: MeetingCostLevel | string) {
+  switch (level) {
+    case "Bajo":
+      return "border-2 border-emerald-400 bg-white hover:border-emerald-500";
+    case "Moderado":
+      return "border-2 border-blue-400 bg-white hover:border-blue-500";
+    case "Alto":
+      return "border-2 border-amber-400 bg-white hover:border-amber-500";
+    case "Crítico":
+      return "border-2 border-rose-500 bg-white hover:border-rose-600";
+    default:
+      return "border border-slate-200 bg-white hover:border-slate-300";
+  }
+}
+
 export function costLevelSortWeight(level: string) {
   if (level === "Crítico") return 0;
   if (level === "Alto") return 1;

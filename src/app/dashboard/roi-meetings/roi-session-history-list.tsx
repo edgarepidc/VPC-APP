@@ -6,6 +6,7 @@ import {
   formatDurationMinutes,
   formatMxn,
   getCostLevelBadge,
+  getMeetingCostLevelCardClass,
   MEETING_OBJECTIVE_LABELS,
   type MeetingRoiDetailRecord,
 } from "@/lib/meeting-roi-utils";
@@ -28,7 +29,7 @@ export function RoiSessionHistoryList({ rows, canEdit = false }: RoiSessionHisto
         return (
           <li
             key={session.id}
-            className="rounded-lg border border-slate-200 p-3 text-sm"
+            className={`rounded-lg p-3 text-sm shadow-sm transition ${getMeetingCostLevelCardClass(session.costLevel)}`}
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <button

@@ -31,6 +31,20 @@ export function getEscalationTierBadge(tier: EscalationTier | string) {
   }
 }
 
+/** Marco de tarjeta acorde al semáforo del Escalómetro. */
+export function getEscalationTierCardClass(tier: EscalationTier | string) {
+  switch (tier) {
+    case "green":
+      return "border-2 border-emerald-400 bg-white hover:border-emerald-500";
+    case "orange":
+      return "border-2 border-amber-400 bg-white hover:border-amber-500";
+    case "red":
+      return "border-2 border-rose-500 bg-white hover:border-rose-600";
+    default:
+      return "border border-slate-200 bg-white hover:border-slate-300";
+  }
+}
+
 export function getIndicatorLevelClass(level: string) {
   if (level === "high") return "bg-rose-500";
   if (level === "medium") return "bg-amber-400";

@@ -10,6 +10,7 @@ import {
   formatEscalationDateTime,
   formatRelativeDate,
   getEscalationTierBadge,
+  getEscalationTierCardClass,
   getIndicatorLevelClass,
 } from "@/lib/escalation-utils";
 
@@ -33,7 +34,7 @@ export function EscalationHistoryList({ rows, canCreateRisk = false }: Escalatio
         return (
           <li
             key={check.id}
-            className="rounded-lg border border-slate-200 p-3 text-sm"
+            className={`rounded-lg p-3 text-sm shadow-sm transition ${getEscalationTierCardClass(check.tier)}`}
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <button
