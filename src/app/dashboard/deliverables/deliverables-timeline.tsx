@@ -10,7 +10,6 @@ import {
   type DeliverableStatus,
 } from "@/modules/deliverables/constants";
 
-import { formatDeliveredAt, formatDueYmd } from "./deliverable-utils";
 import type { DeliverableTrackerRow } from "./deliverables-tracker";
 
 function parseYmd(s: string | null): Date | null {
@@ -39,30 +38,14 @@ function themeForRow(row: DeliverableTrackerRow, overdue: boolean) {
   return STATUS_THEME[st];
 }
 
-const TRACK_INSET = 12;
-const TRACK_SIDE_PAD = 128;
-/** Separación mínima entre hitos (% del ancho útil) antes de apilar en otro carril. */
-const MIN_SEP_PCT = 7;
-const LANE_STEP_PX = 88;
-const BASE_TRACK_HEIGHT = 300;
+const TRACK_INSET = 8;
+const TRACK_SIDE_PAD = 48;
+/** A partir de cuántos hitos usamos espaciado uniforme (evita solapamiento). */
+const EQUAL_SPACING_FROM = 4;
+const SLOT_WIDTH_PX = 112;
+const CONNECTOR_H = 28;
 
-function assignTimelineLanes(
-  items: { row: DeliverableTrackerRow; date: Date; left: number }[],
-) {
-  const occupied: { left: number; lane: number }[] = [];
-  return items.map((item) => {
-    let lane = 0;
-    while (
-      occupied.some(
-        (o) => o.lane === lane && Math.abs(o.left - item.left) < MIN_SEP_PCT,
-      )
-    ) {
-      lane += 1;
-    }
-    occupied.push({ left: item.left, lane });
-    return { ...item, lane };
-  });
-}
+type TimelineItem = { row: DeliverableTrackerRow; date: Date };
 
 type DeliverablesTimelineProps = {
   rows: DeliverableTrackerRow[];
@@ -72,6 +55,16 @@ type DeliverablesTimelineProps = {
   showDependencies?: boolean;
 };
 
+function computeLeftPct(index: number, count: number, date: Date, range: { min: number; span: number } | null) {
+  const usable = 100 - TRACK_INSET * 2;
+  if (count >= EQUAL_SPACING_FROM) {
+    return TRACK_INSET + ((index + 0.5) / count) * usable;
+  }
+  if (!range || count === 1) return TRACK_INSET + usable / 2;
+  const raw = ((date.getTime() - range.min) / range.span) * usable;
+  return TRACK_INSET + raw;
+}
+
 export function DeliverablesTimeline({
   rows,
   focusId,
@@ -79,14 +72,12 @@ export function DeliverablesTimeline({
   onSelect,
   showDependencies = false,
 }: DeliverablesTimelineProps) {
-  const [localFocus, setLocalFocus] = useState<string | null>(null);
-  const focusedId = focusId !== undefined ? focusId : localFocus;
-  const setFocus = onFocusChange ?? setLocalFocus;
+  const [hoverId, setHoverId] = useState<string | null>(null);
 
-  const items = useMemo(() => {
+  const items = useMemo((): TimelineItem[] => {
     return rows
       .map((row) => ({ row, date: parseYmd(row.dueDate) }))
-      .filter((item): item is { row: DeliverableTrackerRow; date: Date } => item.date !== null)
+      .filter((item): item is TimelineItem => item.date !== null)
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [rows]);
 
@@ -97,63 +88,55 @@ export function DeliverablesTimeline({
     return { min, max, span: Math.max(max - min, 86400000) };
   }, [items]);
 
+  const useEqualSpacing = items.length >= EQUAL_SPACING_FROM;
+  const trackMinWidth = Math.max(
+    640,
+    items.length * SLOT_WIDTH_PX + TRACK_SIDE_PAD * 2,
+  );
+
+  const placedItems = useMemo(
+    () =>
+      items.map((item, index) => ({
+        ...item,
+        left: computeLeftPct(index, items.length, item.date, range),
+        isAbove: index % 2 === 0,
+      })),
+    [items, range],
+  );
+
+  const positionsById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of placedItems) map.set(item.row.id, item.left);
+    return map;
+  }, [placedItems]);
+
   const todayLeft = useMemo(() => {
-    if (!range) return null;
+    if (!range || useEqualSpacing) return null;
     const t = new Date();
     t.setHours(0, 0, 0, 0);
     const pct = ((t.getTime() - range.min) / range.span) * 100;
     if (pct < 0 || pct > 100) return null;
     return TRACK_INSET + (pct * (100 - TRACK_INSET * 2)) / 100;
-  }, [range]);
+  }, [range, useEqualSpacing]);
 
   const gradientLine = useMemo(() => {
-    if (items.length === 0) return "#cbd5e1";
-    const colors = items.map(({ row, date }) => {
+    if (placedItems.length === 0) return "#cbd5e1";
+    const colors = placedItems.map(({ row, date }) => {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
-      const overdue = !isDeliverableDoneStatus(row.status) && date.getTime() < todayStart.getTime();
+      const overdue =
+        !isDeliverableDoneStatus(row.status) && date.getTime() < todayStart.getTime();
       return themeForRow(row, overdue).accent;
     });
     if (colors.length === 1) return colors[0]!;
     return `linear-gradient(to right, ${colors.join(", ")})`;
-  }, [items]);
+  }, [placedItems]);
 
-  const compactCards = items.length > 6;
-  const trackMinWidth = Math.max(760, items.length * (compactCards ? 160 : 200) + TRACK_SIDE_PAD * 2);
-
-  const activeItem = useMemo(
-    () => items.find(({ row }) => row.id === focusedId) ?? null,
-    [focusedId, items],
+  const previewId = hoverId ?? focusId ?? null;
+  const previewItem = useMemo(
+    () => placedItems.find(({ row }) => row.id === previewId) ?? null,
+    [placedItems, previewId],
   );
-
-  const positionsById = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const { row, date } of items) {
-      const rawPct =
-        range && items.length === 1
-          ? 50
-          : range
-            ? ((date.getTime() - range.min) / range.span) * 100
-            : 0;
-      map.set(row.id, TRACK_INSET + (rawPct * (100 - TRACK_INSET * 2)) / 100);
-    }
-    return map;
-  }, [items, range]);
-
-  const placedItems = useMemo(() => {
-    const withLeft = items.map((item) => ({
-      ...item,
-      left: positionsById.get(item.row.id) ?? 50,
-    }));
-    return assignTimelineLanes(withLeft);
-  }, [items, positionsById]);
-
-  const maxLane = useMemo(
-    () => placedItems.reduce((max, item) => Math.max(max, item.lane), 0),
-    [placedItems],
-  );
-
-  const trackHeight = BASE_TRACK_HEIGHT + Math.floor(maxLane / 2) * LANE_STEP_PX;
 
   const dependencyEdges = useMemo(() => {
     if (!showDependencies) return [];
@@ -180,13 +163,15 @@ export function DeliverablesTimeline({
   return (
     <section
       className="overflow-visible rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/80 to-white px-4 py-4"
-      onMouseLeave={() => setFocus(null)}
+      onMouseLeave={() => setHoverId(null)}
     >
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-base font-semibold text-slate-900">Línea de tiempo</h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Hitos sobre la línea; el detalle ampliado aparece abajo.
+            {useEqualSpacing
+              ? "Vista compacta con espaciado uniforme · clic para abrir detalle."
+              : "Hitos por fecha compromiso · clic para abrir detalle."}
           </p>
         </div>
         <span className="text-xs text-slate-400">{items.length} fechas</span>
@@ -195,10 +180,7 @@ export function DeliverablesTimeline({
       <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500">
         {(Object.keys(STATUS_THEME) as DeliverableStatus[]).map((st) => (
           <span key={st} className="inline-flex items-center gap-1">
-            <span
-              className="h-2 w-2 rounded-full"
-              style={{ background: STATUS_THEME[st].accent }}
-            />
+            <span className="h-2 w-2 rounded-full" style={{ background: STATUS_THEME[st].accent }} />
             {DELIVERABLE_STATUS_LABEL[st]}
           </span>
         ))}
@@ -206,12 +188,6 @@ export function DeliverablesTimeline({
           <span className="h-2 w-2 rounded-full bg-rose-500" />
           Vencido
         </span>
-        {showDependencies ? (
-          <span className="inline-flex items-center gap-1">
-            <span className="h-px w-4 bg-slate-400" />
-            Dependencia
-          </span>
-        ) : null}
       </div>
 
       <div className="overflow-x-auto overflow-y-visible overscroll-x-contain pb-1 pt-1">
@@ -219,7 +195,7 @@ export function DeliverablesTimeline({
           className="relative mx-auto"
           style={{
             minWidth: trackMinWidth,
-            height: trackHeight,
+            height: 168,
             paddingLeft: TRACK_SIDE_PAD,
             paddingRight: TRACK_SIDE_PAD,
           }}
@@ -227,37 +203,24 @@ export function DeliverablesTimeline({
           <div className="relative h-full w-full">
             {showDependencies && dependencyEdges.length > 0 ? (
               <svg
-                className="pointer-events-none absolute inset-0 z-[2] h-full w-full overflow-visible"
+                className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-visible"
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
                 aria-hidden
               >
-                <defs>
-                  <marker
-                    id="dep-arrow"
-                    markerWidth="8"
-                    markerHeight="8"
-                    refX="6"
-                    refY="4"
-                    orient="auto"
-                  >
-                    <path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8" />
-                  </marker>
-                </defs>
                 {dependencyEdges.map((edge) => {
                   const y = 50;
                   const mid = (edge.fromLeft + edge.toLeft) / 2;
                   return (
                     <path
                       key={`${edge.fromId}-${edge.toId}`}
-                      d={`M ${edge.fromLeft} ${y} Q ${mid} ${y - 14} ${edge.toLeft} ${y}`}
+                      d={`M ${edge.fromLeft} ${y} Q ${mid} ${y - 10} ${edge.toLeft} ${y}`}
                       fill="none"
                       stroke="#94a3b8"
                       strokeWidth="0.35"
                       vectorEffect="non-scaling-stroke"
                       strokeDasharray="1.2 0.8"
-                      markerEnd="url(#dep-arrow)"
-                      opacity="0.85"
+                      opacity="0.75"
                     />
                   );
                 })}
@@ -272,94 +235,75 @@ export function DeliverablesTimeline({
 
             {todayLeft !== null ? (
               <div
-                className="pointer-events-none absolute top-[8%] bottom-[8%] z-[3] w-0.5 bg-amber-500 shadow-[0_0_0_1px_rgba(245,158,11,0.25)]"
+                className="pointer-events-none absolute top-[12%] bottom-[12%] z-[2] w-0.5 bg-amber-500"
                 style={{ left: `${todayLeft}%` }}
               >
-                <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
                   Hoy
                 </span>
               </div>
             ) : null}
 
-            {placedItems.map(({ row, date, left, lane }, index) => {
+            {placedItems.map(({ row, date, left, isAbove }) => {
               const st = normalizeDeliverableStatus(row.status);
               const isDone = isDeliverableDoneStatus(row.status);
               const todayStart = new Date();
               todayStart.setHours(0, 0, 0, 0);
               const overdue = !isDone && date.getTime() < todayStart.getTime();
               const theme = themeForRow(row, overdue);
-              const isActive = focusedId === row.id;
-              const isAbove = lane % 2 === 0;
-              const stackDepth = Math.floor(lane / 2);
-              const connectorH = 44 + stackDepth * LANE_STEP_PX;
-              const showCard = isActive || lane === 0 || !compactCards;
+              const isHighlighted = previewId === row.id;
 
               const day = date.getDate();
               const month = date.toLocaleDateString("es-MX", { month: "short" }).replace(".", "");
-              const year = date.getFullYear();
 
               return (
                 <div
                   key={row.id}
-                  className={`deliverable-timeline-milestone absolute top-1/2 -translate-x-1/2 -translate-y-1/2 ${
-                    isActive ? "z-30" : "z-10"
+                  className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 ${
+                    isHighlighted ? "z-20" : "z-10"
                   }`}
-                  style={{
-                    left: `${left}%`,
-                    animationDelay: `${index * 0.08}s`,
-                  }}
+                  style={{ left: `${left}%` }}
                 >
                   <button
                     type="button"
-                    onMouseEnter={() => setFocus(row.id)}
-                    onFocus={() => setFocus(row.id)}
+                    onMouseEnter={() => setHoverId(row.id)}
+                    onFocus={() => setHoverId(row.id)}
                     onClick={() => {
-                      setFocus(row.id);
+                      onFocusChange?.(row.id);
                       onSelect(row.id);
                     }}
-                    className={`flex flex-col items-center outline-none ${
-                      isActive ? "scale-[1.03]" : "hover:scale-[1.02]"
-                    } transition-transform duration-150`}
-                    aria-label={`${row.title}, ${day} ${month} ${year}`}
-                    aria-pressed={isActive}
-                    title={!showCard ? row.title : undefined}
+                    className="flex flex-col items-center outline-none"
+                    aria-label={`${row.title}, ${day} ${month}`}
+                    aria-pressed={isHighlighted}
                   >
                     {isAbove ? (
                       <>
-                        {showCard ? (
-                          <MilestoneCard
-                            row={row}
-                            theme={theme}
-                            day={day}
-                            month={month}
-                            year={year}
-                            isDone={isDone}
-                            isActive={isActive}
-                            overdue={overdue}
-                            compact={compactCards}
-                          />
-                        ) : (
-                          <span className="mb-1 max-w-[72px] truncate text-[10px] font-medium text-slate-600">
-                            {day} {month}
-                          </span>
-                        )}
+                        <MilestoneChip
+                          row={row}
+                          theme={theme}
+                          day={day}
+                          month={month}
+                          isDone={isDone}
+                          isActive={isHighlighted}
+                          overdue={overdue}
+                        />
                         <div
                           className="w-px shrink-0"
-                          style={{ height: connectorH, backgroundColor: theme.accent }}
+                          style={{ height: CONNECTOR_H, backgroundColor: theme.accent }}
                           aria-hidden
                         />
                       </>
                     ) : null}
 
                     <div
-                      className={`relative z-10 shrink-0 rounded-full border-[3px] border-white shadow-md transition-transform duration-150 ${
-                        isDone ? "h-4 w-4" : "h-3.5 w-3.5"
-                      } ${isActive ? "scale-125" : ""}`}
+                      className={`relative shrink-0 rounded-full border-2 border-white shadow-sm ${
+                        isDone ? "h-3.5 w-3.5" : "h-3 w-3"
+                      } ${isHighlighted ? "ring-2 ring-offset-1" : ""}`}
                       style={{
                         backgroundColor: isDone ? theme.accent : "white",
-                        boxShadow: isActive ? `0 0 0 4px ${theme.ring}` : undefined,
                         outline: isDone ? undefined : `2px solid ${theme.accent}`,
                         outlineOffset: isDone ? undefined : "-1px",
+                        ...(isHighlighted ? { boxShadow: `0 0 0 2px ${theme.ring}` } : {}),
                       }}
                       aria-hidden
                     />
@@ -368,26 +312,18 @@ export function DeliverablesTimeline({
                       <>
                         <div
                           className="w-px shrink-0"
-                          style={{ height: connectorH, backgroundColor: theme.accent }}
+                          style={{ height: CONNECTOR_H, backgroundColor: theme.accent }}
                           aria-hidden
                         />
-                        {showCard ? (
-                          <MilestoneCard
-                            row={row}
-                            theme={theme}
-                            day={day}
-                            month={month}
-                            year={year}
-                            isDone={isDone}
-                            isActive={isActive}
-                            overdue={overdue}
-                            compact={compactCards}
-                          />
-                        ) : (
-                          <span className="mt-1 max-w-[72px] truncate text-[10px] font-medium text-slate-600">
-                            {day} {month}
-                          </span>
-                        )}
+                        <MilestoneChip
+                          row={row}
+                          theme={theme}
+                          day={day}
+                          month={month}
+                          isDone={isDone}
+                          isActive={isHighlighted}
+                          overdue={overdue}
+                        />
                       </>
                     ) : null}
                   </button>
@@ -398,85 +334,70 @@ export function DeliverablesTimeline({
         </div>
       </div>
 
-      {activeItem ? (
-        <TimelineDetailPanel
-          row={activeItem.row}
-          date={activeItem.date}
-          onOpen={() => onSelect(activeItem.row.id)}
-        />
-      ) : (
-        <p className="mt-2 text-center text-xs text-slate-400">
-          Pasa el cursor sobre un hito para ver más información.
-        </p>
-      )}
+      <div className="mt-3 min-h-[108px] border-t border-slate-200/80 pt-3">
+        {previewItem ? (
+          <TimelineDetailPanel
+            row={previewItem.row}
+            date={previewItem.date}
+            onOpen={() => {
+              onFocusChange?.(previewItem.row.id);
+              onSelect(previewItem.row.id);
+            }}
+          />
+        ) : (
+          <p className="py-6 text-center text-xs text-slate-400">
+            Pasa el cursor sobre un hito o haz clic para ver detalle y editar.
+          </p>
+        )}
+      </div>
     </section>
   );
 }
 
-type MilestoneCardProps = {
-  row: DeliverableTrackerRow;
-  theme: { accent: string; soft: string; ring: string };
-  day: number;
-  month: string;
-  year: number;
-  isDone: boolean;
-  isActive: boolean;
-  overdue: boolean;
-  compact?: boolean;
-};
-
-function MilestoneCard({
+function MilestoneChip({
   row,
   theme,
   day,
   month,
-  year,
   isDone,
   isActive,
   overdue,
-  compact = false,
-}: MilestoneCardProps) {
+}: {
+  row: DeliverableTrackerRow;
+  theme: { accent: string; soft: string; ring: string };
+  day: number;
+  month: string;
+  isDone: boolean;
+  isActive: boolean;
+  overdue: boolean;
+}) {
   return (
     <div
-      className={`relative shrink-0 rounded-2xl border bg-white px-3 py-3 text-center shadow-md transition-shadow duration-150 ${
-        compact ? "w-[132px]" : "w-[156px]"
-      } ${
-        isActive
-          ? "border-2 shadow-lg"
-          : "border-slate-100 hover:border-slate-200 hover:shadow-lg"
+      className={`relative w-[100px] shrink-0 rounded-lg border bg-white px-2 py-1.5 text-center shadow-sm transition-shadow ${
+        isActive ? "border-2 shadow-md" : "border-slate-100 hover:border-slate-200 hover:shadow"
       }`}
       style={{
         borderColor: isActive ? theme.accent : undefined,
-        boxShadow: isActive
-          ? `0 10px 30px -12px ${theme.ring}, 0 0 0 4px ${theme.ring}`
-          : undefined,
         backgroundColor: isActive ? theme.soft : undefined,
       }}
     >
       {isDone ? (
-        <span
-          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white shadow"
-          aria-label="Completado"
-        >
+        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[8px] font-bold text-white">
           ✓
         </span>
       ) : null}
       {overdue ? (
-        <span className="absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow">
+        <span className="absolute -left-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white">
           !
         </span>
       ) : null}
-
-      <p
-        className="text-[1.45rem] font-bold leading-none tracking-tight"
-        style={{ color: theme.accent }}
-      >
+      <p className="text-[11px] font-bold leading-none" style={{ color: theme.accent }}>
         {day} {month}
       </p>
-      <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-        {year}
-      </p>
-      <p className="mt-2 line-clamp-2 text-[11px] font-medium leading-snug text-slate-700" title={row.title}>
+      <p
+        className="mt-1 line-clamp-2 text-[9px] font-medium leading-tight text-slate-600"
+        title={row.title}
+      >
         {row.title}
       </p>
     </div>
@@ -498,85 +419,23 @@ function TimelineDetailPanel({
   const year = date.getFullYear();
 
   return (
-    <div className="mt-5 border-t border-slate-200/80 pt-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-            {day} de {month} de {year} · {row.projectName}
-          </p>
-          <h3 className="mt-1 text-base font-semibold leading-snug text-slate-900">{row.title}</h3>
-        </div>
-        <button
-          type="button"
-          onClick={onOpen}
-          className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
-        >
-          Abrir detalle
-        </button>
-      </div>
-
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <p className="text-sm text-slate-700">
-          <span className="font-semibold text-slate-900">Responsable:</span>{" "}
-          {row.ownerName?.trim() || "—"}
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          {day} de {month} de {year} · {row.projectName}
         </p>
-        <p className="text-sm text-slate-700">
-          <span className="font-semibold text-slate-900">Estado:</span>{" "}
-          {DELIVERABLE_STATUS_LABEL[st]} · {row.weight}% del avance
+        <h3 className="mt-0.5 text-sm font-semibold leading-snug text-slate-900">{row.title}</h3>
+        <p className="mt-1 text-xs text-slate-600">
+          {DELIVERABLE_STATUS_LABEL[st]} · {row.weight}% · {row.ownerName?.trim() || "Sin responsable"}
         </p>
-        {row.phase ? (
-          <p className="text-sm text-slate-700 sm:col-span-2">
-            <span className="font-semibold text-slate-900">Fase:</span> {row.phase}
-          </p>
-        ) : null}
-        {row.deliveredAt ? (
-          <p className="text-sm text-slate-700 sm:col-span-2">
-            <span className="font-semibold text-slate-900">Entregado:</span>{" "}
-            {formatDeliveredAt(row.deliveredAt) ?? row.deliveredAt}
-            {row.dueDate ? (
-              <span className="text-slate-500">
-                {" "}
-                · Compromiso: {formatDueYmd(row.dueDate) ?? row.dueDate}
-              </span>
-            ) : null}
-          </p>
-        ) : null}
-        {row.dependsOnId && row.dependsOnTitle ? (
-          <p className="text-sm text-slate-700 sm:col-span-2">
-            <span className="font-semibold text-slate-900">Depende de:</span> {row.dependsOnTitle}
-          </p>
-        ) : null}
-        {row.description?.trim() ? (
-          <p className="text-sm leading-relaxed text-slate-600 sm:col-span-2">
-            {row.description.trim()}
-          </p>
-        ) : null}
-        {row.supportUrl || row.supportFiles.length > 0 ? (
-          <div className="flex flex-wrap gap-2 sm:col-span-2">
-            {row.supportUrl ? (
-              <a
-                href={row.supportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
-              >
-                Ubicación
-              </a>
-            ) : null}
-            {row.supportFiles.map((file) => (
-              <a
-                key={file.url}
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
-              >
-                {file.name}
-              </a>
-            ))}
-          </div>
-        ) : null}
       </div>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+      >
+        Abrir detalle
+      </button>
     </div>
   );
 }

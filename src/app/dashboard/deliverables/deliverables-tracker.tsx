@@ -396,10 +396,10 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
     if (openPanel) {
       setSelectedId(id);
       setPanel("detail");
+      requestAnimationFrame(() => {
+        rowRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
     }
-    requestAnimationFrame(() => {
-      rowRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
   }
 
   function closeDetail() {
@@ -417,12 +417,6 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
     focusDeliverable(id, true);
     syncUrl({ id });
   }
-
-  useEffect(() => {
-    if (focusId) {
-      rowRefs.current.get(focusId)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [focusId]);
 
   function exportCsv() {
     const hdr = [
