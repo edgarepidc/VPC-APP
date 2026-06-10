@@ -26,7 +26,6 @@ import {
 } from "@/modules/invitations/service";
 import { PlanLimitError, getTenantUsageSnapshot } from "@/modules/platform";
 import {
-  formatProjectScopeLabel,
   parseManagerProjectScopeFromForm,
 } from "@/modules/memberships/project-access";
 import {
@@ -36,6 +35,7 @@ import {
 } from "@/modules/memberships/service";
 
 import { ManagerProjectScopeFields } from "./manager-project-scope-fields";
+import { TeamMemberList } from "./team-member-list";
 
 type MembersPageProps = {
   searchParams: Promise<{ error?: string; ok?: string }>;
@@ -179,85 +179,17 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
         {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
       </DashboardPageHeader>
 
-      <section className={`${dashCard} p-4`}>
-        <h2 className="text-base font-semibold text-slate-900">Listado</h2>
-        <div className="mt-3 overflow-x-auto">
-          <table className="pmo-table pmo-row-hover w-full min-w-[640px] text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase text-slate-500">
-                <th className="py-2">Nombre</th>
-                <th className="py-2">Email</th>
-                <th className="py-2">Rol</th>
-                <th className="py-2">Proyectos (PM)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((member) => {
-                const roleKey = member.role.key as RoleKey;
-                const scopeLabel = formatProjectScopeLabel({
-                  roleKey,
-                  managerAllProjects: member.managerAllProjects,
-                  projects: member.projectAccess.map((row) => row.project),
-                });
-                const assignedIds = member.projectAccess.map((row) => row.project.id);
-
-                return (
-                  <tr key={member.id} className="border-b border-slate-100">
-                    <td className="py-2 font-medium text-slate-900">
-                      {member.user.name ?? "—"}
-                    </td>
-                    <td className="py-2 text-slate-700">{member.user.email}</td>
-                    <td className="py-2">
-                      <span className="pmo-badge pmo-badge--blue">
-                        {ROLE_LABELS[roleKey] ?? member.role.name}
-                      </span>
-                    </td>
-                    <td className="py-2 text-slate-700">
-                      {roleKey === "manager" && canManage ? (
-                        <details className="text-sm">
-                          <summary className="cursor-pointer text-slate-700 underline hover:text-slate-900">
-                            {scopeLabel}
-                          </summary>
-                          <form
-                            action={updateManagerScopeAction}
-                            className="mt-2 min-w-[14rem] rounded-lg border border-slate-200 bg-slate-50 p-2"
-                          >
-                            <input type="hidden" name="membershipId" value={member.id} />
-                            <input type="hidden" name="role" value="manager" />
-                            <ManagerProjectScopeFields
-                              projects={allOrgProjects.map((p) => ({
-                                id: p.id,
-                                name: p.name,
-                              }))}
-                              initialRole="manager"
-                              initialAllProjects={member.managerAllProjects}
-                              initialProjectIds={assignedIds}
-                            />
-                            <button
-                              type="submit"
-                              className={`mt-2 ${uiButtonPrimary.replace("w-full ", "w-auto !py-1 !text-xs")}`}
-                            >
-                              Guardar proyectos
-                            </button>
-                          </form>
-                        </details>
-                      ) : (
-                        scopeLabel
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-              {members.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="py-6 text-center text-slate-500">
-                    Sin miembros en este workspace.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      <section className={`${dashCard} p-4 sm:p-5`}>
+        <h2 className="text-base font-semibold text-slate-900">Equipo</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          {members.length} miembro{members.length !== 1 ? "s" : ""} en este workspace.
+        </p>
+        <TeamMemberList
+          members={members}
+          canManage={canManage}
+          allOrgProjects={allOrgProjects.map((p) => ({ id: p.id, name: p.name }))}
+          updateManagerScopeAction={updateManagerScopeAction}
+        />
       </section>
 
       {canManage ? (

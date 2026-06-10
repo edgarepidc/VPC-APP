@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { InitiativeScopeChips } from "@/components/initiative-scope-chips";
 import { uiLabel } from "@/lib/ui-classes";
 import type { RoleKey } from "@/lib/types";
 
@@ -77,24 +78,12 @@ export function AdminManagerProjectScopeFields({
       {!allProjects ? (
         <div className="mt-2">
           <span className={uiLabel}>Iniciativas</span>
-          {projects.length === 0 ? (
-            <p className="mt-1 text-xs text-amber-700">Sin iniciativas en esta org.</p>
-          ) : (
-            <ul className="mt-1 max-h-32 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-2 text-xs">
-              {projects.map((p) => (
-                <li key={p.id}>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(p.id)}
-                      onChange={() => toggle(p.id)}
-                    />
-                    {p.name}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
+          <InitiativeScopeChips
+            projects={projects}
+            selected={selected}
+            onToggle={toggle}
+            emptyMessage="Sin iniciativas en esta org."
+          />
           <input type="hidden" name="managerProjectIds" value={[...selected].join(",")} />
         </div>
       ) : (
