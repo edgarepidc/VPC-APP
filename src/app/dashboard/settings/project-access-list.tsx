@@ -1,12 +1,24 @@
 import Link from "next/link";
 
 import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
-import { PMO_PROJECTS } from "@/lib/dashboard-paths";
+import { PMO_PROJECT_DETAIL, PMO_PROJECTS } from "@/lib/dashboard-paths";
 
 type ProjectAccessListProps = {
   fullAccess: boolean;
   groups: ProjectHierarchyGroup[];
 };
+
+const CARD_ACCENTS = [
+  "border-t-blue-500",
+  "border-t-emerald-500",
+  "border-t-amber-500",
+  "border-t-violet-500",
+  "border-t-slate-500",
+] as const;
+
+function countSubprojects(groups: ProjectHierarchyGroup[]) {
+  return groups.reduce((sum, group) => sum + group.subprojects.length, 0);
+}
 
 export function ProjectAccessList({ fullAccess, groups }: ProjectAccessListProps) {
   if (groups.length === 0) {
@@ -27,45 +39,79 @@ export function ProjectAccessList({ fullAccess, groups }: ProjectAccessListProps
     );
   }
 
+  const initiativeCount = groups.length;
+  const subprojectCount = countSubprojects(groups);
+
   return (
     <div className="mt-3">
       {fullAccess ? (
-        <p className="mb-3 text-sm text-slate-600">
+        <p className="text-sm text-slate-600">
           Tienes acceso a <strong>todas las iniciativas y subproyectos</strong> de esta organización.
         </p>
       ) : (
-        <p className="mb-3 text-sm text-slate-600">
+        <p className="text-sm text-slate-600">
           Estas son las iniciativas y subproyectos incluidos en tu alcance como PM.
         </p>
       )}
 
-      <ul className="space-y-2">
-        {groups.map((group) => (
-          <li
-            key={group.initiative.id}
-            className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5"
-          >
-            <p className="text-sm font-semibold text-slate-900">{group.initiative.name}</p>
-            {group.subprojects.length > 0 ? (
-              <ul className="mt-2 space-y-1 border-l-2 border-slate-200 pl-3">
-                {group.subprojects.map((sub) => (
-                  <li key={sub.id} className="text-sm text-slate-700">
-                    {sub.name}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-1 text-xs text-slate-500">
-                Sin subproyectos — la iniciativa es tu unidad de trabajo.
-              </p>
-            )}
-          </li>
-        ))}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-slate-400" aria-hidden />
+          {initiativeCount} iniciativa{initiativeCount !== 1 ? "s" : ""}
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden />
+          {subprojectCount} subproyecto{subprojectCount !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+        {groups.map((group, index) => {
+          const accent = CARD_ACCENTS[index % CARD_ACCENTS.length];
+          const subCount = group.subprojects.length;
+
+          return (
+            <li
+              key={group.initiative.id}
+              className={`rounded-xl border border-slate-200 border-t-4 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md ${accent}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <Link
+                  href={PMO_PROJECT_DETAIL(group.initiative.id)}
+                  className="text-sm font-semibold leading-snug text-slate-900 hover:text-blue-700 hover:underline"
+                >
+                  {group.initiative.name}
+                </Link>
+                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                  {subCount > 0 ? `${subCount} sub` : "Directa"}
+                </span>
+              </div>
+
+              {subCount > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {group.subprojects.map((sub) => (
+                    <Link
+                      key={sub.id}
+                      href={PMO_PROJECT_DETAIL(sub.id)}
+                      className="inline-flex max-w-full items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800"
+                    >
+                      <span className="truncate">{sub.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 inline-flex items-center rounded-full border border-dashed border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs text-slate-500">
+                  Unidad de trabajo — sin subproyectos
+                </p>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-4 text-xs text-slate-500">
         Ver detalle en{" "}
-        <Link href={PMO_PROJECTS} className="font-medium text-slate-700 underline">
+        <Link href={PMO_PROJECTS} className="font-medium text-slate-700 underline hover:text-slate-900">
           PMO → Iniciativas
         </Link>
         .
