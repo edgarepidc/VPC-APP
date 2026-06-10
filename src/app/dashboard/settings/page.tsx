@@ -12,6 +12,7 @@ import {
   uiLabel,
 } from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
+import { getProjectHierarchyForSession, getSessionProjectScope } from "@/lib/project-scope";
 import { db } from "@/lib/db";
 import { personInitialsFromName, ROLE_LABELS, ROLE_SIDEBAR_LABELS } from "@/lib/role-labels";
 import { flashMessageFromParam } from "@/lib/server-action-errors";
@@ -19,6 +20,7 @@ import { PMO_TEAM } from "@/lib/dashboard-paths";
 import { requireTenantId } from "@/lib/tenancy";
 
 import { clearUserAvatarAction, uploadUserAvatarAction } from "./avatar-actions";
+import { ProjectAccessList } from "./project-access-list";
 import { updateSelfProfileAction } from "./profile-actions";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +35,7 @@ export default async function DashboardSettingsPage({
   if (!session) redirect("/login");
 
   const tenantId = await requireTenantId();
-  const [tenant, user] = await Promise.all([
+  const [tenant, user, scope, hierarchy] = await Promise.all([
     db.tenant.findUnique({
       where: { id: tenantId },
       select: { name: true },
@@ -42,8 +44,12 @@ export default async function DashboardSettingsPage({
       where: { id: session.userId },
       select: { avatarUrl: true, name: true, email: true, phone: true },
     }),
+    getSessionProjectScope(session, tenantId),
+    getProjectHierarchyForSession(session, tenantId, { activeOnly: false }),
   ]);
   if (!tenant) redirect("/select-tenant");
+
+  const fullProjectAccess = scope.type === "all";
 
   const personInitials = personInitialsFromName(
     user?.name ?? session.name,
@@ -93,6 +99,14 @@ export default async function DashboardSettingsPage({
             (correo autorizado en Vercel), no del rol PM/admin del cliente.
           </p>
         ) : null}
+
+        <div className="mt-4 border-t border-slate-200 pt-4">
+          <h3 className="text-sm font-semibold text-slate-900">Iniciativas y subproyectos</h3>
+          <ProjectAccessList
+            fullAccess={fullProjectAccess}
+            groups={hierarchy.groups}
+          />
+        </div>
       </section>
 
       <section className={`${dashCard} p-4`}>

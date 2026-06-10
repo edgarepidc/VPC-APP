@@ -29,11 +29,15 @@ async function expandFilterIds(
   return expandProjectIdsWithDescendants(all, restrictIds);
 }
 
-export async function listProjectsForSession(session: SessionUser, tenantId: string) {
+export async function listProjectsForSession(
+  session: SessionUser,
+  tenantId: string,
+  options?: { activeOnly?: boolean },
+) {
   const scope = await getSessionProjectScope(session, tenantId);
   const restrictIds = restrictToProjectIds(scope);
   const expanded = await expandFilterIds(tenantId, restrictIds);
-  const activeOnly = session.role === "manager";
+  const activeOnly = options?.activeOnly ?? session.role === "manager";
   return listProjectsByTenant(tenantId, {
     restrictToProjectIds: expanded,
     activeOnly,
@@ -52,11 +56,12 @@ export async function getSessionProjectIdsFilter(
 export async function getProjectHierarchyForSession(
   session: SessionUser,
   tenantId: string,
+  options?: { activeOnly?: boolean },
 ): Promise<{
   projects: ProjectHierarchyRow[];
   groups: ProjectHierarchyGroup[];
 }> {
-  const projects = await listProjectsForSession(session, tenantId);
+  const projects = await listProjectsForSession(session, tenantId, options);
   const rows: ProjectHierarchyRow[] = projects.map((p) => ({
     id: p.id,
     name: p.name,
