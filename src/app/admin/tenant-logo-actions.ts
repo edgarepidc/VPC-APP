@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { ensurePublicImageBucket } from "@/lib/supabase/ensure-image-bucket";
 import { db } from "@/lib/db";
 import { createAdminClient } from "@/utils/supabase/admin";
 
@@ -31,6 +32,14 @@ export async function putTenantLogoFromBuffer(
 
   try {
     const admin = createAdminClient();
+    const bucket = await ensurePublicImageBucket(admin, BUCKET, {
+      fileSizeLimit: MAX_BYTES,
+    });
+    if (!bucket.ok) {
+      console.error("[putTenantLogoFromBuffer] bucket:", bucket.message);
+      return { ok: false, code: "storage_logo" };
+    }
+
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, buf, {
       contentType: mime,
       upsert: true,
