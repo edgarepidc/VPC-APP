@@ -233,6 +233,39 @@ function progressBarColor(pct: number): string {
   return "#e11d48";
 }
 
+const KPI_TONES = {
+  slate: "border-slate-200 bg-gradient-to-br from-slate-50 to-white",
+  emerald: "border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-white",
+  sky: "border-sky-200/80 bg-gradient-to-br from-sky-50/90 to-white",
+  rose: "border-rose-200/80 bg-gradient-to-br from-rose-50/90 to-white",
+  amber: "border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-white",
+  accent: "border-slate-300 bg-gradient-to-br from-slate-100 to-white ring-1 ring-slate-200/80",
+} as const;
+
+function KpiCard({
+  label,
+  value,
+  sub,
+  tone,
+  valueClass = "",
+}: {
+  label: string;
+  value: ReactNode;
+  sub: string;
+  tone: keyof typeof KPI_TONES;
+  valueClass?: string;
+}) {
+  return (
+    <div className={`rounded-lg border px-3.5 py-2.5 ${KPI_TONES[tone]}`}>
+      <div className="mb-0.5 text-xs font-medium text-slate-600">{label}</div>
+      <div className={`text-lg font-semibold tabular-nums leading-none text-slate-900 ${valueClass}`}>
+        {value}
+      </div>
+      <div className="mt-0.5 text-xs text-slate-500">{sub}</div>
+    </div>
+  );
+}
+
 export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -355,8 +388,6 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
 
   useEffect(() => {
     if (panel !== "detail") return;
-    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
-    if (isDesktop) return;
 
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -370,7 +401,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- lock scroll while mobile drawer open
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lock scroll while detail modal open
   }, [panel]);
 
   useEffect(() => {
@@ -491,7 +522,7 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
         } as React.CSSProperties
       }
     >
-      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
+      <div className="flex min-h-0 flex-col overflow-hidden">
         <div className="min-w-0 flex-1 space-y-4 overflow-y-auto p-4 pb-10">
           {flash ? (
             <div
@@ -510,69 +541,53 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             </div>
           ) : null}
           <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-2">
-            <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
-              <div className="mb-0.5 text-xs text-slate-500">Total entregables</div>
-              <div className="text-lg font-semibold tabular-nums leading-none">{total}</div>
-              <div className="mt-0.5 text-xs text-slate-400">registrados</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
-              <div className="mb-0.5 text-xs text-slate-500">Completados</div>
-              <div className="text-lg font-semibold tabular-nums leading-none text-emerald-700">{comp}</div>
-              <div className="mt-0.5 text-xs text-slate-400">aprobados / entregados</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
-              <div className="mb-0.5 text-xs text-slate-500">En proceso</div>
-              <div className="text-lg font-semibold tabular-nums leading-none">{pend}</div>
-              <div className="mt-0.5 text-xs text-slate-400">pendiente o revisión</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
-              <div className="mb-0.5 text-xs text-slate-500">Vencidos</div>
-              <div
-                className={`text-lg font-semibold tabular-nums leading-none ${venc > 0 ? "text-rose-700" : ""}`}
-              >
-                {venc}
-              </div>
-              <div className="mt-0.5 text-xs text-slate-400">fuera de fecha</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
-              <div className="mb-0.5 text-xs text-slate-500">Acuses pendientes</div>
-              <div
-                className={`text-lg font-semibold tabular-nums leading-none ${acPend > 0 ? "text-amber-800" : ""}`}
-              >
-                {acPend}
-              </div>
-              <div className="mt-0.5 text-xs text-slate-400">sin confirmar</div>
-            </div>
-            <div
-              className="rounded-lg border-2 px-3.5 py-2.5"
-              style={{ borderColor: ACCENT_L, background: "white" }}
-            >
-              <div className="mb-0.5 text-xs text-slate-500">Avance ponderado</div>
-              <div className="text-lg font-semibold tabular-nums leading-none" style={{ color: ACCENT }}>
-                {pct}%
-              </div>
-              <div className="mt-0.5 text-xs text-slate-400">
-                {projectCount} proyecto{projectCount !== 1 ? "s" : ""} · media ponderada
-              </div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
-              <div className="mb-0.5 text-xs text-slate-500">A tiempo</div>
-              <div className="text-lg font-semibold tabular-nums leading-none text-emerald-700">
-                {compliance.onTimePct !== null ? `${compliance.onTimePct}%` : "—"}
-              </div>
-              <div className="mt-0.5 text-xs text-slate-400">
-                {compliance.closedCount > 0
+            <KpiCard label="Total entregables" value={total} sub="registrados" tone="slate" />
+            <KpiCard
+              label="Completados"
+              value={comp}
+              sub="aprobados / entregados"
+              tone="emerald"
+              valueClass="text-emerald-700"
+            />
+            <KpiCard label="En proceso" value={pend} sub="pendiente o revisión" tone="sky" />
+            <KpiCard
+              label="Vencidos"
+              value={venc}
+              sub="fuera de fecha"
+              tone="rose"
+              valueClass={venc > 0 ? "text-rose-700" : ""}
+            />
+            <KpiCard
+              label="Acuses pendientes"
+              value={acPend}
+              sub="sin confirmar"
+              tone="amber"
+              valueClass={acPend > 0 ? "text-amber-800" : ""}
+            />
+            <KpiCard
+              label="Avance ponderado"
+              value={`${pct}%`}
+              sub={`${projectCount} proyecto${projectCount !== 1 ? "s" : ""} · media ponderada`}
+              tone="accent"
+              valueClass="text-slate-800"
+            />
+            <KpiCard
+              label="A tiempo"
+              value={compliance.onTimePct !== null ? `${compliance.onTimePct}%` : "—"}
+              sub={
+                compliance.closedCount > 0
                   ? `${compliance.closedCount} cerrados con fecha`
-                  : "sin cierres medibles"}
-              </div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
-              <div className="mb-0.5 text-xs text-slate-500">Lead time medio</div>
-              <div className="text-lg font-semibold tabular-nums leading-none">
-                {compliance.avgLeadDays !== null ? `${compliance.avgLeadDays}d` : "—"}
-              </div>
-              <div className="mt-0.5 text-xs text-slate-400">registro → entrega</div>
-            </div>
+                  : "sin cierres medibles"
+              }
+              tone="emerald"
+              valueClass="text-emerald-700"
+            />
+            <KpiCard
+              label="Lead time medio"
+              value={compliance.avgLeadDays !== null ? `${compliance.avgLeadDays}d` : "—"}
+              sub="registro → entrega"
+              tone="slate"
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -856,62 +871,44 @@ export function DeliverablesTracker({ rows, projects, canEdit, initial }: Props)
             </div>
           </div>
         </div>
-
-        <aside
-          className={`hidden shrink-0 overflow-y-auto border-slate-200 bg-white transition-[width] duration-200 ease-out lg:block lg:border-l ${
-            panel === "detail" ? "w-0 min-w-0 overflow-hidden lg:w-[430px] lg:min-w-[430px]" : "w-0 min-w-0 overflow-hidden lg:w-0"
-          }`}
-        >
-          {panel === "detail" && selected ? (
-            <DetailPanel
-              row={selected}
-              allRows={rows}
-              rowById={rowById}
-              projects={projects}
-              phaseOptions={phases}
-              canEdit={canEdit}
-              onClose={closeDetail}
-              run={run}
-            />
-          ) : null}
-        </aside>
       </div>
 
       {panel === "detail" && selected ? (
-        <div className="fixed inset-0 z-50 lg:hidden" role="presentation">
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" role="presentation">
           <button
             type="button"
-            className="dash-drawer-backdrop absolute inset-0 bg-black/40"
+            className="dash-drawer-backdrop absolute inset-0 bg-black/45 backdrop-blur-[2px]"
             aria-label="Cerrar detalle"
             onClick={closeDetail}
           />
           <div
             role="dialog"
             aria-modal="true"
-            aria-labelledby="deliverable-drawer-title"
-            className="dash-detail-drawer absolute inset-y-0 right-0 flex w-full max-w-none flex-col bg-white shadow-2xl"
+            aria-labelledby="deliverable-detail-title"
+            className="relative flex max-h-[min(92dvh,820px)] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl sm:rounded-2xl dash-detail-modal"
           >
-            <header className="flex shrink-0 items-center gap-3 border-b border-slate-200 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-              <button
-                type="button"
-                onClick={closeDetail}
-                className="shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-              >
-                ← Volver
-              </button>
+            <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4">
               <div className="min-w-0">
-                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                  {selected.displayId}
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  {selected.displayId} · {selected.projectName}
                 </p>
                 <h2
-                  id="deliverable-drawer-title"
-                  className="truncate text-sm font-semibold text-slate-900"
+                  id="deliverable-detail-title"
+                  className="mt-0.5 text-base font-semibold leading-snug text-slate-900 sm:text-lg"
                 >
                   {selected.title}
                 </h2>
               </div>
+              <button
+                type="button"
+                onClick={closeDetail}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 hover:bg-slate-100"
+                aria-label="Cerrar"
+              >
+                ✕
+              </button>
             </header>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <DetailPanel
                 row={selected}
                 allRows={rows}

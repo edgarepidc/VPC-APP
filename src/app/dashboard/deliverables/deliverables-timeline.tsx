@@ -41,6 +41,28 @@ function themeForRow(row: DeliverableTrackerRow, overdue: boolean) {
 
 const TRACK_INSET = 12;
 const TRACK_SIDE_PAD = 128;
+/** Separación mínima entre hitos (% del ancho útil) antes de apilar en otro carril. */
+const MIN_SEP_PCT = 7;
+const LANE_STEP_PX = 88;
+const BASE_TRACK_HEIGHT = 300;
+
+function assignTimelineLanes(
+  items: { row: DeliverableTrackerRow; date: Date; left: number }[],
+) {
+  const occupied: { left: number; lane: number }[] = [];
+  return items.map((item) => {
+    let lane = 0;
+    while (
+      occupied.some(
+        (o) => o.lane === lane && Math.abs(o.left - item.left) < MIN_SEP_PCT,
+      )
+    ) {
+      lane += 1;
+    }
+    occupied.push({ left: item.left, lane });
+    return { ...item, lane };
+  });
+}
 
 type DeliverablesTimelineProps = {
   rows: DeliverableTrackerRow[];
@@ -96,7 +118,8 @@ export function DeliverablesTimeline({
     return `linear-gradient(to right, ${colors.join(", ")})`;
   }, [items]);
 
-  const trackMinWidth = Math.max(760, items.length * 220 + TRACK_SIDE_PAD * 2);
+  const compactCards = items.length > 6;
+  const trackMinWidth = Math.max(760, items.length * (compactCards ? 160 : 200) + TRACK_SIDE_PAD * 2);
 
   const activeItem = useMemo(
     () => items.find(({ row }) => row.id === focusedId) ?? null,
@@ -116,6 +139,21 @@ export function DeliverablesTimeline({
     }
     return map;
   }, [items, range]);
+
+  const placedItems = useMemo(() => {
+    const withLeft = items.map((item) => ({
+      ...item,
+      left: positionsById.get(item.row.id) ?? 50,
+    }));
+    return assignTimelineLanes(withLeft);
+  }, [items, positionsById]);
+
+  const maxLane = useMemo(
+    () => placedItems.reduce((max, item) => Math.max(max, item.lane), 0),
+    [placedItems],
+  );
+
+  const trackHeight = BASE_TRACK_HEIGHT + Math.floor(maxLane / 2) * LANE_STEP_PX;
 
   const dependencyEdges = useMemo(() => {
     if (!showDependencies) return [];
@@ -141,7 +179,7 @@ export function DeliverablesTimeline({
 
   return (
     <section
-      className="overflow-visible py-1"
+      className="overflow-visible rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/80 to-white px-4 py-4"
       onMouseLeave={() => setFocus(null)}
     >
       <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
@@ -181,7 +219,7 @@ export function DeliverablesTimeline({
           className="relative mx-auto"
           style={{
             minWidth: trackMinWidth,
-            height: 320,
+            height: trackHeight,
             paddingLeft: TRACK_SIDE_PAD,
             paddingRight: TRACK_SIDE_PAD,
           }}
@@ -243,14 +281,7 @@ export function DeliverablesTimeline({
               </div>
             ) : null}
 
-            {items.map(({ row, date }, index) => {
-              const rawPct =
-                range && items.length === 1
-                  ? 50
-                  : range
-                    ? ((date.getTime() - range.min) / range.span) * 100
-                    : 0;
-              const left = TRACK_INSET + (rawPct * (100 - TRACK_INSET * 2)) / 100;
+            {placedItems.map(({ row, date, left, lane }, index) => {
               const st = normalizeDeliverableStatus(row.status);
               const isDone = isDeliverableDoneStatus(row.status);
               const todayStart = new Date();
@@ -258,7 +289,10 @@ export function DeliverablesTimeline({
               const overdue = !isDone && date.getTime() < todayStart.getTime();
               const theme = themeForRow(row, overdue);
               const isActive = focusedId === row.id;
-              const isAbove = index % 2 === 0;
+              const isAbove = lane % 2 === 0;
+              const stackDepth = Math.floor(lane / 2);
+              const connectorH = 44 + stackDepth * LANE_STEP_PX;
+              const showCard = isActive || lane === 0 || !compactCards;
 
               const day = date.getDate();
               const month = date.toLocaleDateString("es-MX", { month: "short" }).replace(".", "");
@@ -288,22 +322,30 @@ export function DeliverablesTimeline({
                     } transition-transform duration-150`}
                     aria-label={`${row.title}, ${day} ${month} ${year}`}
                     aria-pressed={isActive}
+                    title={!showCard ? row.title : undefined}
                   >
                     {isAbove ? (
                       <>
-                        <MilestoneCard
-                          row={row}
-                          theme={theme}
-                          day={day}
-                          month={month}
-                          year={year}
-                          isDone={isDone}
-                          isActive={isActive}
-                          overdue={overdue}
-                        />
+                        {showCard ? (
+                          <MilestoneCard
+                            row={row}
+                            theme={theme}
+                            day={day}
+                            month={month}
+                            year={year}
+                            isDone={isDone}
+                            isActive={isActive}
+                            overdue={overdue}
+                            compact={compactCards}
+                          />
+                        ) : (
+                          <span className="mb-1 max-w-[72px] truncate text-[10px] font-medium text-slate-600">
+                            {day} {month}
+                          </span>
+                        )}
                         <div
-                          className="h-12 w-px shrink-0"
-                          style={{ backgroundColor: theme.accent }}
+                          className="w-px shrink-0"
+                          style={{ height: connectorH, backgroundColor: theme.accent }}
                           aria-hidden
                         />
                       </>
@@ -325,20 +367,27 @@ export function DeliverablesTimeline({
                     {!isAbove ? (
                       <>
                         <div
-                          className="h-12 w-px shrink-0"
-                          style={{ backgroundColor: theme.accent }}
+                          className="w-px shrink-0"
+                          style={{ height: connectorH, backgroundColor: theme.accent }}
                           aria-hidden
                         />
-                        <MilestoneCard
-                          row={row}
-                          theme={theme}
-                          day={day}
-                          month={month}
-                          year={year}
-                          isDone={isDone}
-                          isActive={isActive}
-                          overdue={overdue}
-                        />
+                        {showCard ? (
+                          <MilestoneCard
+                            row={row}
+                            theme={theme}
+                            day={day}
+                            month={month}
+                            year={year}
+                            isDone={isDone}
+                            isActive={isActive}
+                            overdue={overdue}
+                            compact={compactCards}
+                          />
+                        ) : (
+                          <span className="mt-1 max-w-[72px] truncate text-[10px] font-medium text-slate-600">
+                            {day} {month}
+                          </span>
+                        )}
                       </>
                     ) : null}
                   </button>
@@ -373,6 +422,7 @@ type MilestoneCardProps = {
   isDone: boolean;
   isActive: boolean;
   overdue: boolean;
+  compact?: boolean;
 };
 
 function MilestoneCard({
@@ -384,10 +434,13 @@ function MilestoneCard({
   isDone,
   isActive,
   overdue,
+  compact = false,
 }: MilestoneCardProps) {
   return (
     <div
-      className={`relative w-[156px] shrink-0 rounded-2xl border bg-white px-3.5 py-3 text-center shadow-md transition-shadow duration-150 ${
+      className={`relative shrink-0 rounded-2xl border bg-white px-3 py-3 text-center shadow-md transition-shadow duration-150 ${
+        compact ? "w-[132px]" : "w-[156px]"
+      } ${
         isActive
           ? "border-2 shadow-lg"
           : "border-slate-100 hover:border-slate-200 hover:shadow-lg"

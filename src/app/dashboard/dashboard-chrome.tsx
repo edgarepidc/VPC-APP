@@ -87,8 +87,8 @@ export function DashboardChrome({
 
   const panelBody = (opts: { onNav?: () => void; showCollapseHint?: boolean }) => (
     <>
-      <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
-        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="dash-nav-divider flex items-center gap-3 border-b pb-3">
+        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/15 bg-white/10">
           {personAvatarUrl ? (
             <Image
               src={personAvatarUrl}
@@ -99,18 +99,18 @@ export function DashboardChrome({
               unoptimized
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-800 text-sm font-semibold text-slate-100">
+            <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-700 text-sm font-semibold text-slate-100">
               {personInitials}
             </div>
           )}
         </div>
         <div className="min-w-0 flex-1 text-sm">
-          <p className="truncate font-semibold text-slate-900">{personDisplayName}</p>
-          <p className="truncate text-slate-600">{roleLabel}</p>
-          <p className="truncate text-xs text-slate-500">{tenantName}</p>
+          <p className="dash-nav-name truncate font-semibold">{personDisplayName}</p>
+          <p className="dash-nav-role truncate">{roleLabel}</p>
+          <p className="dash-nav-tenant truncate text-xs">{tenantName}</p>
         </div>
       </div>
-      <p className="mt-2 text-xs capitalize text-slate-500">{dateLabel}</p>
+      <p className="dash-nav-meta mt-2 text-xs capitalize">{dateLabel}</p>
 
       <SidebarNav showPlatformAdmin={showPlatformAdmin} onLinkClick={opts.onNav} />
 
@@ -119,7 +119,7 @@ export function DashboardChrome({
           <button
             type="button"
             onClick={() => persistSidebarHidden(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="dash-nav-button flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm transition hover:bg-white/10"
           >
             <span className="text-base leading-none" aria-hidden>
               ←
@@ -132,7 +132,7 @@ export function DashboardChrome({
       <form action={signOutAction} className="mt-3">
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          className="dash-nav-button flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm transition hover:bg-white/10"
         >
           <span className="text-base leading-none" aria-hidden>
             🔒
@@ -153,7 +153,7 @@ export function DashboardChrome({
           <button
             type="button"
             onClick={() => persistSidebarHidden(false)}
-            className="flex h-full min-h-[8rem] w-full flex-col items-center justify-start gap-2 rounded-lg py-3 text-sm text-slate-700 hover:bg-slate-50"
+            className="flex h-full min-h-[8rem] w-full flex-col items-center justify-start gap-2 rounded-lg py-3 text-sm text-slate-200 hover:bg-white/10"
             aria-label="Mostrar menú de navegación"
           >
             <span aria-hidden className="text-base">

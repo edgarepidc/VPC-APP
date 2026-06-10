@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { uiSectionLabel } from "@/lib/ui-classes";
-
 import { DASHBOARD_NAV_ITEMS } from "./nav-config";
 
 type SidebarNavProps = {
@@ -24,7 +22,9 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
 
   return (
     <nav className="mt-6 space-y-1.5 text-sm">
-      <p className={uiSectionLabel}>Acceso rápido</p>
+      <p className="dash-nav-section-label mb-2 text-xs font-semibold uppercase tracking-wider">
+        Acceso rápido
+      </p>
       {DASHBOARD_NAV_ITEMS.map((item) => {
         const active = isNavItemActive(pathname, item.href);
         return (
@@ -34,7 +34,7 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
             onClick={onLinkClick}
             className={[
               "dash-nav-link flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
-              active ? "dash-nav-link--active text-slate-900" : "text-slate-600",
+              active ? "dash-nav-link--active" : "",
             ].join(" ")}
             aria-current={active ? "page" : undefined}
           >
@@ -48,7 +48,7 @@ export function SidebarNav({ showPlatformAdmin, onLinkClick }: SidebarNavProps) 
 
       {showPlatformAdmin && (
         <Link
-          className="mt-2 flex items-center gap-2.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-400 hover:bg-slate-100"
+          className="mt-2 flex items-center gap-2.5 rounded-lg border border-amber-400/40 bg-amber-500/15 px-3 py-2.5 text-sm font-semibold text-amber-100 transition hover:border-amber-400/60 hover:bg-amber-500/25"
           href="/admin"
           onClick={onLinkClick}
         >
