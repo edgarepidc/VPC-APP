@@ -12,13 +12,11 @@ import {
 import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
 import { resolveProjectFilterIds, type ProjectHierarchyGroup, type ProjectHierarchyRow } from "@/lib/project-hierarchy";
 
-import { KpiTile } from "@/app/dashboard/_components/kpi-tile";
+import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
 import {
   dashAlertWarn,
   dashCard,
-  dashKpiGrid,
   dashKpiLabel,
-  dashKpiValue,
   dashSectionTitle,
   uiInput,
   uiLabel,
@@ -343,12 +341,11 @@ ${D}`;
 
   return (
     <div className="space-y-4 text-slate-900">
-      <div className={dashKpiGrid}>
+      <div className={dashKpiTilesGrid}>
         <KpiTile
           tone="red"
           label={<RiskKpiLabel hint={RISK_KPI_HINTS.grossVme}>Exposición total VME</RiskKpiLabel>}
           value={fmtMoneyMxn(kpis.grossV)}
-          valueClassName="text-red-600"
           sub={
             <>
               <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" />
@@ -360,7 +357,6 @@ ${D}`;
           tone="blue"
           label={<RiskKpiLabel hint={RISK_KPI_HINTS.residualVme}>VME residual</RiskKpiLabel>}
           value={fmtMoneyMxn(kpis.resV)}
-          valueClassName="text-blue-600"
           sub={
             <>
               <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500 align-middle" />
@@ -372,7 +368,6 @@ ${D}`;
           tone="amber"
           label={<RiskKpiLabel hint={RISK_KPI_HINTS.critical}>Riesgos críticos</RiskKpiLabel>}
           value={kpis.critical}
-          valueClassName="text-amber-600"
           sub={
             <>
               <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle" />
@@ -384,7 +379,6 @@ ${D}`;
           tone="emerald"
           label={<RiskKpiLabel hint={RISK_KPI_HINTS.mitigationEff}>Efectividad mitigación</RiskKpiLabel>}
           value={kpis.eff !== null ? `${kpis.eff}%` : "—"}
-          valueClassName="text-emerald-600"
           sub={
             <>
               <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 align-middle" />

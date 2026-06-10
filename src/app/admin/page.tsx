@@ -131,6 +131,7 @@ export default async function AdminHomePage({ searchParams }: Props) {
       <div className="grid gap-4 lg:grid-cols-3">
         <KpiCard
           label={isFiltered ? "Organizaciones (vista)" : "Organizaciones"}
+          tone="slate"
           value={
             <>
               {tenants.length}
@@ -146,12 +147,14 @@ export default async function AdminHomePage({ searchParams }: Props) {
         />
         <KpiCard
           label="Proyectos"
+          tone="blue"
           value={totalProjects}
           hint="Suma en la vista actual"
           icon={<IconProjects />}
         />
         <KpiCard
           label="Miembros"
+          tone="emerald"
           value={totalMembers}
           hint="Membresías activas en la vista"
           icon={<IconPeople />}

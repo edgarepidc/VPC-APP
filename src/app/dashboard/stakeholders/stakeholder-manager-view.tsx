@@ -4,11 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { getQuadrantId } from "@/lib/stakeholder-playbook";
+import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
 import {
   dashAlertWarn,
   dashCard,
-  dashKpiGrid,
-  dashKpiValue,
   dashSectionTitle,
   uiInput,
   uiLabel,
@@ -175,27 +174,37 @@ export function StakeholderManagerView({
 
   return (
     <div className="space-y-4 text-slate-900">
-      <div className={dashKpiGrid}>
-        <div className={`${dashCard} p-4`}>
-          <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.total}>Interesados</StakeholderKpiLabel>
-          <p className={dashKpiValue}>{kpis.total}</p>
-        </div>
-        <div className={`${dashCard} p-4`}>
-          <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.promotores}>
-            Promotores (Q1)
-          </StakeholderKpiLabel>
-          <p className={`${dashKpiValue} text-green-700`}>{kpis.promotores}</p>
-        </div>
-        <div className={`${dashCard} p-4`}>
-          <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.latentes}>Latentes (Q2)</StakeholderKpiLabel>
-          <p className={`${dashKpiValue} text-amber-600`}>{kpis.latentes}</p>
-        </div>
-        <div className={`${dashCard} p-4`}>
-          <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.gaps}>
-            Brechas de cobertura
-          </StakeholderKpiLabel>
-          <p className={`${dashKpiValue} text-orange-600`}>{kpis.gaps}</p>
-        </div>
+      <div className={dashKpiTilesGrid}>
+        <KpiTile
+          tone="slate"
+          label={<StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.total}>Interesados</StakeholderKpiLabel>}
+          value={kpis.total}
+        />
+        <KpiTile
+          tone="emerald"
+          label={
+            <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.promotores}>
+              Promotores (Q1)
+            </StakeholderKpiLabel>
+          }
+          value={kpis.promotores}
+        />
+        <KpiTile
+          tone="amber"
+          label={
+            <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.latentes}>Latentes (Q2)</StakeholderKpiLabel>
+          }
+          value={kpis.latentes}
+        />
+        <KpiTile
+          tone="rose"
+          label={
+            <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.gaps}>
+              Brechas de cobertura
+            </StakeholderKpiLabel>
+          }
+          value={kpis.gaps}
+        />
       </div>
 
       <StakeholdersActionQueue

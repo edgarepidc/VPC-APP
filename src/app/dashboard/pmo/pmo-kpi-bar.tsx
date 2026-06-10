@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
+import { KpiTile, dashKpiTilesGrid, kpiLinkClass } from "@/app/dashboard/_components/kpi-tile";
 import {
   PMO_DELIVERABLES,
   PMO_ESCALATIONS,
@@ -10,7 +10,6 @@ import {
   PMO_STAKEHOLDERS,
   PMO_TEAM,
 } from "@/lib/dashboard-paths";
-import { dashKpiValue } from "@/lib/ui-classes";
 
 import { PMO_KPI_HINTS } from "./pmo-field-hints";
 import { PmoKpiLabel } from "./pmo-kpi-label";
@@ -33,7 +32,7 @@ type PmoKpiBarProps = {
   formatMxn: (value: number) => string;
 };
 
-const linkValueClass = `${dashKpiValue} hover:underline`;
+const linkValueClass = (tone: Parameters<typeof kpiLinkClass>[0]) => kpiLinkClass(tone);
 
 export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
   return (
@@ -42,7 +41,7 @@ export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
         tone="slate"
         label={<PmoKpiLabel hint={PMO_KPI_HINTS.projects}>Iniciativas</PmoKpiLabel>}
         value={
-          <Link href={PMO_PROJECTS} className={linkValueClass}>
+          <Link href={PMO_PROJECTS} className={linkValueClass("slate")}>
             {kpis.projects}
           </Link>
         }
@@ -52,7 +51,10 @@ export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
         tone={kpis.overdueDeliverables > 0 ? "rose" : "sky"}
         label={<PmoKpiLabel hint={PMO_KPI_HINTS.deliverables}>Entregables</PmoKpiLabel>}
         value={
-          <Link href={PMO_DELIVERABLES} className={linkValueClass}>
+          <Link
+            href={PMO_DELIVERABLES}
+            className={linkValueClass(kpis.overdueDeliverables > 0 ? "rose" : "sky")}
+          >
             {kpis.deliverables}
           </Link>
         }
@@ -70,7 +72,6 @@ export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
         tone="emerald"
         label={<PmoKpiLabel hint={PMO_KPI_HINTS.onTime}>A tiempo</PmoKpiLabel>}
         value={kpis.deliverableOnTimePct !== null ? `${kpis.deliverableOnTimePct}%` : "—"}
-        valueClassName="text-emerald-700"
         sub="cierres con fecha"
       />
       <KpiTile
@@ -83,7 +84,7 @@ export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
         tone={kpis.criticalRisks > 0 ? "amber" : "slate"}
         label={<PmoKpiLabel hint={PMO_KPI_HINTS.risks}>Riesgos</PmoKpiLabel>}
         value={
-          <Link href={PMO_RISKS} className={linkValueClass}>
+          <Link href={PMO_RISKS} className={linkValueClass(kpis.criticalRisks > 0 ? "amber" : "slate")}>
             {kpis.risks}
           </Link>
         }
@@ -101,14 +102,13 @@ export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
         tone="red"
         label={<PmoKpiLabel hint={PMO_KPI_HINTS.residualVme}>Exposición residual</PmoKpiLabel>}
         value={formatMxn(kpis.totalResidualVme)}
-        valueClassName="text-red-700"
         sub="VME en pesos"
       />
       <KpiTile
         tone="amber"
         label={<PmoKpiLabel hint={PMO_KPI_HINTS.escalations}>Escalamientos</PmoKpiLabel>}
         value={
-          <Link href={PMO_ESCALATIONS} className={linkValueClass}>
+          <Link href={PMO_ESCALATIONS} className={linkValueClass("amber")}>
             {kpis.escalationChecks}
           </Link>
         }
@@ -118,7 +118,7 @@ export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
         tone="sky"
         label={<PmoKpiLabel hint={PMO_KPI_HINTS.meetings}>Reuniones</PmoKpiLabel>}
         value={
-          <Link href={PMO_MEETINGS} className={linkValueClass}>
+          <Link href={PMO_MEETINGS} className={linkValueClass("sky")}>
             {kpis.meetingSessions}
           </Link>
         }
@@ -128,7 +128,7 @@ export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
         tone="emerald"
         label={<PmoKpiLabel hint={PMO_KPI_HINTS.stakeholders}>Interesados</PmoKpiLabel>}
         value={
-          <Link href={PMO_STAKEHOLDERS} className={linkValueClass}>
+          <Link href={PMO_STAKEHOLDERS} className={linkValueClass("emerald")}>
             {kpis.stakeholders}
           </Link>
         }
@@ -138,7 +138,7 @@ export function PmoKpiBar({ kpis, formatMxn }: PmoKpiBarProps) {
         tone="accent"
         label={<PmoKpiLabel hint={PMO_KPI_HINTS.team}>Equipo</PmoKpiLabel>}
         value={
-          <Link href={PMO_TEAM} className={`${linkValueClass} text-base`}>
+          <Link href={PMO_TEAM} className={`${linkValueClass("accent")} text-base`}>
             Gestionar
           </Link>
         }

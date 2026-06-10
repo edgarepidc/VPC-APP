@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
 
+import type { KpiTileTone } from "@/app/dashboard/_components/kpi-tile";
+import { KPI_VALUE_TONES } from "@/app/dashboard/_components/kpi-tile";
+
 /** Hero / bloque superior admin — slate plano. */
 export function VpcAdminGradientShell({
   className = "",
@@ -50,15 +53,17 @@ export function KpiCard({
   value,
   hint,
   icon,
+  tone = "slate",
 }: {
   label: string;
   value: ReactNode;
   hint?: string;
   icon: ReactNode;
+  tone?: KpiTileTone;
   accent?: "navy" | "tan" | "steel";
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
       <div className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700">
           {icon}
@@ -67,7 +72,9 @@ export function KpiCard({
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             {label}
           </p>
-          <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-slate-900">
+          <p
+            className={`mt-0.5 text-2xl font-semibold tabular-nums tracking-tight ${KPI_VALUE_TONES[tone]}`}
+          >
             {value}
           </p>
           {hint ? (

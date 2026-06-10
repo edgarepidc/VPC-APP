@@ -1,21 +1,33 @@
 import type { ReactNode } from "react";
 
-export const KPI_TILE_TONES = {
-  slate: "border-slate-200 bg-gradient-to-br from-slate-50 to-white",
-  emerald: "border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-white",
-  sky: "border-sky-200/80 bg-gradient-to-br from-sky-50/90 to-white",
-  rose: "border-rose-200/80 bg-gradient-to-br from-rose-50/90 to-white",
-  amber: "border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-white",
-  accent:
-    "border-slate-300 bg-gradient-to-br from-slate-100 to-white ring-1 ring-slate-200/80",
-  blue: "border-blue-200/80 bg-gradient-to-br from-blue-50/90 to-white",
-  red: "border-red-200/80 bg-gradient-to-br from-red-50/90 to-white",
+/** Valores en color sólido sobre tarjeta blanca (sin degradados). */
+export const KPI_VALUE_TONES = {
+  slate: "text-slate-900",
+  emerald: "text-green-600",
+  sky: "text-blue-600",
+  rose: "text-red-600",
+  amber: "text-orange-500",
+  accent: "text-slate-800",
+  blue: "text-blue-600",
+  red: "text-red-600",
+  purple: "text-violet-600",
 } as const;
 
-export type KpiTileTone = keyof typeof KPI_TILE_TONES;
+export type KpiTileTone = keyof typeof KPI_VALUE_TONES;
+
+export const KPI_CARD_BASE =
+  "rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm";
 
 export const dashKpiTilesGrid =
   "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
+
+export function kpiValueClass(tone: KpiTileTone, extra = "") {
+  return `text-2xl font-semibold tabular-nums leading-none ${KPI_VALUE_TONES[tone]} ${extra}`.trim();
+}
+
+export function kpiLinkClass(tone: KpiTileTone) {
+  return `${kpiValueClass(tone)} hover:underline`;
+}
 
 type KpiTileProps = {
   label: ReactNode;
@@ -34,15 +46,25 @@ export function KpiTile({
   valueClassName = "",
   className = "",
 }: KpiTileProps) {
+  const valueColor = KPI_VALUE_TONES[tone];
+  const resolvedValueClass = valueClassName || valueColor;
+
   return (
-    <div className={`rounded-lg border px-3.5 py-2.5 ${KPI_TILE_TONES[tone]} ${className}`}>
-      <div className="mb-1 text-xs font-medium text-slate-600">{label}</div>
-      <div
-        className={`text-lg font-semibold tabular-nums leading-none text-slate-900 ${valueClassName}`}
-      >
+    <div className={`${KPI_CARD_BASE} ${className}`}>
+      {typeof label === "string" ? (
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          {label}
+        </div>
+      ) : (
+        <div className="mb-1 text-[11px] font-medium text-slate-500">{label}</div>
+      )}
+      <div className={`text-2xl font-semibold tabular-nums leading-none ${resolvedValueClass}`}>
         {value}
       </div>
-      {sub ? <div className="mt-1 text-xs text-slate-500">{sub}</div> : null}
+      {sub ? <div className="mt-1 text-[12px] leading-snug text-slate-500">{sub}</div> : null}
     </div>
   );
 }
+
+/** @deprecated use KPI_VALUE_TONES — kept for imports that referenced KPI_TILE_TONES */
+export const KPI_TILE_TONES = KPI_VALUE_TONES;

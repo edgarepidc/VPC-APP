@@ -162,7 +162,7 @@ export function DeliverablesTimeline({
 
   return (
     <section
-      className="overflow-visible rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/80 to-white px-4 py-4"
+      className="overflow-visible rounded-xl border border-slate-200 bg-white px-4 py-4"
       onMouseLeave={() => setHoverId(null)}
     >
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2">

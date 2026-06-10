@@ -523,7 +523,6 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
               value={comp}
               sub="aprobados / entregados"
               tone="emerald"
-              valueClassName="text-emerald-700"
             />
             <KpiTile label="En proceso" value={pend} sub="pendiente o revisión" tone="sky" />
             <KpiTile
@@ -531,21 +530,18 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
               value={venc}
               sub="fuera de fecha"
               tone="rose"
-              valueClassName={venc > 0 ? "text-rose-700" : ""}
             />
             <KpiTile
               label="Acuses pendientes"
               value={acPend}
               sub="sin confirmar"
               tone="amber"
-              valueClassName={acPend > 0 ? "text-amber-800" : ""}
             />
             <KpiTile
               label="Avance ponderado"
               value={`${pct}%`}
               sub={`${projectCount} proyecto${projectCount !== 1 ? "s" : ""} · media ponderada`}
               tone="accent"
-              valueClassName="text-slate-800"
             />
             <KpiTile
               label="A tiempo"
@@ -556,7 +552,6 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
                   : "sin cierres medibles"
               }
               tone="emerald"
-              valueClassName="text-emerald-700"
             />
             <KpiTile
               label="Lead time medio"

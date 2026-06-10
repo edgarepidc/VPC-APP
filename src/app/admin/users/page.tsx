@@ -147,12 +147,14 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
       <div className="grid gap-4 lg:grid-cols-3">
         <KpiCard
           label="Usuarios totales"
+          tone="slate"
           value={totalUsers}
           hint={`${activeUsers} activos en plataforma`}
           icon={<IconPeople />}
         />
         <KpiCard
           label="En esta vista"
+          tone="sky"
           value={users.length}
           hint={
             filterTenant
