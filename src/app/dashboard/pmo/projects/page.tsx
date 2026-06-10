@@ -1,16 +1,8 @@
 import Link from "next/link";
-import { Fragment } from "react";
 import { redirect } from "next/navigation";
 
 import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
-import {
-  DELIVERABLES_PROJECT,
-  PMO_ESCALATIONS_PROJECT,
-  PMO_MEETINGS_PROJECT,
-  PMO_PROJECT_DETAIL,
-  PMO_TEAM,
-  RISKS_PROJECT,
-} from "@/lib/dashboard-paths";
+import { PMO_TEAM } from "@/lib/dashboard-paths";
 import {
   dashAlertError,
   dashAlertOk,
@@ -29,7 +21,6 @@ import { listProjectsForSession } from "@/lib/project-scope";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { canManageProjectsCatalog } from "@/lib/rbac";
 import { requireTenantId } from "@/lib/tenancy";
-import { getProjectStatusBadge } from "@/lib/ui";
 import { PlanLimitError, getTenantUsageSnapshot } from "@/modules/platform";
 import {
   createInitiative,
@@ -38,8 +29,7 @@ import {
   updateProject,
 } from "@/modules/projects/service";
 
-import { DeleteProjectForm } from "./delete-project-form";
-import { EditProjectForm } from "./edit-project-form";
+import { ProjectHierarchyCards } from "./project-hierarchy-cards";
 
 export const dynamic = "force-dynamic";
 
@@ -203,8 +193,6 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     }
   }
 
-  const colCount = canManageCatalog ? 4 : 3;
-
   return (
     <main className={dashPage}>
       <DashboardPageHeader
@@ -253,166 +241,21 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
         </details>
       ) : null}
 
-      <section className={`${dashCard} overflow-hidden`}>
-        <div className="overflow-x-auto p-4">
-          <table className="pmo-table pmo-row-hover w-full min-w-[720px] text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase text-slate-500">
-                <th className="py-2">Iniciativa / subproyecto</th>
-                <th className="py-2">Estado</th>
-                <th className="py-2">Descripción</th>
-                {canManageCatalog ? <th className="py-2 text-right">Acciones</th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {groups.map((g) => {
-                const initiative = items.find((p) => p.id === g.initiative.id);
-                if (!initiative) return null;
-                const initBadge = getProjectStatusBadge(initiative.status);
-                const moduleLinks = (projectId: string) => (
-                  <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-slate-500">
-                    <Link href={DELIVERABLES_PROJECT(projectId)} className="hover:text-slate-900 hover:underline">
-                      Entregables
-                    </Link>
-                    <Link href={RISKS_PROJECT(projectId)} className="hover:text-slate-900 hover:underline">
-                      Riesgos
-                    </Link>
-                    <Link href={PMO_ESCALATIONS_PROJECT(projectId)} className="hover:text-slate-900 hover:underline">
-                      Escalamientos
-                    </Link>
-                    <Link href={PMO_MEETINGS_PROJECT(projectId)} className="hover:text-slate-900 hover:underline">
-                      Reuniones
-                    </Link>
-                  </div>
-                );
-
-                return (
-                  <Fragment key={g.initiative.id}>
-                    <tr key={g.initiative.id} className="border-b border-slate-100 bg-slate-50/80">
-                      <td className="py-2.5">
-                        <span className="mb-1 inline-block rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
-                          Iniciativa
-                        </span>
-                        <Link
-                          href={PMO_PROJECT_DETAIL(g.initiative.id)}
-                          className="block font-semibold text-slate-900 hover:underline"
-                        >
-                          {g.initiative.name}
-                        </Link>
-                        {g.subprojects.length === 0 ? moduleLinks(g.initiative.id) : null}
-                      </td>
-                      <td className="py-2.5">
-                        <span className={initBadge.className}>{initBadge.label}</span>
-                      </td>
-                      <td className="py-2.5 text-slate-600">
-                        {initiative.description?.trim() || "—"}
-                      </td>
-                      {canManageCatalog ? (
-                        <td className="py-2.5 text-right align-top">
-                          <div className="flex flex-col items-end gap-2">
-                            <EditProjectForm
-                              updateAction={updateProjectAction}
-                              projectId={initiative.id}
-                              initialName={initiative.name}
-                              initialDescription={initiative.description}
-                              initialStatus={initiative.status}
-                            />
-                            <DeleteProjectForm
-                              deleteAction={deleteProjectAction}
-                              projectId={initiative.id}
-                              projectName={initiative.name}
-                            />
-                          </div>
-                        </td>
-                      ) : null}
-                    </tr>
-                    {g.subprojects.map((sp) => {
-                      const sub = items.find((p) => p.id === sp.id);
-                      if (!sub) return null;
-                      const subBadge = getProjectStatusBadge(sub.status);
-                      return (
-                        <tr key={sp.id} className="border-b border-slate-100">
-                          <td className="py-2 pl-8">
-                            <span className="mb-1 inline-block rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-800">
-                              Subproyecto
-                            </span>
-                            <Link
-                              href={PMO_PROJECT_DETAIL(sp.id)}
-                              className="block font-medium text-slate-900 hover:underline"
-                            >
-                              {sp.name}
-                            </Link>
-                            {moduleLinks(sp.id)}
-                          </td>
-                          <td className="py-2">
-                            <span className={subBadge.className}>{subBadge.label}</span>
-                          </td>
-                          <td className="py-2 text-slate-600">
-                            {sub.description?.trim() || "—"}
-                          </td>
-                          {canManageCatalog ? (
-                            <td className="py-2 text-right align-top">
-                              <div className="flex flex-col items-end gap-2">
-                                <EditProjectForm
-                                  updateAction={updateProjectAction}
-                                  projectId={sub.id}
-                                  initialName={sub.name}
-                                  initialDescription={sub.description}
-                                  initialStatus={sub.status}
-                                />
-                                <DeleteProjectForm
-                                  deleteAction={deleteProjectAction}
-                                  projectId={sub.id}
-                                  projectName={sub.name}
-                                />
-                              </div>
-                            </td>
-                          ) : null}
-                        </tr>
-                      );
-                    })}
-                    {canManageCatalog && g.subprojects.length >= 0 ? (
-                      <tr key={`${g.initiative.id}-add-sub`} className="border-b border-slate-50">
-                        <td colSpan={colCount} className="py-2 pl-8">
-                          <details className="text-sm">
-                            <summary className="cursor-pointer font-medium text-slate-600 hover:text-slate-900">
-                              + Subproyecto en {g.initiative.name}
-                            </summary>
-                            <form
-                              action={createSubprojectAction}
-                              className="mt-2 grid max-w-lg gap-2 rounded-lg border border-slate-200 bg-white p-3"
-                            >
-                              <input type="hidden" name="parentProjectId" value={g.initiative.id} />
-                              <div>
-                                <label className={uiLabel}>Nombre del subproyecto</label>
-                                <input name="name" required maxLength={200} className={`mt-1 ${uiInput}`} />
-                              </div>
-                              <div>
-                                <label className={uiLabel}>Descripción</label>
-                                <input name="description" maxLength={500} className={`mt-1 ${uiInput}`} />
-                              </div>
-                              <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto !py-1.5 text-xs")}>
-                                Crear subproyecto
-                              </button>
-                            </form>
-                          </details>
-                        </td>
-                      </tr>
-                    ) : null}
-                  </Fragment>
-                );
-              })}
-              {groups.length === 0 && (
-                <tr>
-                  <td colSpan={colCount} className="py-6 text-center text-slate-500">
-                    Sin iniciativas.
-                    {canManageCatalog ? " Usa «Nueva iniciativa» arriba." : null}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      <section className={`${dashCard} p-4 sm:p-5`}>
+        <ProjectHierarchyCards
+          groups={groups}
+          items={items.map((p) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            status: p.status,
+            parentProjectId: p.parentProjectId,
+          }))}
+          canManageCatalog={canManageCatalog}
+          createSubprojectAction={createSubprojectAction}
+          updateProjectAction={updateProjectAction}
+          deleteProjectAction={deleteProjectAction}
+        />
       </section>
     </main>
   );

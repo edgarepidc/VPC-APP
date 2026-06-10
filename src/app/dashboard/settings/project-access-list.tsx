@@ -1,20 +1,13 @@
 import Link from "next/link";
 
 import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
+import { projectCardAccent } from "@/lib/project-hierarchy-visuals";
 import { PMO_PROJECT_DETAIL, PMO_PROJECTS } from "@/lib/dashboard-paths";
 
 type ProjectAccessListProps = {
   fullAccess: boolean;
   groups: ProjectHierarchyGroup[];
 };
-
-const CARD_ACCENTS = [
-  "border-t-blue-500",
-  "border-t-emerald-500",
-  "border-t-amber-500",
-  "border-t-violet-500",
-  "border-t-slate-500",
-] as const;
 
 function countSubprojects(groups: ProjectHierarchyGroup[]) {
   return groups.reduce((sum, group) => sum + group.subprojects.length, 0);
@@ -67,7 +60,7 @@ export function ProjectAccessList({ fullAccess, groups }: ProjectAccessListProps
 
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">
         {groups.map((group, index) => {
-          const accent = CARD_ACCENTS[index % CARD_ACCENTS.length];
+          const accent = projectCardAccent(index);
           const subCount = group.subprojects.length;
 
           return (
