@@ -34,6 +34,8 @@ import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { getPmoSnapshot } from "@/modules/pmo/service";
 import { getProjectById, listSubprojectsByInitiative } from "@/modules/projects/service";
 
+import { ProjectDetailSubprojects } from "../project-detail-subprojects";
+
 export const dynamic = "force-dynamic";
 
 type ProjectDetailPageProps = {
@@ -180,41 +182,25 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
       </section>
 
       {rollupMode ? (
-        <section className={`${dashCard} mb-4 p-4`}>
-          <h2 className={dashSectionTitle}>Subproyectos</h2>
-          <ul className="mt-3 space-y-2">
-            {subprojects.map((sub) => {
-              const subHealth = subprojectHealthRows.find((h) => h.id === sub.id);
-              return (
-                <li
-                  key={sub.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 p-3"
-                >
-                  <Link
-                    href={PMO_PROJECT_DETAIL(sub.id)}
-                    className="font-medium text-slate-900 hover:underline"
-                  >
-                    {sub.name}
-                  </Link>
-                  <span className="text-xs text-slate-600">
-                    Avance {subHealth?.donePct ?? 0}% · {subHealth?.deliverables ?? 0} entregables ·{" "}
-                    {subHealth?.risks ?? 0} riesgos
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        <ProjectDetailSubprojects
+          subprojects={subprojects.map((sub) => ({
+            id: sub.id,
+            name: sub.name,
+            description: sub.description,
+            status: sub.status,
+          }))}
+          healthById={new Map(subprojectHealthRows.map((h) => [h.id, h]))}
+        />
       ) : null}
 
-      <section className={`${dashCard} mb-4 p-4`}>
+      <section className={`${dashCard} mb-4 p-4 sm:p-5`}>
         <h2 className={dashSectionTitle}>Acceso rápido</h2>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {moduleLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800"
             >
               {link.label}
             </Link>

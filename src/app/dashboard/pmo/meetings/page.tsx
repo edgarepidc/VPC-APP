@@ -6,7 +6,7 @@ import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/projec
 import { RoiSessionHistoryList } from "@/app/dashboard/roi-meetings/roi-session-history-list";
 import { MeetingCostAlerts } from "@/app/dashboard/pmo/meeting-cost-alerts";
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { ROI_MEETINGS_HUB } from "@/lib/dashboard-paths";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { resolveProjectFilterIds } from "@/lib/project-hierarchy";
@@ -34,7 +34,7 @@ export default async function PmoMeetingsPage({ searchParams }: PmoMeetingsPageP
   const session = await getSessionUser();
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
-  const canEdit = hasPermission(session.role, "tasks.write");
+  const canEdit = canWriteWorkspaceData(session);
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
   const hierarchy = await getProjectHierarchyForSession(session, tenantId);
   const resolvedFilter = resolveProjectFilterIds(hierarchy.projects, filterProjectId || null);

@@ -119,6 +119,7 @@ async function upsertMembership(input: {
   } else if (input.roleKey !== "manager") {
     await setMembershipProjectAccess(membership.id, input.tenantId, input.roleKey, {
       managerAllProjects: false,
+      managerReadOnly: false,
       projectIds: [],
     });
   }

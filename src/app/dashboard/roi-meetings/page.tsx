@@ -7,7 +7,7 @@ import { PMO_MEETINGS } from "@/lib/dashboard-paths";
 import { RoiMeetingsClient } from "@/app/dashboard/roi-meetings/roi-meetings-client";
 import { RoiSessionHistoryList } from "@/app/dashboard/roi-meetings/roi-session-history-list";
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import {
   initiativeNameFor,
@@ -41,7 +41,7 @@ export default async function RoiMeetingsPage({ searchParams }: RoiMeetingsPageP
   const session = await getSessionUser();
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
-  const canSave = hasPermission(session.role, "tasks.write");
+  const canSave = canWriteWorkspaceData(session);
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
   const hierarchy = await getProjectHierarchyForSession(session, tenantId);

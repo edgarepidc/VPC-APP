@@ -286,6 +286,7 @@ export async function getSessionUser(
     isSuperAdminFromDb: isSuperAdminDb,
     isSuperAdminFromEnv,
     isPlatformVisit: tenantContext.isPlatformVisit,
+    managerReadOnly: tenantContext.managerReadOnly,
   };
 }
 
@@ -344,6 +345,7 @@ type ResolvedTenantContext = {
   activeTenantId: string | null;
   role: SessionUser["role"];
   isPlatformVisit: boolean;
+  managerReadOnly: boolean;
   /** Cookie pointed at a tenant the user may not use; caller should delete it. */
   clearCookie?: boolean;
 };
@@ -358,7 +360,12 @@ async function resolveActiveTenantContext(
   isSuperAdmin: boolean,
 ): Promise<ResolvedTenantContext> {
   if (!cookieTenantId) {
-    return { activeTenantId: null, role: "member", isPlatformVisit: false };
+    return {
+      activeTenantId: null,
+      role: "member",
+      isPlatformVisit: false,
+      managerReadOnly: false,
+    };
   }
 
   const tenant = await db.tenant.findUnique({
@@ -370,13 +377,17 @@ async function resolveActiveTenantContext(
       activeTenantId: null,
       role: "member",
       isPlatformVisit: false,
+      managerReadOnly: false,
       clearCookie: true,
     };
   }
 
   const membership = await db.membership.findFirst({
     where: { userId, tenantId: cookieTenantId, status: "active" },
-    select: { role: { select: { key: true } } },
+    select: {
+      role: { select: { key: true } },
+      managerReadOnly: true,
+    },
   });
 
   if (membership) {
@@ -384,6 +395,7 @@ async function resolveActiveTenantContext(
       activeTenantId: cookieTenantId,
       role: membership.role.key as SessionUser["role"],
       isPlatformVisit: false,
+      managerReadOnly: membership.managerReadOnly,
     };
   }
 
@@ -392,6 +404,7 @@ async function resolveActiveTenantContext(
       activeTenantId: cookieTenantId,
       role: "admin",
       isPlatformVisit: true,
+      managerReadOnly: false,
     };
   }
 
@@ -399,6 +412,7 @@ async function resolveActiveTenantContext(
     activeTenantId: null,
     role: "member",
     isPlatformVisit: false,
+    managerReadOnly: false,
     clearCookie: true,
   };
 }

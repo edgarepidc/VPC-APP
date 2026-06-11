@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
 import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { hasPermission } from "@/lib/rbac";
 import { createTask, listTasksByTenant } from "@/modules/tasks/service";
 
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     const session = await getSessionUser({ redirectOnDbFailure: false });
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!hasPermission(session.role, "tasks.write")) {
+    if (!canWriteWorkspaceData(session)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

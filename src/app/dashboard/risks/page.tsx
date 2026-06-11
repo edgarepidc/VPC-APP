@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { PMO_RISKS } from "@/lib/dashboard-paths";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import {
   initiativeNameFor,
@@ -47,7 +47,7 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
   const session = await getSessionUser();
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
-  const canEdit = hasPermission(session.role, "tasks.write");
+  const canEdit = canWriteWorkspaceData(session);
   const riskPrefill = parseRiskPrefillFromSearchParams(params);
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
@@ -70,7 +70,7 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
     "use server";
     const current = await getSessionUser();
     if (!current?.activeTenantId) redirect("/login");
-    if (!hasPermission(current.role, "tasks.write")) {
+    if (!canWriteWorkspaceData(current)) {
       redirect("/dashboard/risks?error=No+tienes+permiso+para+crear+riesgos");
     }
 
@@ -126,7 +126,7 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
     "use server";
     const current = await getSessionUser();
     if (!current?.activeTenantId) redirect("/login");
-    if (!hasPermission(current.role, "tasks.write")) {
+    if (!canWriteWorkspaceData(current)) {
       redirect("/dashboard/risks?error=No+tienes+permiso+para+editar+riesgos");
     }
 
@@ -192,7 +192,7 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
     "use server";
     const current = await getSessionUser();
     if (!current?.activeTenantId) redirect("/login");
-    if (!hasPermission(current.role, "tasks.write")) {
+    if (!canWriteWorkspaceData(current)) {
       redirect("/dashboard/risks?error=No+tienes+permiso+para+eliminar");
     }
     const riskId = String(formData.get("riskId") ?? "").trim();

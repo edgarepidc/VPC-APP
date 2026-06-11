@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import {
   addDeliverableAcuse,
   applyDeliverableTemplate,
@@ -30,7 +30,7 @@ function parseLocalDate(s: string): Date | null {
 async function requireWriteTenantId(): Promise<string> {
   const s = await getSessionUser();
   if (!s?.activeTenantId) throw new Error("No autorizado");
-  if (!hasPermission(s.role, "tasks.write")) throw new Error("Sin permiso");
+  if (!canWriteWorkspaceData(s)) throw new Error("Sin permiso");
   return s.activeTenantId;
 }
 

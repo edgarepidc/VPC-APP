@@ -14,6 +14,7 @@ import {
   uiLabel,
 } from "@/lib/ui-classes";
 import { getSessionUser } from "@/lib/auth/session";
+import { buildProjectHierarchyGroups } from "@/lib/project-hierarchy";
 import { getAppUrl } from "@/lib/env";
 import { listProjectsByTenant } from "@/modules/projects/service";
 import { ROLE_LABELS } from "@/lib/role-labels";
@@ -48,11 +49,21 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   if (!session.activeTenantId) redirect("/select-tenant");
 
   const tenantId = await requireTenantId();
-  const [members, usage, allOrgProjects] = await Promise.all([
+  const [members, usage, allOrgProjects, allProjects] = await Promise.all([
     listMembersByTenant(tenantId),
     getTenantUsageSnapshot(tenantId),
     listProjectsByTenant(tenantId, { initiativesOnly: true }),
+    listProjectsByTenant(tenantId),
   ]);
+  const scopeGroups = buildProjectHierarchyGroups(
+    allProjects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      parentProjectId: p.parentProjectId,
+      sortOrder: p.sortOrder,
+      status: p.status,
+    })),
+  );
   const canManage = canManageMembers(session.role);
   const appUrl = getAppUrl();
 
@@ -188,6 +199,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
           members={members}
           canManage={canManage}
           allOrgProjects={allOrgProjects.map((p) => ({ id: p.id, name: p.name }))}
+          scopeGroups={scopeGroups}
           updateManagerScopeAction={updateManagerScopeAction}
         />
       </section>
@@ -221,6 +233,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
             </div>
             <ManagerProjectScopeFields
               projects={allOrgProjects.map((p) => ({ id: p.id, name: p.name }))}
+              groups={scopeGroups}
             />
             <button type="submit" className={uiButtonPrimary.replace("w-full ", "w-auto ")}>
               Guardar / invitar

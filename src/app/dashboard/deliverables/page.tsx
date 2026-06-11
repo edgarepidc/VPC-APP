@@ -11,7 +11,7 @@ import {
 } from "@/lib/ui-classes";
 import { PMO_DELIVERABLES, PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import {
   initiativeNameFor,
@@ -62,7 +62,7 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
   if (!session) redirect("/login");
 
   const tenantId = await requireTenantId();
-  const canEdit = hasPermission(session.role, "tasks.write");
+  const canEdit = canWriteWorkspaceData(session);
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
 

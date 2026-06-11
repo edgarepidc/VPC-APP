@@ -7,7 +7,7 @@ import { EscalometroClient } from "@/app/dashboard/escalometro/escalometro-clien
 import { EscalationHistoryList } from "@/app/dashboard/escalometro/escalation-history-list";
 import { getSessionUser } from "@/lib/auth/session";
 import { PMO_ESCALATIONS } from "@/lib/dashboard-paths";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import {
   projectDisplayLabel,
@@ -41,7 +41,7 @@ export default async function EscalometroPage({ searchParams }: EscalometroPageP
   const session = await getSessionUser();
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
-  const canSave = hasPermission(session.role, "tasks.write");
+  const canSave = canWriteWorkspaceData(session);
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
   const hierarchy = await getProjectHierarchyForSession(session, tenantId);

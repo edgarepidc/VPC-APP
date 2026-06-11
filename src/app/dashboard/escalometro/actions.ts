@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import {
   createEscalationCheck,
@@ -36,7 +36,7 @@ export async function saveEscalationAction(input: {
 }) {
   const session = await getSessionUser();
   if (!session?.activeTenantId) redirect("/login");
-  if (!hasPermission(session.role, "tasks.write")) {
+  if (!canWriteWorkspaceData(session)) {
     return { ok: false as const, error: "No tienes permiso para registrar evaluaciones." };
   }
 

@@ -1,3 +1,4 @@
+import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
 import { personInitialsFromName, ROLE_LABELS } from "@/lib/role-labels";
 import { uiButtonPrimary } from "@/lib/ui-classes";
 import type { RoleKey } from "@/lib/types";
@@ -10,6 +11,7 @@ type MemberProject = { id: string; name: string };
 type TeamMember = {
   id: string;
   managerAllProjects: boolean;
+  managerReadOnly: boolean;
   user: { name: string | null; email: string };
   role: { key: string; name: string };
   projectAccess: { project: MemberProject }[];
@@ -19,6 +21,7 @@ type TeamMemberListProps = {
   members: TeamMember[];
   canManage: boolean;
   allOrgProjects: MemberProject[];
+  scopeGroups: ProjectHierarchyGroup[];
   updateManagerScopeAction: (formData: FormData) => Promise<void>;
 };
 
@@ -69,6 +72,7 @@ export function TeamMemberList({
   members,
   canManage,
   allOrgProjects,
+  scopeGroups,
   updateManagerScopeAction,
 }: TeamMemberListProps) {
   if (members.length === 0) {
@@ -108,6 +112,11 @@ export function TeamMemberList({
                   <span className={ROLE_BADGE[roleKey] ?? "pmo-badge"}>
                     {ROLE_LABELS[roleKey] ?? member.role.name}
                   </span>
+                  {member.managerReadOnly ? (
+                    <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                      Solo lectura
+                    </span>
+                  ) : null}
                 </div>
                 <p className="mt-0.5 text-sm text-slate-600">{member.user.email}</p>
 
@@ -135,8 +144,10 @@ export function TeamMemberList({
                           <input type="hidden" name="role" value="manager" />
                           <ManagerProjectScopeFields
                             projects={allOrgProjects}
+                            groups={scopeGroups}
                             initialRole="manager"
                             initialAllProjects={member.managerAllProjects}
+                            initialReadOnly={member.managerReadOnly}
                             initialProjectIds={assignedIds}
                           />
                           <button

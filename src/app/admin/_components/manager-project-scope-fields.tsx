@@ -15,6 +15,7 @@ type Props = {
   tenantSelectName?: string;
   initialRole?: RoleKey;
   initialAllProjects?: boolean;
+  initialReadOnly?: boolean;
   initialProjectIds?: string[];
 };
 
@@ -25,11 +26,13 @@ export function AdminManagerProjectScopeFields({
   tenantSelectName = "tenantId",
   initialRole = "member",
   initialAllProjects = false,
+  initialReadOnly = false,
   initialProjectIds = [],
 }: Props) {
   const [role, setRole] = useState<RoleKey>(initialRole);
   const [activeTenantId, setActiveTenantId] = useState(tenantId);
   const [allProjects, setAllProjects] = useState(initialAllProjects);
+  const [readOnly, setReadOnly] = useState(initialReadOnly);
   const [selected, setSelected] = useState<Set<string>>(new Set(initialProjectIds));
 
   useEffect(() => {
@@ -74,6 +77,16 @@ export function AdminManagerProjectScopeFields({
           className="rounded border-slate-300"
         />
         Todas las iniciativas
+      </label>
+      <label className="mt-2 flex items-center gap-2 text-sm text-slate-800">
+        <input
+          type="checkbox"
+          name="managerReadOnly"
+          checked={readOnly}
+          onChange={(e) => setReadOnly(e.target.checked)}
+          className="rounded border-slate-300"
+        />
+        Solo lectura
       </label>
       {!allProjects ? (
         <div className="mt-2">

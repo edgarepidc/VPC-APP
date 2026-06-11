@@ -4,6 +4,7 @@ import type { RoleKey } from "@/lib/types";
 
 export type ManagerProjectScopeInput = {
   managerAllProjects: boolean;
+  managerReadOnly: boolean;
   projectIds: string[];
 };
 
@@ -14,10 +15,11 @@ export type ProjectAccessScope =
 export function parseManagerProjectScopeFromForm(formData: FormData): ManagerProjectScopeInput {
   const roleKey = String(formData.get("role") ?? formData.get("roleKey") ?? "");
   if (roleKey !== "manager") {
-    return { managerAllProjects: false, projectIds: [] };
+    return { managerAllProjects: false, managerReadOnly: false, projectIds: [] };
   }
 
   const managerAllProjects = formData.get("managerAllProjects") === "on";
+  const managerReadOnly = formData.get("managerReadOnly") === "on";
   const raw = String(formData.get("managerProjectIds") ?? "").trim();
   const projectIds = raw
     ? raw
@@ -26,7 +28,7 @@ export function parseManagerProjectScopeFromForm(formData: FormData): ManagerPro
         .filter(Boolean)
     : [];
 
-  return { managerAllProjects, projectIds };
+  return { managerAllProjects, managerReadOnly, projectIds };
 }
 
 export async function getMembershipProjectScope(input: {
@@ -103,7 +105,7 @@ export async function setMembershipProjectAccess(
   if (roleKey !== "manager") {
     await db.membership.update({
       where: { id: membershipId },
-      data: { managerAllProjects: false },
+      data: { managerAllProjects: false, managerReadOnly: false },
     });
     await db.membershipProject.deleteMany({ where: { membershipId } });
     return;
@@ -112,7 +114,10 @@ export async function setMembershipProjectAccess(
   if (scope.managerAllProjects) {
     await db.membership.update({
       where: { id: membershipId },
-      data: { managerAllProjects: true },
+      data: {
+        managerAllProjects: true,
+        managerReadOnly: scope.managerReadOnly,
+      },
     });
     await db.membershipProject.deleteMany({ where: { membershipId } });
     return;
@@ -130,7 +135,10 @@ export async function setMembershipProjectAccess(
 
   await db.membership.update({
     where: { id: membershipId },
-    data: { managerAllProjects: false },
+    data: {
+      managerAllProjects: false,
+      managerReadOnly: scope.managerReadOnly,
+    },
   });
   await db.membershipProject.deleteMany({ where: { membershipId } });
   await db.membershipProject.createMany({
@@ -150,7 +158,7 @@ export async function setInvitationProjectAccess(
   if (roleKey !== "manager") {
     await db.invitation.update({
       where: { id: invitationId },
-      data: { managerAllProjects: false },
+      data: { managerAllProjects: false, managerReadOnly: false },
     });
     return;
   }
@@ -158,7 +166,10 @@ export async function setInvitationProjectAccess(
   if (scope.managerAllProjects) {
     await db.invitation.update({
       where: { id: invitationId },
-      data: { managerAllProjects: true },
+      data: {
+        managerAllProjects: true,
+        managerReadOnly: scope.managerReadOnly,
+      },
     });
     return;
   }
@@ -174,7 +185,10 @@ export async function setInvitationProjectAccess(
 
   await db.invitation.update({
     where: { id: invitationId },
-    data: { managerAllProjects: false },
+    data: {
+      managerAllProjects: false,
+      managerReadOnly: scope.managerReadOnly,
+    },
   });
   await db.invitationProject.createMany({
     data: validProjects.map((p) => ({ invitationId, projectId: p.id })),
@@ -192,6 +206,7 @@ export async function applyInvitationProjectAccessToMembership(
     select: {
       roleKey: true,
       managerAllProjects: true,
+      managerReadOnly: true,
       projectAccess: { select: { projectId: true } },
     },
   });
@@ -199,6 +214,7 @@ export async function applyInvitationProjectAccessToMembership(
 
   await setMembershipProjectAccess(membershipId, tenantId, invitation.roleKey as RoleKey, {
     managerAllProjects: invitation.managerAllProjects,
+    managerReadOnly: invitation.managerReadOnly,
     projectIds: invitation.projectAccess.map((p) => p.projectId),
   });
 }

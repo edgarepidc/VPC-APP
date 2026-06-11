@@ -25,6 +25,7 @@ export async function listMembersByTenant(tenantId: string) {
     select: {
       id: true,
       managerAllProjects: true,
+      managerReadOnly: true,
       user: {
         select: {
           id: true,
@@ -112,7 +113,7 @@ export async function assignRoleByEmail(input: {
     membership.id,
     input.tenantId,
     input.roleKey,
-    input.managerScope ?? { managerAllProjects: false, projectIds: [] },
+    input.managerScope ?? { managerAllProjects: false, managerReadOnly: false, projectIds: [] },
   );
 }
 

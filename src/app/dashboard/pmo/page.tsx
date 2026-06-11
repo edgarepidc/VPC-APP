@@ -10,13 +10,17 @@ import {
   STAKEHOLDERS_QUADRANT,
 } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { serializeEscalationChecks } from "@/lib/escalation-serialize";
 import { serializeMeetingRoiSessions } from "@/lib/meeting-roi-utils";
 import { getCachedPmoSnapshot } from "@/modules/pmo/cached-snapshot";
 
+import {
+  buildPmoPortfolioAlertSummary,
+  PmoPortfolioAlertsBanner,
+} from "./pmo-portfolio-alerts-banner";
 import { buildPmoActionQueue } from "./pmo-action-utils";
 import { PmoActionQueue } from "./pmo-action-queue";
 import { PmoKpiBar } from "./pmo-kpi-bar";
@@ -38,7 +42,7 @@ export default async function PmoPage() {
   const session = await getSessionUser();
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
-  const canCreateRisk = hasPermission(session.role, "tasks.write");
+  const canCreateRisk = canWriteWorkspaceData(session);
 
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
   const snapshot = await getCachedPmoSnapshot(tenantId, {
@@ -51,6 +55,12 @@ export default async function PmoPage() {
     stakeholderAlerts: snapshot.stakeholderAlerts,
     deteriorationAlerts: snapshot.deteriorationAlerts,
     meetingCostAlerts: snapshot.meetingCostAlerts,
+  });
+
+  const portfolioAlerts = buildPmoPortfolioAlertSummary({
+    projectHealth: snapshot.projectHealth,
+    overdueDeliverablesCount: snapshot.overdueDeliverables.length,
+    criticalRisksCount: snapshot.criticalRiskRows.length,
   });
 
   const radarRows = serializeEscalationChecks(snapshot.escalationRadar.rows);
@@ -82,6 +92,8 @@ export default async function PmoPage() {
       />
 
       <PmoKpiBar kpis={snapshot.kpis} formatMxn={mxn} />
+
+      <PmoPortfolioAlertsBanner summary={portfolioAlerts} />
 
       <section className="mb-4">
         <PmoActionQueue items={actionItems} />

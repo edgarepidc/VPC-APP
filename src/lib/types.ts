@@ -18,6 +18,8 @@ export type SessionUser = {
   isSuperAdminFromDb: boolean;
   /** true si el correo está en PLATFORM_OWNER_EMAIL o PLATFORM_SUPERADMIN_EMAILS. */
   isSuperAdminFromEnv: boolean;
+  /** PM en modo solo lectura (sin crear/editar en módulos operativos). */
+  managerReadOnly: boolean;
   /**
    * Superadmin entró con “Entrar al workspace” sin membresía en ese tenant.
    * Rol efectivo admin; útil para avisos de gobernanza en UI.

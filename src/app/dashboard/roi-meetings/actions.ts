@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import {
   createMeetingRoiSession,
@@ -28,7 +28,7 @@ const VALID_COST_LEVELS = new Set<MeetingCostLevel>([
   "Bajo",
   "Moderado",
   "Alto",
-  "Crítico",
+  "Cr\u00edtico",
 ]);
 
 function parseRoleMap(raw: unknown): RoleCounts | null {
@@ -62,7 +62,7 @@ export async function saveMeetingRoiSessionAction(input: {
 }) {
   const session = await getSessionUser();
   if (!session?.activeTenantId) redirect("/login");
-  if (!hasPermission(session.role, "tasks.write")) {
+  if (!canWriteWorkspaceData(session)) {
     return { ok: false as const, error: "No tienes permiso para registrar sesiones." };
   }
 
@@ -72,17 +72,17 @@ export async function saveMeetingRoiSessionAction(input: {
   }
 
   if (!VALID_OBJECTIVES.has(input.objective as MeetingObjective)) {
-    return { ok: false as const, error: "Objetivo de sesión inválido." };
+    return { ok: false as const, error: "Objetivo de sesi?n inv?lido." };
   }
 
   if (!VALID_COST_LEVELS.has(input.costLevel as MeetingCostLevel)) {
-    return { ok: false as const, error: "Nivel de costo inválido." };
+    return { ok: false as const, error: "Nivel de costo inv?lido." };
   }
 
   const diagnosisTitle = input.diagnosisTitle?.trim();
   const diagnosisText = input.diagnosisText?.trim();
   if (!diagnosisTitle || !diagnosisText) {
-    return { ok: false as const, error: "Datos de diagnóstico incompletos." };
+    return { ok: false as const, error: "Datos de diagn?stico incompletos." };
   }
 
   if (
@@ -92,14 +92,14 @@ export async function saveMeetingRoiSessionAction(input: {
   ) {
     return {
       ok: false as const,
-      error: "Configura participantes y duración antes de registrar.",
+      error: "Configura participantes y duraci?n antes de registrar.",
     };
   }
 
   const participants = parseRoleMap(input.participants);
   const roleCosts = parseRoleMap(input.roleCosts);
   if (!participants || !roleCosts) {
-    return { ok: false as const, error: "Desglose de participantes inválido." };
+    return { ok: false as const, error: "Desglose de participantes inv?lido." };
   }
 
   try {
@@ -145,18 +145,18 @@ export async function saveMeetingRoiSessionAction(input: {
 export async function updateMeetingRoiSessionAction(id: string, sessionName: string | null) {
   const session = await getSessionUser();
   if (!session?.activeTenantId) redirect("/login");
-  if (!hasPermission(session.role, "tasks.write")) {
+  if (!canWriteWorkspaceData(session)) {
     return { ok: false as const, error: "No tienes permiso para editar sesiones." };
   }
 
   const trimmedId = id?.trim();
   if (!trimmedId) {
-    return { ok: false as const, error: "Sesión inválida." };
+    return { ok: false as const, error: "Sesi?n inv?lida." };
   }
 
   const existing = await getMeetingRoiSession(session.activeTenantId, trimmedId);
   if (!existing) {
-    return { ok: false as const, error: "Sesión no encontrada." };
+    return { ok: false as const, error: "Sesi?n no encontrada." };
   }
 
   try {
@@ -196,18 +196,18 @@ export async function updateMeetingRoiSessionAction(id: string, sessionName: str
 export async function deleteMeetingRoiSessionAction(id: string) {
   const session = await getSessionUser();
   if (!session?.activeTenantId) redirect("/login");
-  if (!hasPermission(session.role, "tasks.write")) {
+  if (!canWriteWorkspaceData(session)) {
     return { ok: false as const, error: "No tienes permiso para eliminar sesiones." };
   }
 
   const trimmedId = id?.trim();
   if (!trimmedId) {
-    return { ok: false as const, error: "Sesión inválida." };
+    return { ok: false as const, error: "Sesi?n inv?lida." };
   }
 
   const existing = await getMeetingRoiSession(session.activeTenantId, trimmedId);
   if (!existing) {
-    return { ok: false as const, error: "Sesión no encontrada." };
+    return { ok: false as const, error: "Sesi?n no encontrada." };
   }
 
   try {

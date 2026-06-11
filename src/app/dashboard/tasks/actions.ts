@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import {
   TASK_KANBAN_STATUSES,
@@ -57,7 +57,7 @@ export async function createTaskWithContextAction(formData: FormData) {
   const monthExtra =
     view === "calendar" && /^\d{4}-\d{2}$/.test(month) ? { month } : undefined;
 
-  if (!hasPermission(s.role, "tasks.write")) {
+  if (!canWriteWorkspaceData(s)) {
     redirect(
       buildTasksUrl({
         view,
@@ -124,7 +124,7 @@ export async function createTaskWithContextAction(formData: FormData) {
 export async function moveTaskAction(formData: FormData) {
   const s = await getSessionUser();
   if (!s?.activeTenantId) throw new Error("No autorizado");
-  if (!hasPermission(s.role, "tasks.write")) {
+  if (!canWriteWorkspaceData(s)) {
     throw new Error("Sin permiso");
   }
 
@@ -145,7 +145,7 @@ export async function moveTaskAction(formData: FormData) {
 export async function updateTaskAction(formData: FormData) {
   const s = await getSessionUser();
   if (!s?.activeTenantId) throw new Error("No autorizado");
-  if (!hasPermission(s.role, "tasks.write")) {
+  if (!canWriteWorkspaceData(s)) {
     throw new Error("Sin permiso");
   }
 

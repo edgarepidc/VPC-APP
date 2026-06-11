@@ -7,7 +7,7 @@ import { EscalationHistoryList } from "@/app/dashboard/escalometro/escalation-hi
 import { EscalationDeteriorationAlerts } from "@/app/dashboard/pmo/escalation-deterioration-alerts";
 import { getSessionUser } from "@/lib/auth/session";
 import { ESCALOMETRO_HUB } from "@/lib/dashboard-paths";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { resolveProjectFilterIds } from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
@@ -34,7 +34,7 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
   const session = await getSessionUser();
   if (!session) redirect("/login");
   const tenantId = await requireTenantId();
-  const canCreateRisk = hasPermission(session.role, "tasks.write");
+  const canCreateRisk = canWriteWorkspaceData(session);
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
   const hierarchy = await getProjectHierarchyForSession(session, tenantId);
   const resolvedFilter = resolveProjectFilterIds(hierarchy.projects, filterProjectId || null);

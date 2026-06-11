@@ -17,7 +17,7 @@ import {
 } from "@/lib/ui-classes";
 import { PMO_HUB, PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/rbac";
+import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import {
@@ -97,7 +97,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
   if (!session) redirect("/login");
 
   const tenantId = await requireTenantId();
-  const canWrite = hasPermission(session.role, "tasks.write");
+  const canWrite = canWriteWorkspaceData(session);
   const view = normalizeView(params.view);
   const projectFilter = params.project?.trim() || undefined;
   const qFilter = params.q?.trim() || undefined;

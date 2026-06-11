@@ -82,6 +82,7 @@ export default async function DashboardSettingsPage({
             </dt>
             <dd className="mt-0.5 font-medium text-slate-900">
               {ROLE_LABELS[session.role]} ({ROLE_SIDEBAR_LABELS[session.role]})
+              {session.managerReadOnly ? " · solo lectura" : ""}
             </dd>
           </div>
           <div>
@@ -97,6 +98,12 @@ export default async function DashboardSettingsPage({
           <p className="mt-3 text-xs text-amber-800">
             Tu acceso a la administración global viene de la configuración de plataforma
             (correo autorizado en Vercel), no del rol PM/admin del cliente.
+          </p>
+        ) : null}
+        {session.managerReadOnly ? (
+          <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+            Tu perfil PM está en <strong>modo solo lectura</strong>: puedes consultar entregables,
+            riesgos, escalómetro y reuniones, pero no crear ni editar registros.
           </p>
         ) : null}
 

@@ -73,6 +73,8 @@ model Membership {
   status             String              @default("active")
   /** PM (manager): true = todos los proyectos del tenant. */
   managerAllProjects Boolean             @default(false)
+  /** PM (manager): true = solo lectura en entregables, riesgos, escalómetro, etc. */
+  managerReadOnly    Boolean             @default(false)
   tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   role               Role                @relation(fields: [roleId], references: [id])
@@ -167,6 +169,7 @@ model Invitation {
   status             String              @default("pending")
   invitedBy          String
   managerAllProjects Boolean             @default(false)
+  managerReadOnly    Boolean             @default(false)
   acceptedAt         DateTime?
   createdAt          DateTime            @default(now())
   tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
