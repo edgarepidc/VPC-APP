@@ -7,10 +7,16 @@ import {
   type MinuteProvider,
 } from "@/lib/meeting-minute-types";
 
-/** Modelos vía Vercel AI Gateway (provider/model). */
+/** Modelos compatibles con créditos gratuitos de AI Gateway ($5/mes). */
 const MODEL_BY_PROVIDER: Record<MinuteProvider, { gatewayModel: string; label: string }> = {
-  claude: { gatewayModel: "anthropic/claude-sonnet-4.6", label: "anthropic/claude-sonnet-4.6" },
-  deepseek: { gatewayModel: "deepseek/deepseek-chat", label: "deepseek/deepseek-chat" },
+  claude: {
+    gatewayModel: "anthropic/claude-haiku-4.5",
+    label: "anthropic/claude-haiku-4.5",
+  },
+  deepseek: {
+    gatewayModel: "deepseek/deepseek-v3.2",
+    label: "deepseek/deepseek-v3.2",
+  },
 };
 
 function isGatewayConfigured(): boolean {

@@ -4,8 +4,8 @@ export const MINUTE_PROVIDERS = ["claude", "deepseek"] as const;
 export type MinuteProvider = (typeof MINUTE_PROVIDERS)[number];
 
 export const MINUTE_PROVIDER_LABELS: Record<MinuteProvider, string> = {
-  claude: "Claude (Anthropic)",
-  deepseek: "DeepSeek",
+  claude: "Claude Haiku 4.5",
+  deepseek: "DeepSeek V3.2",
 };
 
 export const meetingMinuteContentSchema = z.object({

@@ -267,7 +267,8 @@ export function MinutesClient({
             Nueva minuta
           </p>
           <p className="mt-1 text-sm text-indigo-50">
-            Adjunta tu archivo Word o pega la transcripción. Solo se guarda la minuta final.
+            Adjunta tu archivo Word o pega la transcripción. Plan gratuito: Claude Haiku 4.5 y
+            DeepSeek V3.2.
           </p>
         </div>
 

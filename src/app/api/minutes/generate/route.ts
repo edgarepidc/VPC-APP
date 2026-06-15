@@ -94,6 +94,9 @@ export async function POST(req: Request) {
     if (/credit card|valid credit card/i.test(message)) {
       userMessage =
         "AI Gateway requiere una tarjeta de crédito en tu cuenta Vercel para activar los créditos gratuitos. Añádela en Vercel → AI Gateway → Billing y vuelve a intentar.";
+    } else if (/Free tier users do not have access/i.test(message)) {
+      userMessage =
+        "Ese modelo no está incluido en el plan gratuito de AI Gateway. La app usa Claude Haiku 4.5 y DeepSeek V3.2; redeploya si acabas de actualizar.";
     } else if (/Unauthenticated|AI_GATEWAY_API_KEY/i.test(message)) {
       userMessage =
         "AI Gateway no está autenticado. Verifica AI_GATEWAY_API_KEY en Vercel y redeploya el proyecto.";
