@@ -19,7 +19,6 @@ import {
 } from "@/lib/meeting-minute-types";
 import { MINUTES_DETAIL, PMO_HUB } from "@/lib/dashboard-paths";
 import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
-import { firstProjectHierarchySelectValue } from "@/lib/project-hierarchy";
 import {
   dashAlertError,
   dashAlertOk,
@@ -69,9 +68,7 @@ export function MinutesClient({
 }: MinutesClientProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [projectId, setProjectId] = useState(() =>
-    firstProjectHierarchySelectValue(projectGroups, true),
-  );
+  const [projectId, setProjectId] = useState("");
   const [title, setTitle] = useState("");
   const [meetingDate, setMeetingDate] = useState("");
   const [provider, setProvider] = useState<MinuteProvider>(
@@ -308,10 +305,16 @@ export function MinutesClient({
                 }}
                 groups={projectGroups}
                 allowAll={false}
+                placeholderLabel="Selecciona un subproyecto"
                 workScopeOnly
                 className={`${uiInput} mt-1`}
                 aria-label="Subproyecto"
               />
+              {!projectId ? (
+                <p className={`mt-2 ${dashAlertWarn}`} role="status">
+                  Selecciona un subproyecto para generar o guardar la minuta.
+                </p>
+              ) : null}
             </label>
             <label className="block">
               <span className={uiLabel}>Título</span>

@@ -1,11 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-
-import {
-  firstProjectHierarchySelectValue,
-  type ProjectHierarchyGroup,
-} from "@/lib/project-hierarchy";
+import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
 
 export type ProjectHierarchySelectProps = {
   value: string;
@@ -14,6 +9,8 @@ export type ProjectHierarchySelectProps = {
   /** Incluir opción vacía (todos). */
   allowAll?: boolean;
   allLabel?: string;
+  /** Opción vacía cuando allowAll es false (p. ej. «Selecciona un subproyecto»). */
+  placeholderLabel?: string;
   /** Solo subproyectos + iniciativas legacy sin hijos (formularios de alta). */
   workScopeOnly?: boolean;
   className?: string;
@@ -28,22 +25,13 @@ export function ProjectHierarchySelect({
   groups,
   allowAll = true,
   allLabel = "Todas las iniciativas",
+  placeholderLabel,
   workScopeOnly = false,
   className,
   id,
   "aria-label": ariaLabel,
   name,
 }: ProjectHierarchySelectProps) {
-  const firstSelectableId = useMemo(
-    () => firstProjectHierarchySelectValue(groups, workScopeOnly),
-    [groups, workScopeOnly],
-  );
-
-  useEffect(() => {
-    if (allowAll || value || !firstSelectableId) return;
-    onChange(firstSelectableId);
-  }, [allowAll, value, firstSelectableId, onChange]);
-
   return (
     <select
       id={id}
@@ -54,6 +42,9 @@ export function ProjectHierarchySelect({
       className={className}
     >
       {allowAll ? <option value="">{allLabel}</option> : null}
+      {!allowAll && placeholderLabel ? (
+        <option value="">{placeholderLabel}</option>
+      ) : null}
       {groups.map((g) => {
         if (g.subprojects.length === 0) {
           if (workScopeOnly) {
