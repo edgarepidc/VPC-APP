@@ -1,3 +1,5 @@
+import { Buffer } from "node:buffer";
+
 import mammoth from "mammoth";
 
 import { MAX_TRANSCRIPT_CHARS } from "@/lib/meeting-minute-types";
@@ -22,7 +24,7 @@ export async function extractTextFromDocxBuffer(
     throw new Error("El archivo supera el límite de 10 MB.");
   }
 
-  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+  const result = await mammoth.extractRawText({ buffer: Buffer.from(buffer) });
   const text = result.value.trim();
 
   if (!text) {
