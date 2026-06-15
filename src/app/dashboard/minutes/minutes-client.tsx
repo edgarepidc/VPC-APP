@@ -104,7 +104,13 @@ export function MinutesClient({
       });
       const json = (await res.json()) as {
         error?: string;
-        data?: { text: string; fileName: string; charCount: number };
+        data?: {
+          text: string;
+          fileName: string;
+          charCount: number;
+          suggestedTitle?: string | null;
+          suggestedMeetingDate?: string | null;
+        };
       };
 
       if (!res.ok || !json.data) {
@@ -117,10 +123,25 @@ export function MinutesClient({
 
       setTranscript(json.data.text);
       setUploadedFileName(json.data.fileName);
+      if (json.data.suggestedTitle?.trim()) {
+        setTitle(json.data.suggestedTitle.trim());
+      }
+      if (json.data.suggestedMeetingDate) {
+        setMeetingDate(json.data.suggestedMeetingDate);
+      }
       setInputMode("paste");
+
+      const autoParts: string[] = [];
+      if (json.data.suggestedTitle?.trim()) autoParts.push("título");
+      if (json.data.suggestedMeetingDate) autoParts.push("fecha");
+      const autoHint =
+        autoParts.length > 0
+          ? ` · Autocompletado: ${autoParts.join(" y ")}`
+          : "";
+
       setFeedback({
         type: "ok",
-        message: `Texto extraído de «${json.data.fileName}» (${json.data.charCount.toLocaleString("es-MX")} caracteres). Revísalo y genera la minuta.`,
+        message: `Texto extraído de «${json.data.fileName}» (${json.data.charCount.toLocaleString("es-MX")} caracteres)${autoHint}. Revísalo y genera la minuta.`,
       });
     } catch {
       setFeedback({ type: "error", message: "Error al subir el archivo Word." });

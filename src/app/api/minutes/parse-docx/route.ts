@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { extractTextFromDocxBuffer } from "@/lib/extract-docx-text";
+import { extractFromDocxBuffer } from "@/lib/extract-docx-text";
 import { getSessionUser } from "@/lib/auth/session";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 
@@ -22,13 +22,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Adjunta un archivo Word (.docx)." }, { status: 400 });
     }
 
-    const text = await extractTextFromDocxBuffer(await file.arrayBuffer(), file.name);
+    const extracted = await extractFromDocxBuffer(await file.arrayBuffer(), file.name);
 
     return NextResponse.json({
       data: {
-        text,
+        text: extracted.text,
         fileName: file.name,
-        charCount: text.length,
+        charCount: extracted.text.length,
+        suggestedTitle: extracted.suggestedTitle,
+        suggestedMeetingDate: extracted.suggestedMeetingDate,
       },
     });
   } catch (error) {
