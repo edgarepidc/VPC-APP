@@ -94,7 +94,7 @@ export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps)
           <div className="flex flex-wrap gap-2">
             <Link
               href={MINUTES_HUB}
-              className="rounded-lg border border-white/30 bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               Volver al listado
             </Link>
@@ -105,7 +105,7 @@ export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps)
                     type="button"
                     onClick={saveMarkdown}
                     disabled={pendingSave || pendingDelete}
-                    className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
+                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                   >
                     {pendingSave ? "Guardando…" : "Guardar cambios"}
                   </button>
@@ -114,7 +114,7 @@ export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps)
                   type="button"
                   onClick={remove}
                   disabled={pendingDelete || pendingSave}
-                  className="rounded-lg border border-red-200/60 bg-red-500/20 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500/30 disabled:opacity-50"
+                  className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                 >
                   {pendingDelete ? "Eliminando…" : "Eliminar"}
                 </button>

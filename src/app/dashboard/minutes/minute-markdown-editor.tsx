@@ -1,70 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-
-import { uiInput } from "@/lib/ui-classes";
-
-type SlashCommand = {
-  id: string;
-  label: string;
-  hint: string;
-  insert: string;
-  keywords: string[];
-};
-
-const SLASH_COMMANDS: SlashCommand[] = [
-  {
-    id: "h1",
-    label: "Título principal",
-    hint: "# Encabezado grande",
-    insert: "# ",
-    keywords: ["titulo", "h1", "encabezado"],
-  },
-  {
-    id: "h2",
-    label: "Subtítulo",
-    hint: "## Sección",
-    insert: "## ",
-    keywords: ["subtitulo", "h2", "seccion"],
-  },
-  {
-    id: "h3",
-    label: "Apartado",
-    hint: "### Punto",
-    insert: "### ",
-    keywords: ["apartado", "h3", "punto"],
-  },
-  {
-    id: "table",
-    label: "Tabla de acuerdos",
-    hint: "Acción · Responsable · Fecha",
-    insert: "| Acción | Responsable | Fecha |\n| --- | --- | --- |\n|  |  |  |\n",
-    keywords: ["tabla", "table", "acuerdos"],
-  },
-  {
-    id: "bullet",
-    label: "Lista con viñetas",
-    hint: "- Elemento",
-    insert: "- \n",
-    keywords: ["lista", "viñetas", "bullet"],
-  },
-  {
-    id: "numbered",
-    label: "Lista numerada",
-    hint: "1. Elemento",
-    insert: "1. \n",
-    keywords: ["numerada", "orden"],
-  },
-  {
-    id: "hr",
-    label: "Separador",
-    hint: "---",
-    insert: "\n---\n",
-    keywords: ["separador", "linea", "hr"],
-  },
-];
+import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useEffect, useRef, useState } from "react";
+import { Markdown } from "tiptap-markdown";
 
 type MinuteMarkdownEditorProps = {
   value: string;
@@ -73,22 +13,40 @@ type MinuteMarkdownEditorProps = {
   className?: string;
 };
 
-function getSlashContext(value: string, cursor: number) {
-  const before = value.slice(0, cursor);
-  const match = before.match(/(?:^|\n)([^\n]*?)\/([^/\n]*)$/);
-  if (!match) return null;
-  const query = match[2] ?? "";
-  const slashStart = before.lastIndexOf("/");
-  return { query, slashStart, replaceEnd: cursor };
+type MarkdownStorage = {
+  markdown: {
+    getMarkdown: () => string;
+  };
+};
+
+function getMarkdownFromEditor(editor: NonNullable<ReturnType<typeof useEditor>>) {
+  return (editor.storage as unknown as MarkdownStorage).markdown.getMarkdown();
 }
 
-function filterCommands(query: string) {
-  const q = query.trim().toLowerCase();
-  if (!q) return SLASH_COMMANDS;
-  return SLASH_COMMANDS.filter(
-    (cmd) =>
-      cmd.label.toLowerCase().includes(q) ||
-      cmd.keywords.some((kw) => kw.includes(q) || q.includes(kw)),
+function ToolbarButton({
+  label,
+  onClick,
+  active,
+  disabled,
+}: {
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 sm:text-sm ${
+        active
+          ? "bg-indigo-600 text-white"
+          : "border border-indigo-100 bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-900"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -98,84 +56,57 @@ export function MinuteMarkdownEditor({
   readOnly = false,
   className = "",
 }: MinuteMarkdownEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [mode, setMode] = useState<"edit" | "preview">("edit");
-  const [slashOpen, setSlashOpen] = useState(false);
-  const [slashQuery, setSlashQuery] = useState("");
-  const [slashStart, setSlashStart] = useState(0);
-  const [slashEnd, setSlashEnd] = useState(0);
-  const [activeCommand, setActiveCommand] = useState(0);
+  const skipUpdate = useRef(false);
   const [copyState, setCopyState] = useState<"idle" | "ok" | "error">("idle");
 
-  const filteredCommands = useMemo(() => filterCommands(slashQuery), [slashQuery]);
-
-  const applySlashCommand = useCallback(
-    (command: SlashCommand) => {
-      const next =
-        value.slice(0, slashStart) + command.insert + value.slice(slashEnd);
-      onChange?.(next);
-      setSlashOpen(false);
-      setSlashQuery("");
-      requestAnimationFrame(() => {
-        const el = textareaRef.current;
-        if (!el) return;
-        const pos = slashStart + command.insert.length;
-        el.focus();
-        el.setSelectionRange(pos, pos);
-      });
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+      }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Markdown.configure({
+        html: false,
+        transformPastedText: true,
+        transformCopiedText: true,
+      }),
+    ],
+    content: value,
+    editable: !readOnly,
+    editorProps: {
+      attributes: {
+        class:
+          "minute-editor-content min-h-[420px] px-4 py-4 text-sm leading-relaxed text-slate-800 focus:outline-none",
+      },
     },
-    [onChange, slashEnd, slashStart, value],
-  );
+    onUpdate: ({ editor: currentEditor }) => {
+      if (skipUpdate.current) return;
+      onChange?.(getMarkdownFromEditor(currentEditor));
+    },
+  });
 
-  function syncSlashMenu(nextValue: string, cursor: number) {
-    const ctx = getSlashContext(nextValue, cursor);
-    if (!ctx) {
-      setSlashOpen(false);
-      return;
-    }
-    setSlashOpen(true);
-    setSlashQuery(ctx.query);
-    setSlashStart(ctx.slashStart);
-    setSlashEnd(ctx.replaceEnd);
-    setActiveCommand(0);
-  }
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(!readOnly);
+  }, [editor, readOnly]);
 
-  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    const next = e.target.value;
-    onChange?.(next);
-    syncSlashMenu(next, e.target.selectionStart);
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (!slashOpen || filteredCommands.length === 0) {
-      if (e.key === "/" && !readOnly) {
-        requestAnimationFrame(() => {
-          const el = textareaRef.current;
-          if (!el) return;
-          syncSlashMenu(el.value, el.selectionStart);
-        });
-      }
-      return;
-    }
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveCommand((i) => (i + 1) % filteredCommands.length);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveCommand((i) => (i - 1 + filteredCommands.length) % filteredCommands.length);
-    } else if (e.key === "Enter" || e.key === "Tab") {
-      e.preventDefault();
-      applySlashCommand(filteredCommands[activeCommand]!);
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      setSlashOpen(false);
-    }
-  }
+  useEffect(() => {
+    if (!editor) return;
+    const current = getMarkdownFromEditor(editor);
+    if (value.trim() === current.trim()) return;
+    skipUpdate.current = true;
+    editor.commands.setContent(value);
+    skipUpdate.current = false;
+  }, [editor, value]);
 
   async function copyMarkdown() {
+    const text = editor ? getMarkdownFromEditor(editor) : value;
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(text);
       setCopyState("ok");
       window.setTimeout(() => setCopyState("idle"), 2000);
     } catch {
@@ -184,147 +115,141 @@ export function MinuteMarkdownEditor({
     }
   }
 
+  function insertAgreementTable() {
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+      .run();
+  }
+
   return (
-    <div className={`overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm ${className}`}>
+    <div
+      className={`overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm ${className}`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 bg-indigo-50/50 px-3 py-2">
-        <div className="flex gap-1">
-          <button
-            type="button"
-            onClick={() => setMode("edit")}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-              mode === "edit"
-                ? "bg-indigo-600 text-white"
-                : "text-slate-600 hover:bg-white hover:text-indigo-800"
-            }`}
-          >
-            Editar
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("preview")}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-              mode === "preview"
-                ? "bg-indigo-600 text-white"
-                : "text-slate-600 hover:bg-white hover:text-indigo-800"
-            }`}
-          >
-            Vista previa
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          {!readOnly ? (
-            <span className="hidden text-xs text-slate-500 sm:inline">
-              Escribe <kbd className="rounded border px-1">/</kbd> para insertar bloques
-            </span>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => void copyMarkdown()}
-            className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-800 hover:bg-indigo-50"
-          >
-            {copyState === "ok"
-              ? "Copiado"
-              : copyState === "error"
-                ? "Error al copiar"
-                : "Copiar markdown"}
-          </button>
-        </div>
+        {!readOnly && editor ? (
+          <div className="flex flex-wrap gap-1.5">
+            <ToolbarButton
+              label="Título"
+              active={editor.isActive("heading", { level: 1 })}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            />
+            <ToolbarButton
+              label="Sección"
+              active={editor.isActive("heading", { level: 2 })}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            />
+            <ToolbarButton
+              label="Apartado"
+              active={editor.isActive("heading", { level: 3 })}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            />
+            <ToolbarButton
+              label="Lista"
+              active={editor.isActive("bulletList")}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+            />
+            <ToolbarButton label="Tabla" onClick={insertAgreementTable} />
+          </div>
+        ) : (
+          <span className="text-xs text-slate-500 sm:text-sm">Vista de lectura</span>
+        )}
+        <button
+          type="button"
+          onClick={() => void copyMarkdown()}
+          className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-800 hover:bg-indigo-50"
+        >
+          {copyState === "ok"
+            ? "Copiado"
+            : copyState === "error"
+              ? "Error al copiar"
+              : "Copiar markdown"}
+        </button>
       </div>
 
-      {mode === "edit" ? (
-        <div className="relative">
-          <textarea
-            ref={textareaRef}
-            value={value}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            onClick={(e) => syncSlashMenu(value, e.currentTarget.selectionStart)}
-            readOnly={readOnly}
-            rows={22}
-            spellCheck
-            className={`${uiInput} min-h-[420px] w-full resize-y rounded-none border-0 font-mono text-sm leading-relaxed focus:ring-0 ${
-              readOnly ? "bg-slate-50 text-slate-700" : ""
-            }`}
-            aria-label="Contenido de la minuta en Markdown"
-          />
-          {slashOpen && !readOnly && filteredCommands.length > 0 ? (
-            <div
-              className="absolute bottom-4 left-4 z-10 max-h-56 w-[min(100%,20rem)] overflow-y-auto rounded-xl border border-indigo-200 bg-white py-1 shadow-lg"
-              role="listbox"
-            >
-              <p className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-indigo-700">
-                Insertar bloque
-              </p>
-              {filteredCommands.map((cmd, index) => (
-                <button
-                  key={cmd.id}
-                  type="button"
-                  role="option"
-                  aria-selected={index === activeCommand}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    applySlashCommand(cmd);
-                  }}
-                  className={`flex w-full flex-col items-start px-3 py-2 text-left text-sm transition ${
-                    index === activeCommand
-                      ? "bg-indigo-50 text-indigo-950"
-                      : "text-slate-800 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="font-medium">{cmd.label}</span>
-                  <span className="text-xs text-slate-500">{cmd.hint}</span>
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : (
-        <div className="minute-markdown-preview px-4 py-4 text-sm leading-relaxed text-slate-800">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              h1: ({ children }) => (
-                <h1 className="mb-4 mt-2 text-2xl font-bold text-slate-900">{children}</h1>
-              ),
-              h2: ({ children }) => (
-                <h2 className="mb-3 mt-6 border-b border-indigo-100 pb-1 text-lg font-semibold text-indigo-950">
-                  {children}
-                </h2>
-              ),
-              h3: ({ children }) => (
-                <h3 className="mb-2 mt-4 text-base font-semibold text-violet-900">{children}</h3>
-              ),
-              p: ({ children }) => <p className="mb-3 whitespace-pre-wrap">{children}</p>,
-              ul: ({ children }) => (
-                <ul className="mb-3 list-disc space-y-1 pl-5">{children}</ul>
-              ),
-              ol: ({ children }) => (
-                <ol className="mb-3 list-decimal space-y-1 pl-5">{children}</ol>
-              ),
-              li: ({ children }) => <li className="pl-1">{children}</li>,
-              hr: () => <hr className="my-6 border-slate-200" />,
-              table: ({ children }) => (
-                <div className="my-4 overflow-x-auto rounded-lg border border-emerald-100">
-                  <table className="min-w-full text-sm">{children}</table>
-                </div>
-              ),
-              thead: ({ children }) => (
-                <thead className="bg-emerald-50 text-left text-xs font-semibold uppercase tracking-wide text-emerald-900">
-                  {children}
-                </thead>
-              ),
-              th: ({ children }) => <th className="px-3 py-2">{children}</th>,
-              td: ({ children }) => (
-                <td className="border-t border-emerald-50 px-3 py-2 align-top">{children}</td>
-              ),
-              strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-              em: ({ children }) => <em className="italic text-slate-600">{children}</em>,
-            }}
-          >
-            {value || "_Sin contenido_"}
-          </ReactMarkdown>
-        </div>
-      )}
+      <div className="minute-wysiwyg-editor">
+        {editor ? (
+          <EditorContent editor={editor} />
+        ) : (
+          <div className="min-h-[420px] animate-pulse bg-slate-50" aria-hidden />
+        )}
+      </div>
+
+      <style jsx global>{`
+        .minute-wysiwyg-editor .minute-editor-content h1 {
+          margin: 0.5rem 0 1rem;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #0f172a;
+        }
+        .minute-wysiwyg-editor .minute-editor-content h2 {
+          margin: 1.5rem 0 0.75rem;
+          padding-bottom: 0.25rem;
+          border-bottom: 1px solid #e0e7ff;
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: #1e1b4b;
+        }
+        .minute-wysiwyg-editor .minute-editor-content h3 {
+          margin: 1rem 0 0.5rem;
+          font-size: 1rem;
+          font-weight: 600;
+          color: #4c1d95;
+        }
+        .minute-wysiwyg-editor .minute-editor-content p {
+          margin: 0 0 0.75rem;
+          white-space: pre-wrap;
+        }
+        .minute-wysiwyg-editor .minute-editor-content ul,
+        .minute-wysiwyg-editor .minute-editor-content ol {
+          margin: 0 0 0.75rem;
+          padding-left: 1.25rem;
+        }
+        .minute-wysiwyg-editor .minute-editor-content ul {
+          list-style: disc;
+        }
+        .minute-wysiwyg-editor .minute-editor-content ol {
+          list-style: decimal;
+        }
+        .minute-wysiwyg-editor .minute-editor-content li {
+          margin: 0.25rem 0;
+        }
+        .minute-wysiwyg-editor .minute-editor-content hr {
+          margin: 1.5rem 0;
+          border: 0;
+          border-top: 1px solid #e2e8f0;
+        }
+        .minute-wysiwyg-editor .minute-editor-content table {
+          width: 100%;
+          margin: 1rem 0;
+          border-collapse: collapse;
+          font-size: 0.875rem;
+        }
+        .minute-wysiwyg-editor .minute-editor-content th {
+          background: #ecfdf5;
+          text-align: left;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+          color: #064e3b;
+          padding: 0.5rem 0.75rem;
+          border: 1px solid #d1fae5;
+        }
+        .minute-wysiwyg-editor .minute-editor-content td {
+          padding: 0.5rem 0.75rem;
+          vertical-align: top;
+          border: 1px solid #ecfdf5;
+        }
+        .minute-wysiwyg-editor .minute-editor-content .selectedCell {
+          background: #eef2ff;
+        }
+        .minute-wysiwyg-editor .minute-editor-content:focus {
+          outline: none;
+        }
+      `}</style>
     </div>
   );
 }

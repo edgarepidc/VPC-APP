@@ -287,7 +287,7 @@ export function MinutesClient({
         headerExtra={
           <Link
             href={PMO_HUB}
-            className="inline-flex text-sm font-medium text-white/90 underline hover:text-white"
+            className="inline-flex text-sm font-medium text-indigo-700 underline hover:text-indigo-900"
           >
             Volver al PMO
           </Link>
@@ -512,7 +512,7 @@ export function MinutesClient({
         <MinutesSectionShell
           eyebrow="Resultado"
           title="Editar minuta generada"
-          subtitle={`${MINUTE_PROVIDER_LABELS[draft.provider]} · ${draft.model}. Usa / para insertar títulos, tablas y listas. Copia el Markdown a Loop, Notion u otros editores.`}
+          subtitle={`${MINUTE_PROVIDER_LABELS[draft.provider]} · ${draft.model}. Edita directamente el texto y las tablas; al guardar se conserva en Markdown para copiar a Loop, Notion u otros editores.`}
           gradient="violet"
         >
           <div className="p-4">

@@ -17,7 +17,7 @@ import {
 } from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
 import { meetingMinuteTableMissingMessage } from "@/lib/prisma-errors";
-import { dashAlertWarn, dashPage, uiInput } from "@/lib/ui-classes";
+import { dashAlertWarn, dashPage, uiInput, uiLabel } from "@/lib/ui-classes";
 import {
   isMeetingMinuteStorageReady,
   listMeetingMinutesByTenant,
@@ -88,20 +88,18 @@ export default async function MinutesPage({ searchParams }: MinutesPageProps) {
         headerExtra={
           <form method="get" className="flex w-full flex-wrap items-end gap-2">
             <label className="block min-w-0 flex-1 sm:max-w-xs">
-              <span className="text-xs font-medium text-white/80">
-                Filtrar por iniciativa / subproyecto
-              </span>
+              <span className={uiLabel}>Filtrar por iniciativa / subproyecto</span>
               <ProjectHierarchyFilterSelect
                 name="projectId"
                 groups={hierarchy.groups}
                 defaultValue={filterProjectId}
                 allLabel="Todas las iniciativas"
-                className={`${uiInput} mt-1 w-full border-white/20 bg-white/95 text-slate-900`}
+                className={`${uiInput} mt-1 w-full sm:min-w-[220px]`}
               />
             </label>
             <button
               type="submit"
-              className="rounded-lg border border-white/30 bg-white/15 px-3 py-2 text-sm font-medium text-white hover:bg-white/25"
+              className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-800 hover:bg-indigo-50"
             >
               Filtrar
             </button>
