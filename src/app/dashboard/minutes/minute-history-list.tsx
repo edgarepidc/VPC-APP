@@ -14,7 +14,7 @@ type MinuteHistoryListProps = {
 export function MinuteHistoryList({ rows }: MinuteHistoryListProps) {
   if (rows.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/50 px-4 py-8 text-center text-sm text-indigo-900/80">
+      <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600">
         Aún no hay minutas guardadas. Genera la primera desde el formulario superior.
       </p>
     );
@@ -25,13 +25,13 @@ export function MinuteHistoryList({ rows }: MinuteHistoryListProps) {
       {rows.map((minute) => (
         <li
           key={minute.id}
-          className="rounded-xl border border-indigo-100 bg-white p-3 text-sm shadow-sm transition hover:border-indigo-200 hover:shadow-md"
+          className="rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-sm transition hover:border-slate-300 hover:shadow-md"
         >
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <Link
                 href={MINUTES_DETAIL(minute.id)}
-                className="font-medium text-indigo-950 hover:text-indigo-700 hover:underline"
+                className="font-medium text-slate-900 hover:text-slate-700 hover:underline"
               >
                 {minute.title}
               </Link>

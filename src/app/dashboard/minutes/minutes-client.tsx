@@ -287,13 +287,13 @@ export function MinutesClient({
         headerExtra={
           <Link
             href={PMO_HUB}
-            className="inline-flex text-sm font-medium text-indigo-700 underline hover:text-indigo-900"
+            className="inline-flex text-sm font-medium text-slate-600 underline hover:text-slate-900"
           >
             Volver al PMO
           </Link>
         }
       >
-        <div className="border-b border-indigo-50 bg-indigo-50/40 px-4 py-3 sm:px-5">
+        <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3 sm:px-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className={uiLabel}>Subproyecto *</span>
@@ -381,8 +381,8 @@ export function MinutesClient({
                 onClick={() => setInputMode("word")}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                   inputMode === "word"
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-800"
+                    ? "rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white shadow-sm"
+                    : "rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 Archivo Word
@@ -392,8 +392,8 @@ export function MinutesClient({
                 onClick={() => setInputMode("paste")}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                   inputMode === "paste"
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-800"
+                    ? "rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white shadow-sm"
+                    : "rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 Pegar texto
@@ -424,14 +424,14 @@ export function MinutesClient({
                   }}
                   className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition ${
                     dragOver
-                      ? "border-indigo-400 bg-indigo-50"
-                      : "border-indigo-200 bg-gradient-to-b from-indigo-50/50 to-white hover:border-indigo-300 hover:bg-indigo-50/70"
+                      ? "border-slate-400 bg-slate-50"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                   } ${parsingFile ? "pointer-events-none opacity-60" : ""}`}
                 >
                   <span className="text-3xl" aria-hidden>
                     📄
                   </span>
-                  <span className="mt-2 text-sm font-medium text-indigo-950">
+                  <span className="mt-2 text-sm font-medium text-slate-900">
                     {parsingFile ? "Leyendo documento…" : "Arrastra tu archivo .docx o haz clic"}
                   </span>
                   <span className="mt-1 text-xs text-slate-500">
@@ -443,7 +443,7 @@ export function MinutesClient({
               <label className="mt-3 block">
                 <span className={uiLabel}>Transcripción *</span>
                 {uploadedFileName ? (
-                  <p className="mt-0.5 text-xs text-indigo-700">
+                  <p className="mt-0.5 text-xs text-slate-600">
                     Origen: {uploadedFileName} · puedes editar el texto antes de generar
                   </p>
                 ) : (
@@ -496,7 +496,7 @@ export function MinutesClient({
               type="button"
               onClick={() => void generateMinute()}
               disabled={!canSave || generating || pendingSave || parsingFile}
-              className="rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50"
+              className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-700 disabled:opacity-50"
             >
               {generating ? "Generando…" : "Generar minuta"}
             </button>
@@ -519,7 +519,6 @@ export function MinutesClient({
           eyebrow="Resultado"
           title="Editar minuta generada"
           subtitle="Edita directamente el texto y las tablas; al guardar se conserva en Markdown para copiar a Loop, Notion u otros editores."
-          gradient="violet"
         >
           <div className="p-4">
             <MinuteMarkdownEditor

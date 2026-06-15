@@ -84,7 +84,6 @@ export default async function MinutesPage({ searchParams }: MinutesPageProps) {
         eyebrow="Historial"
         title="Minutas guardadas"
         subtitle="Consulta y abre minutas anteriores. El contenido se conserva en Markdown para copiarlo a Loop, Notion u otros editores."
-        gradient="violet"
         headerExtra={
           <form method="get" className="flex w-full flex-wrap items-end gap-2">
             <label className="block min-w-0 flex-1 sm:max-w-xs">
@@ -99,7 +98,7 @@ export default async function MinutesPage({ searchParams }: MinutesPageProps) {
             </label>
             <button
               type="submit"
-              className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-800 hover:bg-indigo-50"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
             >
               Filtrar
             </button>

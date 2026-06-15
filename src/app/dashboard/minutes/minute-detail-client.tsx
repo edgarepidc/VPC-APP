@@ -89,7 +89,6 @@ export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps)
         eyebrow="Minuta guardada"
         title={minute.title}
         subtitle={metaLine}
-        gradient="emerald"
         headerExtra={
           <div className="flex flex-wrap gap-2">
             <Link
@@ -105,7 +104,7 @@ export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps)
                     type="button"
                     onClick={saveMarkdown}
                     disabled={pendingSave || pendingDelete}
-                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                    className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
                   >
                     {pendingSave ? "Guardando…" : "Guardar cambios"}
                   </button>

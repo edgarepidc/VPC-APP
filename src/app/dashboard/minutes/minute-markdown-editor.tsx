@@ -41,8 +41,8 @@ function ToolbarButton({
       disabled={disabled}
       className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 sm:text-sm ${
         active
-          ? "bg-indigo-600 text-white"
-          : "border border-indigo-100 bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-900"
+          ? "bg-slate-800 text-white"
+          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900"
       }`}
     >
       {label}
@@ -126,9 +126,9 @@ export function MinuteMarkdownEditor({
 
   return (
     <div
-      className={`overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm ${className}`}
+      className={`overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 bg-indigo-50/50 px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50/80 px-3 py-2">
         {!readOnly && editor ? (
           <div className="flex flex-wrap gap-1.5">
             <ToolbarButton
@@ -159,7 +159,7 @@ export function MinuteMarkdownEditor({
         <button
           type="button"
           onClick={() => void copyMarkdown()}
-          className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-800 hover:bg-indigo-50"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
         >
           {copyState === "ok"
             ? "Copiado"
