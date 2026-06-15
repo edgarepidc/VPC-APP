@@ -76,6 +76,21 @@ export function workScopeProjectIds(projects: ProjectHierarchyRow[]): string[] {
   return ids;
 }
 
+/** Primer valor seleccionable en ProjectHierarchySelect (sin opción vacía). */
+export function firstProjectHierarchySelectValue(
+  groups: ProjectHierarchyGroup[],
+  workScopeOnly = false,
+): string {
+  for (const g of groups) {
+    if (workScopeOnly) {
+      if (g.subprojects.length > 0) return g.subprojects[0]!.id;
+      return g.initiative.id;
+    }
+    return g.initiative.id;
+  }
+  return "";
+}
+
 export function expandProjectIdsWithDescendants(
   all: ProjectHierarchyRow[],
   ids: string[],

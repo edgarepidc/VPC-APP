@@ -1,6 +1,11 @@
 "use client";
 
-import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
+import { useEffect, useMemo } from "react";
+
+import {
+  firstProjectHierarchySelectValue,
+  type ProjectHierarchyGroup,
+} from "@/lib/project-hierarchy";
 
 export type ProjectHierarchySelectProps = {
   value: string;
@@ -29,6 +34,16 @@ export function ProjectHierarchySelect({
   "aria-label": ariaLabel,
   name,
 }: ProjectHierarchySelectProps) {
+  const firstSelectableId = useMemo(
+    () => firstProjectHierarchySelectValue(groups, workScopeOnly),
+    [groups, workScopeOnly],
+  );
+
+  useEffect(() => {
+    if (allowAll || value || !firstSelectableId) return;
+    onChange(firstSelectableId);
+  }, [allowAll, value, firstSelectableId, onChange]);
+
   return (
     <select
       id={id}
