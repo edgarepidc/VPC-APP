@@ -283,7 +283,7 @@ export function MinutesClient({
       <MinutesSectionShell
         eyebrow="Minutas"
         title="Generar nueva minuta de reunión"
-        subtitle="Adjunta un archivo Word (.docx) o pega la transcripción. Solo se guarda el resultado final editable en Markdown. Plan gratuito: Claude Haiku 4.5 y DeepSeek V3.2."
+        subtitle="Adjunta un archivo Word (.docx) o pega la transcripción. Solo se guarda el resultado final editable en Markdown."
         headerExtra={
           <Link
             href={PMO_HUB}
@@ -512,7 +512,7 @@ export function MinutesClient({
         <MinutesSectionShell
           eyebrow="Resultado"
           title="Editar minuta generada"
-          subtitle={`${MINUTE_PROVIDER_LABELS[draft.provider]} · ${draft.model}. Edita directamente el texto y las tablas; al guardar se conserva en Markdown para copiar a Loop, Notion u otros editores.`}
+          subtitle="Edita directamente el texto y las tablas; al guardar se conserva en Markdown para copiar a Loop, Notion u otros editores."
           gradient="violet"
         >
           <div className="p-4">
