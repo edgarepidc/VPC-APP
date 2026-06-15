@@ -6,7 +6,6 @@ import { useRef, useState, useTransition } from "react";
 import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
 import { saveMeetingMinuteAction } from "@/app/dashboard/minutes/actions";
 import { MinuteContentView } from "@/app/dashboard/minutes/minute-content-view";
-import { MinutesPrivacyNotice } from "@/app/dashboard/minutes/minutes-privacy-notice";
 import { DOCX_ACCEPT } from "@/lib/extract-docx-text";
 import {
   DEFAULT_MINUTE_PROMPT,
@@ -258,12 +257,9 @@ export function MinutesClient({
     <div className="space-y-6">
       {!aiAvailable.claude && !aiAvailable.deepseek ? (
         <p className={dashAlertWarn} role="status">
-          Configura Vercel AI Gateway o define AI_GATEWAY_API_KEY para habilitar la generación
-          con IA.
+          Configura AI_GATEWAY_API_KEY en Vercel para habilitar la generación con IA.
         </p>
       ) : null}
-
-      <MinutesPrivacyNotice />
 
       <section className="overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-md">
         <div className="bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-700 px-4 py-4 text-white sm:px-5">
@@ -501,8 +497,6 @@ export function MinutesClient({
           <MinuteContentView content={draft.content} />
         </section>
       ) : null}
-
-      <MinutesPrivacyNotice compact className="border-slate-200 bg-slate-50/80" />
     </div>
   );
 }

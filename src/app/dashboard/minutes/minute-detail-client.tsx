@@ -6,7 +6,6 @@ import { useState, useTransition } from "react";
 
 import { deleteMeetingMinuteAction } from "@/app/dashboard/minutes/actions";
 import { MinuteContentView } from "@/app/dashboard/minutes/minute-content-view";
-import { MinutesPrivacyNotice } from "@/app/dashboard/minutes/minutes-privacy-notice";
 import { MINUTE_PROVIDER_LABELS } from "@/lib/meeting-minute-types";
 import { MINUTES_HUB } from "@/lib/dashboard-paths";
 import type { MeetingMinuteRow } from "@/lib/meeting-minute-types";
@@ -78,8 +77,6 @@ export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps)
       ) : null}
 
       <MinuteContentView content={minute.content} />
-
-      <MinutesPrivacyNotice compact />
     </div>
   );
 }

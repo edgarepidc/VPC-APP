@@ -1,4 +1,4 @@
-import { generateText, Output } from "ai";
+import { createGateway, generateText, gateway, Output } from "ai";
 
 import {
   DEFAULT_MINUTE_PROMPT,
@@ -13,18 +13,22 @@ const MODEL_BY_PROVIDER: Record<MinuteProvider, { gatewayModel: string; label: s
   deepseek: { gatewayModel: "deepseek/deepseek-chat", label: "deepseek/deepseek-chat" },
 };
 
+function getGatewayProvider() {
+  const apiKey = process.env.AI_GATEWAY_API_KEY?.trim();
+  if (apiKey) {
+    return createGateway({ apiKey });
+  }
+  return gateway;
+}
+
 function isGatewayAuthReady(): boolean {
-  return !!(
-    process.env.AI_GATEWAY_API_KEY?.trim() ||
-    process.env.VERCEL_OIDC_TOKEN?.trim() ||
-    process.env.VERCEL === "1"
-  );
+  return !!process.env.AI_GATEWAY_API_KEY?.trim();
 }
 
 function assertGatewayAuthReady() {
   if (!isGatewayAuthReady()) {
     throw new Error(
-      "Falta AI Gateway: activa AI Gateway en Vercel o define AI_GATEWAY_API_KEY.",
+      "Falta AI_GATEWAY_API_KEY en Vercel. Configura la clave de AI Gateway y vuelve a desplegar.",
     );
   }
 }
@@ -63,9 +67,10 @@ export async function generateMeetingMinuteFromTranscript(input: {
 }): Promise<{ content: MeetingMinuteContent; provider: MinuteProvider; model: string }> {
   assertGatewayAuthReady();
   const { gatewayModel, label } = MODEL_BY_PROVIDER[input.provider];
+  const gatewayProvider = getGatewayProvider();
 
   const result = await generateText({
-    model: gatewayModel,
+    model: gatewayProvider(gatewayModel),
     output: Output.object({ schema: meetingMinuteContentSchema }),
     system: buildSystemPrompt(),
     prompt: buildUserPrompt(input.transcript, input.customPrompt),

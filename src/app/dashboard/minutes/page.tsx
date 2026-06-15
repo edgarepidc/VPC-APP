@@ -125,7 +125,7 @@ export default async function MinutesPage({ searchParams }: MinutesPageProps) {
         </div>
       </section>
 
-      <MinutesPrivacyNotice compact />
+      <MinutesPrivacyNotice />
     </main>
   );
 }
