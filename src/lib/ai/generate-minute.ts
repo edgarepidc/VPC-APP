@@ -1,6 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
-import { deepseek } from "@ai-sdk/deepseek";
-import { generateText, Output, type LanguageModel } from "ai";
+import { createGateway, generateText, Output } from "ai";
 
 import {
   DEFAULT_MINUTE_PROMPT,
@@ -9,34 +7,30 @@ import {
   type MinuteProvider,
 } from "@/lib/meeting-minute-types";
 
-const MODEL_BY_PROVIDER: Record<MinuteProvider, { modelId: string; label: string }> = {
-  claude: { modelId: "claude-sonnet-4-20250514", label: "claude-sonnet-4-20250514" },
-  deepseek: { modelId: "deepseek-chat", label: "deepseek-chat" },
+/** Modelos vía Vercel AI Gateway (provider/model). */
+const MODEL_BY_PROVIDER: Record<MinuteProvider, { gatewayModel: string; label: string }> = {
+  claude: { gatewayModel: "anthropic/claude-sonnet-4.6", label: "anthropic/claude-sonnet-4.6" },
+  deepseek: { gatewayModel: "deepseek/deepseek-chat", label: "deepseek/deepseek-chat" },
 };
 
-function isProviderConfigured(provider: MinuteProvider): boolean {
-  if (provider === "claude") return !!process.env.ANTHROPIC_API_KEY?.trim();
-  return !!process.env.DEEPSEEK_API_KEY?.trim();
+function isGatewayConfigured(): boolean {
+  return !!process.env.AI_GATEWAY_API_KEY?.trim();
 }
 
-function resolveLanguageModel(provider: MinuteProvider): LanguageModel {
-  const { modelId } = MODEL_BY_PROVIDER[provider];
-
-  if (provider === "claude") {
-    if (!isProviderConfigured("claude")) {
-      throw new Error(
-        "Claude no está configurado. Añade ANTHROPIC_API_KEY en Vercel (Settings → Environment Variables).",
-      );
-    }
-    return anthropic(modelId);
-  }
-
-  if (!isProviderConfigured("deepseek")) {
+function assertGatewayConfigured() {
+  if (!isGatewayConfigured()) {
     throw new Error(
-      "DeepSeek no está configurado. Añade DEEPSEEK_API_KEY en Vercel (Settings → Environment Variables).",
+      "Falta AI_GATEWAY_API_KEY en Vercel. Crea una clave en AI Gateway y redeploya el proyecto.",
     );
   }
-  return deepseek(modelId);
+}
+
+function getGatewayModel(provider: MinuteProvider) {
+  assertGatewayConfigured();
+  const apiKey = process.env.AI_GATEWAY_API_KEY!.trim();
+  const gateway = createGateway({ apiKey });
+  const { gatewayModel } = MODEL_BY_PROVIDER[provider];
+  return gateway(gatewayModel);
 }
 
 function buildSystemPrompt() {
@@ -71,7 +65,7 @@ export async function generateMeetingMinuteFromTranscript(input: {
   provider: MinuteProvider;
   customPrompt?: string;
 }): Promise<{ content: MeetingMinuteContent; provider: MinuteProvider; model: string }> {
-  const model = resolveLanguageModel(input.provider);
+  const model = getGatewayModel(input.provider);
   const { label } = MODEL_BY_PROVIDER[input.provider];
 
   const result = await generateText({
@@ -93,8 +87,6 @@ export async function generateMeetingMinuteFromTranscript(input: {
 }
 
 export function isMinuteAiConfigured(): { claude: boolean; deepseek: boolean } {
-  return {
-    claude: isProviderConfigured("claude"),
-    deepseek: isProviderConfigured("deepseek"),
-  };
+  const ready = isGatewayConfigured();
+  return { claude: ready, deepseek: ready };
 }

@@ -90,8 +90,21 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     const message = (error as Error).message || "Error al generar la minuta.";
+    let userMessage = message;
+    if (/credit card|valid credit card/i.test(message)) {
+      userMessage =
+        "AI Gateway requiere una tarjeta de crédito en tu cuenta Vercel para activar los créditos gratuitos. Añádela en Vercel → AI Gateway → Billing y vuelve a intentar.";
+    } else if (/Unauthenticated|AI_GATEWAY_API_KEY/i.test(message)) {
+      userMessage =
+        "AI Gateway no está autenticado. Verifica AI_GATEWAY_API_KEY en Vercel y redeploya el proyecto.";
+    }
     const status =
-      message.includes("API_KEY") || message.includes("no está configurado") ? 503 : 500;
-    return NextResponse.json({ error: message }, { status });
+      message.includes("API_KEY") ||
+      message.includes("AI Gateway") ||
+      message.includes("Unauthenticated") ||
+      message.includes("credit card")
+        ? 503
+        : 500;
+    return NextResponse.json({ error: userMessage }, { status });
   }
 }
