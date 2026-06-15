@@ -14,7 +14,7 @@ type MinuteHistoryListProps = {
 export function MinuteHistoryList({ rows }: MinuteHistoryListProps) {
   if (rows.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600">
+      <p className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/50 px-4 py-8 text-center text-sm text-indigo-900/80">
         Aún no hay minutas guardadas. Genera la primera desde el formulario superior.
       </p>
     );
@@ -25,20 +25,29 @@ export function MinuteHistoryList({ rows }: MinuteHistoryListProps) {
       {rows.map((minute) => (
         <li
           key={minute.id}
-          className="rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-sm transition hover:border-slate-300"
+          className="rounded-xl border border-indigo-100 bg-white p-3 text-sm shadow-sm transition hover:border-indigo-200 hover:shadow-md"
         >
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <Link
                 href={MINUTES_DETAIL(minute.id)}
-                className="font-medium text-slate-900 hover:underline"
+                className="font-medium text-indigo-950 hover:text-indigo-700 hover:underline"
               >
                 {minute.title}
               </Link>
               <p className="text-slate-600">{minute.project.name}</p>
               <p className="mt-0.5 text-xs text-slate-500">
-                {minute.authorName} · {MINUTE_PROVIDER_LABELS[minute.provider]} ·{" "}
-                {formatEscalationDateTime(new Date(minute.createdAt))}
+                {minute.authorName} ·{" "}
+                <span
+                  className={
+                    minute.provider === "claude"
+                      ? "font-medium text-amber-700"
+                      : "font-medium text-sky-700"
+                  }
+                >
+                  {MINUTE_PROVIDER_LABELS[minute.provider]}
+                </span>{" "}
+                · {formatEscalationDateTime(new Date(minute.createdAt))}
               </p>
             </div>
             <div className="text-right text-xs text-slate-500">

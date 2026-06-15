@@ -44,7 +44,10 @@ export async function POST(req: Request) {
     }
 
     if (!transcript) {
-      return NextResponse.json({ error: "Pega la transcripción de la reunión." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Adjunta un archivo Word o pega la transcripción de la reunión." },
+        { status: 400 },
+      );
     }
 
     if (transcript.length > MAX_TRANSCRIPT_CHARS) {
