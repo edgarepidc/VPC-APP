@@ -9,6 +9,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   { href: "/dashboard/pmo", label: "PMO", emoji: "📊" },
   { href: "/dashboard/escalometro", label: "Escalómetro", emoji: "📐" },
   { href: "/dashboard/roi-meetings", label: "ROI reuniones", emoji: "💰" },
+  { href: "/dashboard/minutes", label: "Minutas", emoji: "📝" },
   { href: "/dashboard/deliverables", label: "Entregables", emoji: "📦" },
   { href: "/dashboard/risks", label: "Riesgos", emoji: "⚠️" },
   { href: "/dashboard/stakeholders", label: "Interesados", emoji: "🎯" },

@@ -15,3 +15,7 @@ export function escalationTableMissingMessage(): string {
 export function meetingRoiTableMissingMessage(): string {
   return "Falta la tabla MeetingRoiSession en la base de datos. Aplica la migración 20260609200000_meeting_roi_sessions (GitHub Actions Database migrate o SQL en Supabase).";
 }
+
+export function meetingMinuteTableMissingMessage(): string {
+  return "Falta la tabla MeetingMinute en la base de datos. Aplica la migración 20260608120000_meeting_minutes (GitHub Actions Database migrate o SQL en Supabase).";
+}

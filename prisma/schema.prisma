@@ -24,6 +24,7 @@ model Tenant {
   tasks       Task[]
   escalationChecks EscalationCheck[]
   meetingRoiSessions MeetingRoiSession[]
+  meetingMinutes     MeetingMinute[]
   createdAt   DateTime     @default(now())
 }
 
@@ -140,6 +141,7 @@ model Project {
   tasks       Task[]
   escalationChecks EscalationCheck[]
   meetingRoiSessions MeetingRoiSession[]
+  meetingMinutes     MeetingMinute[]
   membershipAccess MembershipProject[]
   invitationAccess InvitationProject[]
   createdAt   DateTime @default(now())
@@ -323,6 +325,26 @@ model MeetingRoiSession {
   createdAt         DateTime @default(now())
   tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, projectId, createdAt])
+  @@index([tenantId, createdAt])
+}
+
+model MeetingMinute {
+  id          String    @id @default(uuid())
+  tenantId    String
+  projectId   String
+  title       String
+  meetingDate DateTime?
+  /** Resumen, puntos tratados y acuerdos (sin transcripción). */
+  content     Json
+  provider    String
+  model       String
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, projectId, createdAt])
   @@index([tenantId, createdAt])
