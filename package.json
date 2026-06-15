@@ -17,6 +17,8 @@
     "prisma:promote-superadmin": "node prisma/promote-superadmin.mjs"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.84",
+    "@ai-sdk/deepseek": "^2.0.38",
     "@prisma/client": "^6.8.2",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.3",

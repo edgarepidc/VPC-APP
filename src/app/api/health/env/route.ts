@@ -15,7 +15,8 @@ const ENV_KEYS = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "PLATFORM_OWNER_EMAIL",
   "PLATFORM_SUPERADMIN_EMAILS",
-  "AI_GATEWAY_API_KEY",
+  "ANTHROPIC_API_KEY",
+  "DEEPSEEK_API_KEY",
 ] as const;
 
 function urlEnvHint(name: string, raw: string | undefined) {

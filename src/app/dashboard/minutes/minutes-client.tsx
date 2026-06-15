@@ -177,7 +177,7 @@ export function MinutesClient({
     if (!providerReady) {
       setFeedback({
         type: "error",
-        message: `El proveedor ${MINUTE_PROVIDER_LABELS[provider]} no está disponible: falta AI Gateway.`,
+        message: `El proveedor ${MINUTE_PROVIDER_LABELS[provider]} no está configurado. Añade su API key en Vercel.`,
       });
       return;
     }
@@ -257,7 +257,7 @@ export function MinutesClient({
     <div className="space-y-6">
       {!aiAvailable.claude && !aiAvailable.deepseek ? (
         <p className={dashAlertWarn} role="status">
-          Configura AI_GATEWAY_API_KEY en Vercel para habilitar la generación con IA.
+          Configura ANTHROPIC_API_KEY y/o DEEPSEEK_API_KEY en Vercel para habilitar la generación con IA.
         </p>
       ) : null}
 

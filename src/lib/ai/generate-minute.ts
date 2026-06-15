@@ -1,4 +1,6 @@
-import { createGateway, generateText, gateway, Output } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { deepseek } from "@ai-sdk/deepseek";
+import { generateText, Output, type LanguageModel } from "ai";
 
 import {
   DEFAULT_MINUTE_PROMPT,
@@ -7,30 +9,34 @@ import {
   type MinuteProvider,
 } from "@/lib/meeting-minute-types";
 
-/** Modelos vía Vercel AI Gateway (provider/model). */
-const MODEL_BY_PROVIDER: Record<MinuteProvider, { gatewayModel: string; label: string }> = {
-  claude: { gatewayModel: "anthropic/claude-sonnet-4.6", label: "anthropic/claude-sonnet-4.6" },
-  deepseek: { gatewayModel: "deepseek/deepseek-chat", label: "deepseek/deepseek-chat" },
+const MODEL_BY_PROVIDER: Record<MinuteProvider, { modelId: string; label: string }> = {
+  claude: { modelId: "claude-sonnet-4-20250514", label: "claude-sonnet-4-20250514" },
+  deepseek: { modelId: "deepseek-chat", label: "deepseek-chat" },
 };
 
-function getGatewayProvider() {
-  const apiKey = process.env.AI_GATEWAY_API_KEY?.trim();
-  if (apiKey) {
-    return createGateway({ apiKey });
+function isProviderConfigured(provider: MinuteProvider): boolean {
+  if (provider === "claude") return !!process.env.ANTHROPIC_API_KEY?.trim();
+  return !!process.env.DEEPSEEK_API_KEY?.trim();
+}
+
+function resolveLanguageModel(provider: MinuteProvider): LanguageModel {
+  const { modelId } = MODEL_BY_PROVIDER[provider];
+
+  if (provider === "claude") {
+    if (!isProviderConfigured("claude")) {
+      throw new Error(
+        "Claude no está configurado. Añade ANTHROPIC_API_KEY en Vercel (Settings → Environment Variables).",
+      );
+    }
+    return anthropic(modelId);
   }
-  return gateway;
-}
 
-function isGatewayAuthReady(): boolean {
-  return !!process.env.AI_GATEWAY_API_KEY?.trim();
-}
-
-function assertGatewayAuthReady() {
-  if (!isGatewayAuthReady()) {
+  if (!isProviderConfigured("deepseek")) {
     throw new Error(
-      "Falta AI_GATEWAY_API_KEY en Vercel. Configura la clave de AI Gateway y vuelve a desplegar.",
+      "DeepSeek no está configurado. Añade DEEPSEEK_API_KEY en Vercel (Settings → Environment Variables).",
     );
   }
+  return deepseek(modelId);
 }
 
 function buildSystemPrompt() {
@@ -65,12 +71,11 @@ export async function generateMeetingMinuteFromTranscript(input: {
   provider: MinuteProvider;
   customPrompt?: string;
 }): Promise<{ content: MeetingMinuteContent; provider: MinuteProvider; model: string }> {
-  assertGatewayAuthReady();
-  const { gatewayModel, label } = MODEL_BY_PROVIDER[input.provider];
-  const gatewayProvider = getGatewayProvider();
+  const model = resolveLanguageModel(input.provider);
+  const { label } = MODEL_BY_PROVIDER[input.provider];
 
   const result = await generateText({
-    model: gatewayProvider(gatewayModel),
+    model,
     output: Output.object({ schema: meetingMinuteContentSchema }),
     system: buildSystemPrompt(),
     prompt: buildUserPrompt(input.transcript, input.customPrompt),
@@ -88,6 +93,8 @@ export async function generateMeetingMinuteFromTranscript(input: {
 }
 
 export function isMinuteAiConfigured(): { claude: boolean; deepseek: boolean } {
-  const ready = isGatewayAuthReady();
-  return { claude: ready, deepseek: ready };
+  return {
+    claude: isProviderConfigured("claude"),
+    deepseek: isProviderConfigured("deepseek"),
+  };
 }

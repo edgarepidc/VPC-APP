@@ -90,7 +90,8 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     const message = (error as Error).message || "Error al generar la minuta.";
-    const status = message.includes("AI Gateway") || message.includes("API_KEY") ? 503 : 500;
+    const status =
+      message.includes("API_KEY") || message.includes("no está configurado") ? 503 : 500;
     return NextResponse.json({ error: message }, { status });
   }
 }
