@@ -16,6 +16,7 @@ import {
   createMeetingMinute,
   deleteMeetingMinute,
   getMeetingMinuteById,
+  updateMeetingMinuteMarkdown,
 } from "@/modules/meeting-minutes/service";
 
 function parseContent(raw: unknown): MeetingMinuteContent | null {
@@ -34,6 +35,7 @@ export async function saveMeetingMinuteAction(input: {
   title: string;
   meetingDate?: string;
   content: MeetingMinuteContent;
+  markdown: string;
   provider: MinuteProvider;
   model: string;
 }) {
@@ -46,10 +48,12 @@ export async function saveMeetingMinuteAction(input: {
   const projectId = input.projectId?.trim();
   const title = input.title?.trim();
   const content = parseContent(input.content);
+  const markdown = input.markdown?.trim();
 
   if (!projectId) return { ok: false as const, error: "Selecciona un subproyecto." };
   if (!title) return { ok: false as const, error: "Indica un título para la minuta." };
   if (!content) return { ok: false as const, error: "Contenido de minuta inválido." };
+  if (!markdown) return { ok: false as const, error: "El contenido en Markdown no puede estar vacío." };
   if (input.provider !== "claude" && input.provider !== "deepseek") {
     return { ok: false as const, error: "Proveedor inválido." };
   }
@@ -73,6 +77,7 @@ export async function saveMeetingMinuteAction(input: {
       title,
       meetingDate: parseMeetingDate(input.meetingDate),
       content,
+      markdown,
       provider: input.provider,
       model: input.model?.trim() || input.provider,
       createdBy: session.userId,
@@ -81,6 +86,52 @@ export async function saveMeetingMinuteAction(input: {
     revalidatePath(MINUTES_HUB);
     revalidatePath(MINUTES_DETAIL(created.id));
     return { ok: true as const, id: created.id };
+  } catch (e) {
+    return { ok: false as const, error: (e as Error).message };
+  }
+}
+
+export async function updateMeetingMinuteMarkdownAction(input: {
+  minuteId: string;
+  markdown: string;
+}) {
+  const session = await getSessionUser();
+  if (!session?.activeTenantId) redirect("/login");
+  if (!canWriteWorkspaceData(session)) {
+    return { ok: false as const, error: "No tienes permiso para editar minutas." };
+  }
+
+  const id = input.minuteId?.trim();
+  const markdown = input.markdown?.trim();
+  if (!id) return { ok: false as const, error: "Minuta no encontrada." };
+  if (!markdown) return { ok: false as const, error: "El contenido en Markdown no puede estar vacío." };
+
+  const existing = await getMeetingMinuteById(session.activeTenantId, id);
+  if (!existing) return { ok: false as const, error: "Minuta no encontrada." };
+
+  try {
+    await assertCanAccessProject({
+      tenantId: session.activeTenantId,
+      userId: session.userId,
+      role: session.role,
+      projectId: existing.projectId,
+      isPlatformVisit: session.isPlatformVisit,
+    });
+  } catch (e) {
+    return { ok: false as const, error: (e as Error).message };
+  }
+
+  try {
+    const updated = await updateMeetingMinuteMarkdown({
+      tenantId: session.activeTenantId,
+      minuteId: id,
+      markdown,
+    });
+    if (!updated) return { ok: false as const, error: "Minuta no encontrada." };
+
+    revalidatePath(MINUTES_HUB);
+    revalidatePath(MINUTES_DETAIL(id));
+    return { ok: true as const };
   } catch (e) {
     return { ok: false as const, error: (e as Error).message };
   }

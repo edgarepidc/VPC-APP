@@ -338,6 +338,8 @@ model MeetingMinute {
   meetingDate DateTime?
   /** Resumen, puntos tratados y acuerdos (sin transcripción). */
   content     Json
+  /** Minuta editable en Markdown para copiar a Loop, Notion, etc. */
+  markdown    String?   @db.Text
   provider    String
   model       String
   createdBy   String

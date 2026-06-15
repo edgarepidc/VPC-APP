@@ -42,6 +42,8 @@ export type MeetingMinuteRow = {
   title: string;
   meetingDate: Date | null;
   content: MeetingMinuteContent;
+  /** Markdown editable; si falta, se deriva de content. */
+  markdown: string | null;
   provider: MinuteProvider;
   model: string;
   createdBy: string;

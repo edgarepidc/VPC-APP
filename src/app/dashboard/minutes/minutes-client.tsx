@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
 import { saveMeetingMinuteAction } from "@/app/dashboard/minutes/actions";
-import { MinuteContentView } from "@/app/dashboard/minutes/minute-content-view";
+import { MinuteMarkdownEditor } from "@/app/dashboard/minutes/minute-markdown-editor";
+import { MinutesSectionShell } from "@/app/dashboard/minutes/minutes-section-shell";
 import { DOCX_ACCEPT } from "@/lib/extract-docx-text";
+import { contentToMarkdown } from "@/lib/meeting-minute-markdown";
 import {
   DEFAULT_MINUTE_PROMPT,
   MINUTE_PROVIDERS,
@@ -14,7 +17,7 @@ import {
   type MeetingMinuteContent,
   type MinuteProvider,
 } from "@/lib/meeting-minute-types";
-import { MINUTES_DETAIL } from "@/lib/dashboard-paths";
+import { MINUTES_DETAIL, PMO_HUB } from "@/lib/dashboard-paths";
 import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
 import {
   dashAlertError,
@@ -76,6 +79,7 @@ export function MinutesClient({
   const [transcript, setTranscript] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [draft, setDraft] = useState<GeneratedDraft | null>(null);
+  const [draftMarkdown, setDraftMarkdown] = useState("");
   const [feedback, setFeedback] = useState<{ type: "ok" | "error" | "warn"; message: string } | null>(
     null,
   );
@@ -87,6 +91,12 @@ export function MinutesClient({
   const selectedProject = projects.find((p) => p.id === projectId);
   const providerReady =
     provider === "claude" ? aiAvailable.claude : aiAvailable.deepseek;
+
+  useEffect(() => {
+    if (!draft) {
+      setDraftMarkdown("");
+    }
+  }, [draft]);
 
   async function processWordFile(file: File) {
     setParsingFile(true);
@@ -211,15 +221,19 @@ export function MinutesClient({
       }
 
       setDraft(json.data);
+      const dateLabel = meetingDate
+        ? new Date(meetingDate).toLocaleDateString("es-MX")
+        : new Date().toLocaleDateString("es-MX");
+      const resolvedTitle =
+        title.trim() ||
+        `Minuta ${dateLabel}${selectedProject ? ` · ${selectedProject.name}` : ""}`;
       if (!title.trim()) {
-        const dateLabel = meetingDate
-          ? new Date(meetingDate).toLocaleDateString("es-MX")
-          : new Date().toLocaleDateString("es-MX");
-        setTitle(`Minuta ${dateLabel}${selectedProject ? ` · ${selectedProject.name}` : ""}`);
+        setTitle(resolvedTitle);
       }
+      setDraftMarkdown(contentToMarkdown(json.data.content, resolvedTitle));
       setFeedback({
         type: "ok",
-        message: "Minuta generada. Revisa el contenido y guárdala cuando esté lista.",
+        message: "Minuta generada. Edítala en Markdown y guárdala cuando esté lista.",
       });
     } catch {
       setFeedback({ type: "error", message: "Error de red al generar la minuta." });
@@ -234,6 +248,10 @@ export function MinutesClient({
       setFeedback({ type: "error", message: "Indica un título antes de guardar." });
       return;
     }
+    if (!draftMarkdown.trim()) {
+      setFeedback({ type: "error", message: "La minuta en Markdown no puede estar vacía." });
+      return;
+    }
 
     startSaveTransition(async () => {
       const result = await saveMeetingMinuteAction({
@@ -241,6 +259,7 @@ export function MinutesClient({
         title,
         meetingDate: meetingDate || undefined,
         content: draft.content,
+        markdown: draftMarkdown,
         provider: draft.provider,
         model: draft.model,
       });
@@ -261,17 +280,19 @@ export function MinutesClient({
         </p>
       ) : null}
 
-      <section className="overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-md">
-        <div className="bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-700 px-4 py-4 text-white sm:px-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-indigo-100">
-            Nueva minuta
-          </p>
-          <p className="mt-1 text-sm text-indigo-50">
-            Adjunta tu archivo Word o pega la transcripción. Plan gratuito: Claude Haiku 4.5 y
-            DeepSeek V3.2.
-          </p>
-        </div>
-
+      <MinutesSectionShell
+        eyebrow="Minutas"
+        title="Generar nueva minuta de reunión"
+        subtitle="Adjunta un archivo Word (.docx) o pega la transcripción. Solo se guarda el resultado final editable en Markdown. Plan gratuito: Claude Haiku 4.5 y DeepSeek V3.2."
+        headerExtra={
+          <Link
+            href={PMO_HUB}
+            className="inline-flex text-sm font-medium text-white/90 underline hover:text-white"
+          >
+            Volver al PMO
+          </Link>
+        }
+      >
         <div className="border-b border-indigo-50 bg-indigo-50/40 px-4 py-3 sm:px-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
@@ -485,18 +506,22 @@ export function MinutesClient({
             ) : null}
           </div>
         </div>
-      </section>
+      </MinutesSectionShell>
 
       {draft ? (
-        <section>
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-violet-50 px-3 py-2">
-            <h2 className="text-base font-semibold text-violet-950">Vista previa</h2>
-            <p className="text-xs font-medium text-violet-700">
-              {MINUTE_PROVIDER_LABELS[draft.provider]} · {draft.model}
-            </p>
+        <MinutesSectionShell
+          eyebrow="Resultado"
+          title="Editar minuta generada"
+          subtitle={`${MINUTE_PROVIDER_LABELS[draft.provider]} · ${draft.model}. Usa / para insertar títulos, tablas y listas. Copia el Markdown a Loop, Notion u otros editores.`}
+          gradient="violet"
+        >
+          <div className="p-4">
+            <MinuteMarkdownEditor
+              value={draftMarkdown}
+              onChange={setDraftMarkdown}
+            />
           </div>
-          <MinuteContentView content={draft.content} />
-        </section>
+        </MinutesSectionShell>
       ) : null}
     </div>
   );

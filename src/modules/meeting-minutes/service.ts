@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { resolveMeetingMinuteMarkdown } from "@/lib/meeting-minute-markdown";
 import {
   parseMeetingMinuteContent,
   type MeetingMinuteContent,
@@ -33,6 +34,7 @@ function mapRow(
     title: string;
     meetingDate: Date | null;
     content: unknown;
+    markdown: string | null;
     provider: string;
     model: string;
     createdBy: string;
@@ -51,6 +53,7 @@ function mapRow(
     title: row.title,
     meetingDate: row.meetingDate,
     content,
+    markdown: row.markdown,
     provider,
     model: row.model,
     createdBy: row.createdBy,
@@ -77,6 +80,7 @@ export async function createMeetingMinute(input: {
   title: string;
   meetingDate?: Date | null;
   content: MeetingMinuteContent;
+  markdown: string;
   provider: MinuteProvider;
   model: string;
   createdBy: string;
@@ -88,6 +92,7 @@ export async function createMeetingMinute(input: {
       title: input.title.trim(),
       meetingDate: input.meetingDate ?? null,
       content: input.content,
+      markdown: input.markdown.trim(),
       provider: input.provider,
       model: input.model,
       createdBy: input.createdBy,
@@ -95,6 +100,28 @@ export async function createMeetingMinute(input: {
     select: { id: true },
   });
   return created;
+}
+
+export async function updateMeetingMinuteMarkdown(input: {
+  tenantId: string;
+  minuteId: string;
+  markdown: string;
+}) {
+  const existing = await db.meetingMinute.findFirst({
+    where: { id: input.minuteId, tenantId: input.tenantId },
+    select: { id: true },
+  });
+  if (!existing) return null;
+
+  await db.meetingMinute.update({
+    where: { id: input.minuteId },
+    data: { markdown: input.markdown.trim() },
+  });
+  return existing.id;
+}
+
+export function getDisplayMarkdown(row: Pick<MeetingMinuteRow, "markdown" | "content" | "title">) {
+  return resolveMeetingMinuteMarkdown(row);
 }
 
 export async function getMeetingMinuteById(tenantId: string, minuteId: string) {

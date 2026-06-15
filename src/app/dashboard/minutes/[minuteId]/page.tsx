@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { MinuteDetailClient } from "@/app/dashboard/minutes/minute-detail-client";
 import { MINUTES_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
@@ -55,15 +54,6 @@ export default async function MinuteDetailPage({ params }: MinuteDetailPageProps
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader title={minute.title} description="Minuta de reunión">
-        <Link
-          href={MINUTES_HUB}
-          className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
-        >
-          Todas las minutas
-        </Link>
-      </DashboardPageHeader>
-
       <MinuteDetailClient minute={minute} canEdit={canEdit} />
     </main>
   );

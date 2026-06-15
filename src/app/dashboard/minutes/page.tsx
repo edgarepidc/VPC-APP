@@ -1,13 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
 import { MinuteHistoryList } from "@/app/dashboard/minutes/minute-history-list";
 import { MinutesPrivacyNotice } from "@/app/dashboard/minutes/minutes-privacy-notice";
 import { MinutesClient } from "@/app/dashboard/minutes/minutes-client";
+import { MinutesSectionShell } from "@/app/dashboard/minutes/minutes-section-shell";
 import { isMinuteAiConfigured } from "@/lib/ai/generate-minute";
-import { PMO_HUB } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
@@ -19,7 +17,7 @@ import {
 } from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
 import { meetingMinuteTableMissingMessage } from "@/lib/prisma-errors";
-import { dashAlertWarn, dashPage, uiInput, uiLabel } from "@/lib/ui-classes";
+import { dashAlertWarn, dashPage, uiInput } from "@/lib/ui-classes";
 import {
   isMeetingMinuteStorageReady,
   listMeetingMinutesByTenant,
@@ -68,18 +66,6 @@ export default async function MinutesPage({ searchParams }: MinutesPageProps) {
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Minutas"
-        description="Genera minutas estructuradas desde un archivo Word (.docx) o pegando la transcripción. Solo se guarda el resultado final."
-      >
-        <Link
-          href={PMO_HUB}
-          className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
-        >
-          Volver al PMO
-        </Link>
-      </DashboardPageHeader>
-
       {!storageReady ? (
         <p className={`mb-4 ${dashAlertWarn}`} role="status">
           {meetingMinuteTableMissingMessage()}
@@ -93,37 +79,39 @@ export default async function MinutesPage({ searchParams }: MinutesPageProps) {
         aiAvailable={aiAvailable}
       />
 
-      <section className="mt-8 overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm">
-        <div className="border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-violet-50 px-4 py-3">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-indigo-950">Minutas guardadas</h2>
-              <span className="text-xs text-indigo-700/80">Historial por subproyecto</span>
-            </div>
-            <form method="get" className="flex w-full flex-wrap items-end gap-2 sm:w-auto">
-              <label className="block min-w-0 flex-1 sm:flex-none">
-                <span className={uiLabel}>Filtrar por iniciativa / subproyecto</span>
-                <ProjectHierarchyFilterSelect
-                  name="projectId"
-                  groups={hierarchy.groups}
-                  defaultValue={filterProjectId}
-                  allLabel="Todas las iniciativas"
-                  className={`${uiInput} mt-1 w-full min-w-0 sm:min-w-[220px]`}
-                />
-              </label>
-              <button
-                type="submit"
-                className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-800 hover:bg-indigo-50"
-              >
-                Filtrar
-              </button>
-            </form>
-          </div>
-        </div>
+      <MinutesSectionShell
+        className="mt-8"
+        eyebrow="Historial"
+        title="Minutas guardadas"
+        subtitle="Consulta y abre minutas anteriores. El contenido se conserva en Markdown para copiarlo a Loop, Notion u otros editores."
+        gradient="violet"
+        headerExtra={
+          <form method="get" className="flex w-full flex-wrap items-end gap-2">
+            <label className="block min-w-0 flex-1 sm:max-w-xs">
+              <span className="text-xs font-medium text-white/80">
+                Filtrar por iniciativa / subproyecto
+              </span>
+              <ProjectHierarchyFilterSelect
+                name="projectId"
+                groups={hierarchy.groups}
+                defaultValue={filterProjectId}
+                allLabel="Todas las iniciativas"
+                className={`${uiInput} mt-1 w-full border-white/20 bg-white/95 text-slate-900`}
+              />
+            </label>
+            <button
+              type="submit"
+              className="rounded-lg border border-white/30 bg-white/15 px-3 py-2 text-sm font-medium text-white hover:bg-white/25"
+            >
+              Filtrar
+            </button>
+          </form>
+        }
+      >
         <div className="p-4">
           <MinuteHistoryList rows={recentMinutes} />
         </div>
-      </section>
+      </MinutesSectionShell>
 
       <MinutesPrivacyNotice />
     </main>

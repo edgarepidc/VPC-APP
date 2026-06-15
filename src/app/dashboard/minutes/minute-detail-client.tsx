@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 
-import { deleteMeetingMinuteAction } from "@/app/dashboard/minutes/actions";
-import { MinuteContentView } from "@/app/dashboard/minutes/minute-content-view";
+import {
+  deleteMeetingMinuteAction,
+  updateMeetingMinuteMarkdownAction,
+} from "@/app/dashboard/minutes/actions";
+import { MinuteMarkdownEditor } from "@/app/dashboard/minutes/minute-markdown-editor";
+import { MinutesSectionShell } from "@/app/dashboard/minutes/minutes-section-shell";
 import { MINUTE_PROVIDER_LABELS } from "@/lib/meeting-minute-types";
+import { resolveMeetingMinuteMarkdown } from "@/lib/meeting-minute-markdown";
 import { MINUTES_HUB } from "@/lib/dashboard-paths";
 import type { MeetingMinuteRow } from "@/lib/meeting-minute-types";
 import { formatEscalationDateTime } from "@/lib/escalation-utils";
@@ -19,14 +24,34 @@ type MinuteDetailClientProps = {
 
 export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const initialMarkdown = useMemo(
+    () => resolveMeetingMinuteMarkdown(minute),
+    [minute],
+  );
+  const [markdown, setMarkdown] = useState(initialMarkdown);
+  const [savedMarkdown, setSavedMarkdown] = useState(initialMarkdown);
+  const [pendingDelete, startDeleteTransition] = useTransition();
+  const [pendingSave, startSaveTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "ok" | "error"; message: string } | null>(
     null,
   );
 
+  const metaLine = [
+    minute.project.name,
+    minute.authorName,
+    MINUTE_PROVIDER_LABELS[minute.provider],
+    minute.model,
+    `Guardada ${formatEscalationDateTime(new Date(minute.createdAt))}`,
+    minute.meetingDate
+      ? `Reunión ${formatEscalationDateTime(new Date(minute.meetingDate))}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   function remove() {
     if (!window.confirm("¿Eliminar esta minuta? Esta acción no se puede deshacer.")) return;
-    startTransition(async () => {
+    startDeleteTransition(async () => {
       const result = await deleteMeetingMinuteAction(minute.id);
       if (result.ok) {
         router.push(MINUTES_HUB);
@@ -37,46 +62,86 @@ export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps)
     });
   }
 
+  function saveMarkdown() {
+    if (!markdown.trim()) {
+      setFeedback({ type: "error", message: "La minuta en Markdown no puede estar vacía." });
+      return;
+    }
+
+    startSaveTransition(async () => {
+      const result = await updateMeetingMinuteMarkdownAction({
+        minuteId: minute.id,
+        markdown,
+      });
+      if (result.ok) {
+        setSavedMarkdown(markdown);
+        setFeedback({ type: "ok", message: "Cambios guardados." });
+        router.refresh();
+      } else {
+        setFeedback({ type: "error", message: result.error });
+      }
+    });
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-slate-600">{minute.project.name}</p>
-          <p className="mt-1 text-xs text-slate-500">
-            {minute.authorName} · {MINUTE_PROVIDER_LABELS[minute.provider]} · {minute.model} ·{" "}
-            Guardada {formatEscalationDateTime(new Date(minute.createdAt))}
-            {minute.meetingDate
-              ? ` · Reunión ${formatEscalationDateTime(new Date(minute.meetingDate))}`
-              : ""}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href={MINUTES_HUB}
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Volver al listado
-          </Link>
-          {canEdit ? (
-            <button
-              type="button"
-              onClick={remove}
-              disabled={pending}
-              className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+      <MinutesSectionShell
+        eyebrow="Minuta guardada"
+        title={minute.title}
+        subtitle={metaLine}
+        gradient="emerald"
+        headerExtra={
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={MINUTES_HUB}
+              className="rounded-lg border border-white/30 bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20"
             >
-              {pending ? "Eliminando…" : "Eliminar"}
-            </button>
+              Volver al listado
+            </Link>
+            {canEdit ? (
+              <>
+                {markdown !== savedMarkdown ? (
+                  <button
+                    type="button"
+                    onClick={saveMarkdown}
+                    disabled={pendingSave || pendingDelete}
+                    className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
+                  >
+                    {pendingSave ? "Guardando…" : "Guardar cambios"}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={remove}
+                  disabled={pendingDelete || pendingSave}
+                  className="rounded-lg border border-red-200/60 bg-red-500/20 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500/30 disabled:opacity-50"
+                >
+                  {pendingDelete ? "Eliminando…" : "Eliminar"}
+                </button>
+              </>
+            ) : null}
+          </div>
+        }
+      >
+        <div className="p-4">
+          {feedback ? (
+            <p
+              className={`mb-4 ${feedback.type === "ok" ? dashAlertOk : dashAlertError}`}
+              role="status"
+            >
+              {feedback.message}
+            </p>
           ) : null}
+          <MinuteMarkdownEditor
+            value={markdown}
+            onChange={(value) => {
+              setMarkdown(value);
+              setFeedback(null);
+            }}
+            readOnly={!canEdit}
+          />
         </div>
-      </div>
-
-      {feedback ? (
-        <p className={feedback.type === "ok" ? dashAlertOk : dashAlertError} role="status">
-          {feedback.message}
-        </p>
-      ) : null}
-
-      <MinuteContentView content={minute.content} />
+      </MinutesSectionShell>
     </div>
   );
 }
