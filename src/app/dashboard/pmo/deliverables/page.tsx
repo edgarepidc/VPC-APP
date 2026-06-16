@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { getSessionUser } from "@/lib/auth/session";
-import { DELIVERABLES_HUB, DELIVERABLE_DETAIL_IN_PROJECT } from "@/lib/dashboard-paths";
+import { DELIVERABLE_DETAIL_IN_PROJECT } from "@/lib/dashboard-paths";
 import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { dashCard, dashKpiLabel, dashKpiValue, dashPage } from "@/lib/ui-classes";
@@ -42,18 +42,8 @@ export default async function PmoDeliverablesPage() {
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Entregables"
-        description="Cumplimiento de fechas, avance ponderado y tendencia de cierres."
-      >
-        <Link
-          href={DELIVERABLES_HUB}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Abrir tracker de entregables
-        </Link>
-      </DashboardPageHeader>
-
+      <DashboardSectionShell eyebrow="PMO" title="Entregables" titleAs="h1">
+        <div className="space-y-4 p-4">
       <section className="mb-4 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 sm:flex sm:flex-wrap sm:gap-6 sm:px-4">
         <div>
           <p className={dashKpiLabel}>Entregables</p>
@@ -97,6 +87,8 @@ export default async function PmoDeliverablesPage() {
           </ul>
         </section>
       ) : null}
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

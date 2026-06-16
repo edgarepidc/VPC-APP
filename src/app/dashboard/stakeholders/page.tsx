@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { getSessionUser } from "@/lib/auth/session";
-import { PMO_STAKEHOLDERS } from "@/lib/dashboard-paths";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import {
@@ -18,8 +17,6 @@ import {
   listStakeholdersByTenant,
   updateStakeholder,
 } from "@/modules/stakeholders/service";
-
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
 import { dashAlertError, dashAlertOk, dashPage } from "@/lib/ui-classes";
 
 import { StakeholderManagerView } from "./stakeholder-manager-view";
@@ -176,35 +173,29 @@ export default async function StakeholdersPage({ searchParams }: StakeholdersPag
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Interesados"
-        description="Matriz de poder e interés por subproyecto."
-      >
-        <Link
-          href={PMO_STAKEHOLDERS}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Ver resumen PMO de interesados
-        </Link>
-        {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
-        {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
-      </DashboardPageHeader>
-
-      <StakeholderManagerView
-        stakeholders={matrixItems}
-        projects={projects}
-        projectGroups={projectGroups}
-        projectHierarchy={hierarchyProjects}
-        canEdit={canEdit}
-        initial={{
-          id: params.id,
-          project: initialProject,
-          q: params.q,
-        }}
-        createAction={createAction}
-        updateAction={updateAction}
-        deleteAction={deleteAction}
-      />
+      <DashboardSectionShell eyebrow="Interesados" title="Mapa de poder e interés" titleAs="h1">
+        {params.error ? (
+          <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p>
+        ) : null}
+        {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
+        <div className="p-4">
+          <StakeholderManagerView
+            stakeholders={matrixItems}
+            projects={projects}
+            projectGroups={projectGroups}
+            projectHierarchy={hierarchyProjects}
+            canEdit={canEdit}
+            initial={{
+              id: params.id,
+              project: initialProject,
+              q: params.q,
+            }}
+            createAction={createAction}
+            updateAction={updateAction}
+            deleteAction={deleteAction}
+          />
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

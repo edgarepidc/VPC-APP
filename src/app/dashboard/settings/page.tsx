@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import {
   dashAlertError,
   dashAlertOk,
@@ -61,18 +61,15 @@ export default async function DashboardSettingsPage({
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Configuración"
-        description={
-          <>
-            Workspace: <strong>{tenant.name}</strong>
-          </>
-        }
-      />
+      <DashboardSectionShell
+        eyebrow="Configuración"
+        title={tenant.name}
+        titleAs="h1"
+      >
+        {errorMessage ? <p className={`mx-4 mt-4 ${dashAlertError}`}>{errorMessage}</p> : null}
+        {okMessage ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{okMessage}</p> : null}
 
-      {errorMessage ? <p className={dashAlertError}>{errorMessage}</p> : null}
-      {okMessage ? <p className={dashAlertOk}>{okMessage}</p> : null}
-
+        <div className="space-y-4 p-4">
       <section className={`${dashCard} p-4`}>
         <h2 className="text-base font-semibold text-slate-900">Tu acceso</h2>
         <dl className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
@@ -222,6 +219,8 @@ export default async function DashboardSettingsPage({
           .
         </p>
       </section>
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

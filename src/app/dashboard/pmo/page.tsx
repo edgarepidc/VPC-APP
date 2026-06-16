@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { dashCard, dashPage } from "@/lib/ui-classes";
 import {
   DELIVERABLE_DETAIL_IN_PROJECT,
@@ -86,11 +86,8 @@ export default async function PmoPage() {
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="PMO"
-        description="Resumen ejecutivo de la organización: proyectos, entregables, riesgos y equipo."
-      />
-
+      <DashboardSectionShell eyebrow="PMO" title="Resumen ejecutivo" titleAs="h1">
+        <div className="space-y-4 p-4">
       <PmoKpiBar kpis={snapshot.kpis} formatMxn={mxn} />
 
       <PmoPortfolioAlertsBanner summary={portfolioAlerts} />
@@ -200,6 +197,8 @@ export default async function PmoPage() {
           </ul>
         </div>
       </section>
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

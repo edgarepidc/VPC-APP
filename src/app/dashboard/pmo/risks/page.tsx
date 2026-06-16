@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { fmtMoneyMxn } from "@/app/dashboard/risks/risk-utils";
 import { getSessionUser } from "@/lib/auth/session";
-import { RISK_DETAIL_IN_PROJECT, RISKS_HUB } from "@/lib/dashboard-paths";
+import { RISK_DETAIL_IN_PROJECT } from "@/lib/dashboard-paths";
 import { getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { dashCard, dashKpiLabel, dashKpiValue, dashPage, dashSectionTitle } from "@/lib/ui-classes";
@@ -24,18 +24,8 @@ export default async function PmoRisksPage() {
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Riesgos"
-        description="Exposición residual, riesgos críticos y tolerancia del portafolio."
-      >
-        <Link
-          href={RISKS_HUB}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Abrir gestor de riesgos
-        </Link>
-      </DashboardPageHeader>
-
+      <DashboardSectionShell eyebrow="PMO" title="Riesgos" titleAs="h1">
+        <div className="space-y-4 p-4">
       <section className="mb-4 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 sm:flex sm:flex-wrap sm:gap-6 sm:px-4">
         <div>
           <p className={dashKpiLabel}>Riesgos</p>
@@ -77,6 +67,8 @@ export default async function PmoRisksPage() {
           ) : null}
         </ul>
       </section>
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

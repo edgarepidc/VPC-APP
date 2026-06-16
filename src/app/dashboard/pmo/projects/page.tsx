@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
-import { PMO_TEAM } from "@/lib/dashboard-paths";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import {
   dashAlertError,
   dashAlertOk,
@@ -195,31 +193,16 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Iniciativas y subproyectos"
-        description={
-          <>
-            Las <strong>iniciativas</strong> agrupan el portafolio; los{" "}
-            <strong>subproyectos</strong> son donde el equipo registra entregables, riesgos y
-            tareas. {tenant?.name ?? "—"}
-          </>
-        }
-      >
-        <Link
-          href={PMO_TEAM}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Gestionar equipo y accesos
-        </Link>
+      <DashboardSectionShell eyebrow="PMO" title="Iniciativas y subproyectos" titleAs="h1">
         {usage ? (
-          <p className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <p className="mx-4 mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
             Plan {usage.plan}: {usage.projectCount}/{usage.limits.maxProjects} iniciativas
           </p>
         ) : null}
-        {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
-        {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
-      </DashboardPageHeader>
+        {params.error ? <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p> : null}
+        {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
 
+        <div className="space-y-4 p-4">
       {canManageCatalog ? (
         <details className={`${dashCard} group`}>
           <summary className={dashDetailsSummary}>Nueva iniciativa</summary>
@@ -257,6 +240,8 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
           deleteProjectAction={deleteProjectAction}
         />
       </section>
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

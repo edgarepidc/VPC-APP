@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import {
   dashAlertError,
   dashAlertOk,
@@ -15,7 +15,7 @@ import {
   dashTabIdle,
   uiLabel,
 } from "@/lib/ui-classes";
-import { PMO_HUB, PMO_PROJECTS } from "@/lib/dashboard-paths";
+import { PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
@@ -180,21 +180,13 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Tareas"
-        description="Kanban, tabla, calendario y Gantt. Filtra por iniciativa, subproyecto o texto."
-      >
-        <Link
-          href={PMO_HUB}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Ver resumen PMO
-        </Link>
-        {params.error && <p className={dashAlertError}>{params.error}</p>}
-        {params.ok && <p className={dashAlertOk}>{params.ok}</p>}
-      </DashboardPageHeader>
+      <DashboardSectionShell eyebrow="Tareas" title="Seguimiento de actividades" titleAs="h1">
+        {params.error ? (
+          <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p>
+        ) : null}
+        {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
 
-      <section className={`${dashCard} ${dashCardBody}`}>
+        <section className={`border-t border-slate-100 ${dashCardBody}`}>
         <nav className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
           {(
             [
@@ -350,7 +342,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
         )}
       </section>
 
-      <section className={`${dashCard} overflow-hidden ${dashCardBody}`}>
+      <section className={`border-t border-slate-100 ${dashCardBody}`}>
         {view === "kanban" && (
           <KanbanBoard
             tasks={taskCards}
@@ -379,7 +371,8 @@ export default async function TasksPage({ searchParams }: PageProps) {
           />
         )}
         {view === "gantt" && <TasksGanttView tasks={taskCards} />}
-      </section>
+        </section>
+      </DashboardSectionShell>
     </main>
   );
 }

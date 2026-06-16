@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { getSessionUser } from "@/lib/auth/session";
-import { PMO_RISKS } from "@/lib/dashboard-paths";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import {
@@ -14,11 +13,8 @@ import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import { requireTenantId } from "@/lib/tenancy";
 import { createRisk, deleteRisk, getRiskById, listRisksByTenant, updateRisk } from "@/modules/risks/service";
 import { listDeliverablesByTenant } from "@/modules/deliverables/service";
-
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
-import { dashAlertError, dashAlertOk, dashPage } from "@/lib/ui-classes";
-
 import { parseRiskPrefillFromSearchParams } from "@/lib/escalation-risk-prefill";
+import { dashAlertError, dashAlertOk, dashPage } from "@/lib/ui-classes";
 
 import { residualScore } from "./risk-utils";
 import { RiskManagerView, type RiskClientRow } from "./risk-manager-view";
@@ -230,41 +226,35 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Riesgos"
-        description="Matriz, exposición y registro de riesgos."
-      >
-        <Link
-          href={PMO_RISKS}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Ver resumen PMO de riesgos
-        </Link>
-        {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
-        {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
-      </DashboardPageHeader>
-
-      <RiskManagerView
-        risks={risksClient}
-        projects={projects}
-        projectGroups={projectGroups}
-        projectHierarchy={hierarchyProjects}
-        deliverables={deliverables.map((d) => ({
-          id: d.id,
-          title: d.title,
-          projectId: d.projectId,
-        }))}
-        canEdit={canEdit}
-        prefill={riskPrefill}
-        initial={{
-          id: params.id,
-          project: params.project,
-          q: params.q,
-        }}
-        createAction={createAction}
-        updateAction={updateAction}
-        deleteAction={deleteAction}
-      />
+      <DashboardSectionShell eyebrow="Riesgos" title="Matriz y registro" titleAs="h1">
+        {params.error ? (
+          <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p>
+        ) : null}
+        {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
+        <div className="p-4">
+          <RiskManagerView
+            risks={risksClient}
+            projects={projects}
+            projectGroups={projectGroups}
+            projectHierarchy={hierarchyProjects}
+            deliverables={deliverables.map((d) => ({
+              id: d.id,
+              title: d.title,
+              projectId: d.projectId,
+            }))}
+            canEdit={canEdit}
+            prefill={riskPrefill}
+            initial={{
+              id: params.id,
+              project: params.project,
+              q: params.q,
+            }}
+            createAction={createAction}
+            updateAction={updateAction}
+            deleteAction={deleteAction}
+          />
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

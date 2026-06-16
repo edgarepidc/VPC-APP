@@ -1,12 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
 import { EscalationHistoryList } from "@/app/dashboard/escalometro/escalation-history-list";
 import { EscalationDeteriorationAlerts } from "@/app/dashboard/pmo/escalation-deterioration-alerts";
 import { getSessionUser } from "@/lib/auth/session";
-import { ESCALOMETRO_HUB } from "@/lib/dashboard-paths";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { resolveProjectFilterIds } from "@/lib/project-hierarchy";
@@ -68,18 +66,8 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Escalamientos"
-        description="Historial completo de evaluaciones del Escalómetro por subproyecto."
-      >
-        <Link
-          href={ESCALOMETRO_HUB}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Abrir Escalómetro
-        </Link>
-      </DashboardPageHeader>
-
+      <DashboardSectionShell eyebrow="PMO" title="Escalamientos" titleAs="h1">
+        <div className="space-y-4 p-4">
       <EscalationDeteriorationAlerts alerts={alertRows} />
 
       <section className={`${dashCard} p-4`}>
@@ -117,6 +105,8 @@ export default async function PmoEscalationsPage({ searchParams }: EscalationsPa
           )}
         </ul>
       </section>
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

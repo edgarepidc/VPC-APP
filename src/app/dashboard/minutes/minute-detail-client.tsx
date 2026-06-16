@@ -85,11 +85,9 @@ export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps)
 
   return (
     <div className="space-y-6">
-      <MinutesSectionShell
-        eyebrow="Minuta guardada"
-        title={minute.title}
-        subtitle={metaLine}
-        headerExtra={
+      <MinutesSectionShell eyebrow="Minutas" title={minute.title} titleAs="h1">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5">
+          <p className="text-sm text-slate-600">{metaLine}</p>
           <div className="flex flex-wrap gap-2">
             <Link
               href={MINUTES_HUB}
@@ -120,8 +118,7 @@ export function MinuteDetailClient({ minute, canEdit }: MinuteDetailClientProps)
               </>
             ) : null}
           </div>
-        }
-      >
+        </div>
         <div className="p-4">
           {feedback ? (
             <p

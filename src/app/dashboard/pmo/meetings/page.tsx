@@ -1,13 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
 import { RoiSessionHistoryList } from "@/app/dashboard/roi-meetings/roi-session-history-list";
 import { MeetingCostAlerts } from "@/app/dashboard/pmo/meeting-cost-alerts";
 import { getSessionUser } from "@/lib/auth/session";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
-import { ROI_MEETINGS_HUB } from "@/lib/dashboard-paths";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { resolveProjectFilterIds } from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
@@ -72,18 +70,8 @@ export default async function PmoMeetingsPage({ searchParams }: PmoMeetingsPageP
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Reuniones"
-        description="Historial de sesiones registradas con la calculadora de reuniones por subproyecto."
-      >
-        <Link
-          href={ROI_MEETINGS_HUB}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Abrir calculadora de reuniones
-        </Link>
-      </DashboardPageHeader>
-
+      <DashboardSectionShell eyebrow="PMO" title="Reuniones" titleAs="h1">
+        <div className="space-y-4 p-4">
       <MeetingCostAlerts alerts={alertRows} />
 
       <section className={`${dashCard} p-4`}>
@@ -132,6 +120,8 @@ export default async function PmoMeetingsPage({ searchParams }: PmoMeetingsPageP
           )}
         </ul>
       </section>
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

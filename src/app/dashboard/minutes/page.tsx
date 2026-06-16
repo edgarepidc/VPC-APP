@@ -83,8 +83,8 @@ export default async function MinutesPage({ searchParams }: MinutesPageProps) {
         className="mt-8"
         eyebrow="Historial"
         title="Minutas guardadas"
-        subtitle="Consulta y abre minutas anteriores. El contenido se conserva en Markdown para copiarlo a Loop, Notion u otros editores."
-        headerExtra={
+      >
+        <div className="border-b border-slate-100 px-4 py-3 sm:px-5">
           <form method="get" className="flex w-full flex-wrap items-end gap-2">
             <label className="block min-w-0 flex-1 sm:max-w-xs">
               <span className={uiLabel}>Filtrar por iniciativa / subproyecto</span>
@@ -103,8 +103,7 @@ export default async function MinutesPage({ searchParams }: MinutesPageProps) {
               Filtrar
             </button>
           </form>
-        }
-      >
+        </div>
         <div className="p-4">
           <MinuteHistoryList rows={recentMinutes} />
         </div>

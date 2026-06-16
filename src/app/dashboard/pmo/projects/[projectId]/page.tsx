@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { fmtMoneyMxn } from "@/app/dashboard/risks/risk-utils";
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { EscalationTrendDots } from "@/app/dashboard/pmo/escalation-trend-dots";
 import { MeetingCostTrendDots } from "@/app/dashboard/pmo/meeting-cost-trend-dots";
 import { getSessionUser } from "@/lib/auth/session";
@@ -12,7 +12,6 @@ import {
   PMO_ESCALATIONS_PROJECT,
   PMO_MEETINGS_PROJECT,
   PMO_PROJECT_DETAIL,
-  PMO_PROJECTS,
   RISK_DETAIL_IN_PROJECT,
   RISKS_PROJECT,
   STAKEHOLDERS_PROJECT,
@@ -110,27 +109,17 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
+      <DashboardSectionShell
+        eyebrow={isInitiative ? "Iniciativa" : "Subproyecto"}
         title={project.name}
-        description={
-          rollupMode
-            ? `Iniciativa · ${subprojects.length} subproyecto${subprojects.length !== 1 ? "s" : ""}`
-            : project.description?.trim() ||
-              (isInitiative ? "Ficha de la iniciativa." : "Ficha del subproyecto.")
-        }
+        titleAs="h1"
       >
-        <Link
-          href={PMO_PROJECTS}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          ← Volver a iniciativas
-        </Link>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-3 sm:px-5">
           <span className={statusBadge.className}>{statusBadge.label}</span>
           <span className={semaphore.className}>{semaphore.label}</span>
         </div>
-      </DashboardPageHeader>
 
+        <div className="space-y-4 p-4">
       <section className="mb-4 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 sm:grid-cols-4 sm:px-4">
         <div>
           <p className={dashKpiLabel}>Avance</p>
@@ -322,6 +311,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
           </ul>
         </section>
       ) : null}
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }

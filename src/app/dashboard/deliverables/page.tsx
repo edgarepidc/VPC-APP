@@ -9,7 +9,7 @@ import {
   dashCard,
   dashPage,
 } from "@/lib/ui-classes";
-import { PMO_DELIVERABLES, PMO_PROJECTS } from "@/lib/dashboard-paths";
+import { PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
@@ -173,20 +173,11 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
         eyebrow="Entregables"
         title="Tracker de compromisos"
         titleAs="h1"
-        subtitle="Estados, pesos y acuses por subproyecto."
-        headerExtra={
-          <>
-            <Link
-              href={PMO_DELIVERABLES}
-              className="inline-flex text-sm font-medium text-slate-600 underline hover:text-slate-900"
-            >
-              Ver resumen PMO de entregables
-            </Link>
-            {params.error ? <p className={`mt-3 ${dashAlertError}`}>{params.error}</p> : null}
-            {params.ok ? <p className={`mt-3 ${dashAlertOk}`}>{params.ok}</p> : null}
-          </>
-        }
       >
+        {params.error ? (
+          <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p>
+        ) : null}
+        {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
         {projects.length === 0 ? (
           <div className="p-4">
             <p className="text-sm text-slate-700">

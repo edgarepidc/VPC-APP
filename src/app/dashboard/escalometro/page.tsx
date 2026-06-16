@@ -1,12 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
 import { EscalometroClient } from "@/app/dashboard/escalometro/escalometro-client";
 import { EscalationHistoryList } from "@/app/dashboard/escalometro/escalation-history-list";
 import { getSessionUser } from "@/lib/auth/session";
-import { PMO_ESCALATIONS } from "@/lib/dashboard-paths";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import {
@@ -18,7 +16,6 @@ import {
 import { requireTenantId } from "@/lib/tenancy";
 import {
   dashAlertWarn,
-  dashCard,
   dashPage,
   uiInput,
   uiLabel,
@@ -73,35 +70,19 @@ export default async function EscalometroPage({ searchParams }: EscalometroPageP
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Escalómetro"
-        description="Evalúa el nivel de escalamiento en 6 dimensiones y registra el resultado por proyecto."
-      >
-        <Link
-          href={PMO_ESCALATIONS}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Ver resumen PMO de escalamientos
-        </Link>
-      </DashboardPageHeader>
-
-      {!storageReady && (
-        <p className={dashAlertWarn} role="status">
+      {!storageReady ? (
+        <p className={`mb-4 ${dashAlertWarn}`} role="status">
           {escalationTableMissingMessage()} Mientras tanto puedes usar la herramienta, pero los
           registros no se guardarán.
         </p>
-      )}
+      ) : null}
 
-      <EscalometroClient projects={projects} projectGroups={hierarchy.groups} canSave={canSave} />
+      <DashboardSectionShell eyebrow="Escalómetro" title="Evaluación de escalamiento" titleAs="h1">
+        <EscalometroClient projects={projects} projectGroups={hierarchy.groups} canSave={canSave} />
+      </DashboardSectionShell>
 
-      <section className={`${dashCard} p-4`}>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">Registros recientes</h2>
-            <span className="text-xs text-slate-500">
-              Historial ligero — distinto al registro de riesgos
-            </span>
-          </div>
+      <DashboardSectionShell className="mt-8" eyebrow="Historial" title="Registros recientes">
+        <div className="border-b border-slate-100 px-4 py-3 sm:px-5">
           <form method="get" className="flex flex-wrap items-end gap-2">
             <label className="block">
               <span className={uiLabel}>Filtrar por iniciativa / subproyecto</span>
@@ -121,7 +102,7 @@ export default async function EscalometroPage({ searchParams }: EscalometroPageP
             </button>
           </form>
         </div>
-        <ul className="mt-3 space-y-2">
+        <ul className="space-y-2 p-4">
           {historyRows.length > 0 ? (
             <EscalationHistoryList rows={historyRows} canCreateRisk={canSave} />
           ) : (
@@ -132,7 +113,7 @@ export default async function EscalometroPage({ searchParams }: EscalometroPageP
             </li>
           )}
         </ul>
-      </section>
+      </DashboardSectionShell>
     </main>
   );
 }

@@ -17,7 +17,7 @@ import {
   type MeetingMinuteContent,
   type MinuteProvider,
 } from "@/lib/meeting-minute-types";
-import { MINUTES_DETAIL, PMO_HUB } from "@/lib/dashboard-paths";
+import { MINUTES_DETAIL } from "@/lib/dashboard-paths";
 import type { ProjectHierarchyGroup } from "@/lib/project-hierarchy";
 import {
   dashAlertError,
@@ -280,19 +280,7 @@ export function MinutesClient({
         </p>
       ) : null}
 
-      <MinutesSectionShell
-        eyebrow="Minutas"
-        title="Generar nueva minuta de reunión"
-        subtitle="Adjunta un archivo Word (.docx) o pega la transcripción. Solo se guarda el resultado final editable en Markdown."
-        headerExtra={
-          <Link
-            href={PMO_HUB}
-            className="inline-flex text-sm font-medium text-slate-600 underline hover:text-slate-900"
-          >
-            Volver al PMO
-          </Link>
-        }
-      >
+      <MinutesSectionShell eyebrow="Minutas" title="Generar nueva minuta de reunión" titleAs="h1">
         <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3 sm:px-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
@@ -515,11 +503,7 @@ export function MinutesClient({
       </MinutesSectionShell>
 
       {draft ? (
-        <MinutesSectionShell
-          eyebrow="Resultado"
-          title="Editar minuta generada"
-          subtitle="Edita directamente el texto y las tablas; al guardar se conserva en Markdown para copiar a Loop, Notion u otros editores."
-        >
+        <MinutesSectionShell eyebrow="Resultado" title="Editar minuta generada">
           <div className="p-4">
             <MinuteMarkdownEditor
               value={draftMarkdown}

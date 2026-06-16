@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
-import { DASHBOARD_SETTINGS, PMO_PROJECTS } from "@/lib/dashboard-paths";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import {
   dashAlertError,
   dashAlertOk,
@@ -167,29 +165,18 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Equipo"
-        description="Personas con acceso a este workspace."
-      >
-        <div className="mt-2 flex flex-wrap gap-3 text-sm">
-          <Link href={PMO_PROJECTS} className="font-medium text-slate-700 underline">
-            Ver proyectos
-          </Link>
-          <Link href={DASHBOARD_SETTINGS} className="font-medium text-slate-700 underline">
-            Mi perfil
-          </Link>
-        </div>
+      <DashboardSectionShell eyebrow="PMO" title="Equipo" titleAs="h1">
         {usage ? (
-          <p className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <p className="mx-4 mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
             Plan <span className="font-semibold uppercase">{usage.plan}</span>:{" "}
             {usage.seatsUsed}/{usage.limits.maxMemberSeats} puestos ·{" "}
             {usage.projectCount}/{usage.limits.maxProjects} proyectos
           </p>
         ) : null}
-        {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
-        {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
-      </DashboardPageHeader>
+        {params.error ? <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p> : null}
+        {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
 
+        <div className="space-y-4 p-4">
       <section className={`${dashCard} p-4 sm:p-5`}>
         <h2 className="text-base font-semibold text-slate-900">Equipo</h2>
         <p className="mt-1 text-sm text-slate-600">
@@ -245,6 +232,8 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
           Tu rol solo permite ver miembros. Necesitas rol de administrador para invitar.
         </p>
       )}
+        </div>
+      </DashboardSectionShell>
     </main>
   );
 }
