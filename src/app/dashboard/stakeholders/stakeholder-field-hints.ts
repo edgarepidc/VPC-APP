@@ -12,7 +12,9 @@ export const STAKEHOLDER_FIELD_HINTS = {
 
 export const STAKEHOLDER_KPI_HINTS = {
   total: "Interesados registrados en el alcance activo (proyecto filtrado o portafolio completo).",
-  promotores: "Jugadores clave: alta influencia y bajo interés aparente — gestionar de cerca.",
-  latentes: "Alta influencia e interés — mantener satisfechos con comunicación ejecutiva.",
+  promotores:
+    "Jugadores clave (Q1): alta influencia y bajo interés aparente — gestionar de cerca.",
+  latentes:
+    "Cumplidores (Q2): alta influencia e interés — mantener satisfechos con comunicación ejecutiva.",
   gaps: "Subproyectos sin interesados o sin promotores identificados en la matriz.",
 } as const;

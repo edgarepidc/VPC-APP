@@ -182,9 +182,11 @@ export function CreateStakeholderModal({
             </div>
 
             <div className={`rounded-lg border px-4 py-3 ${qPreviewBg[quadrant.id]}`}>
-              <p className={dashKpiLabel}>Cuadrante previsto</p>
+              <p className={dashKpiLabel}>Cuadrante previsto · {quadrant.code}</p>
               <p className="text-sm font-semibold">{quadrant.fullLabel}</p>
-              <p className="mt-1 text-xs opacity-90">Estrategia: {quadrant.strategy}</p>
+              <p className="mt-1 text-xs opacity-90">{quadrant.positionHint}</p>
+              <p className="mt-2 text-xs font-medium opacity-95">Estrategia: {quadrant.strategy}</p>
+              <p className="mt-1 text-xs leading-relaxed opacity-90">{quadrant.strategyRationale}</p>
             </div>
 
             <label>

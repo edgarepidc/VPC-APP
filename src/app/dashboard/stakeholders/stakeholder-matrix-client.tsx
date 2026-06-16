@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-import { type QuadrantId, QUADRANT_PLAYBOOK, getQuadrantId } from "@/lib/stakeholder-playbook";
+import {
+  type QuadrantId,
+  QUADRANT_PLAYBOOK,
+  formatQuadrantTacticsForExport,
+  getQuadrantId,
+} from "@/lib/stakeholder-playbook";
 
 import { StakeholderDetailPanel } from "./stakeholder-detail-panel";
 
@@ -113,8 +118,11 @@ export function StakeholderMatrixClient({
           `## ${s.name}`,
           `- Subproyecto: ${s.projectName}`,
           `- Influencia: ${s.influence} · Interés: ${s.interest}`,
-          `- Cuadrante: ${q.fullLabel}`,
+          `- Cuadrante: ${q.code} · ${q.fullLabel} (${q.positionHint})`,
           `- Estrategia: ${q.strategy}`,
+          `- Por qué: ${q.strategyRationale}`,
+          `- Comunicación: ${q.freq}`,
+          `- Tácticas: ${formatQuadrantTacticsForExport(q.tactics)}`,
           s.observation ? `- Nota: ${s.observation}` : "",
           "",
         ]

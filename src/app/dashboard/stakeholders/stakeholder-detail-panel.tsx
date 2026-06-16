@@ -90,10 +90,14 @@ export function StakeholderDetailPanel({
                 <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 font-mono text-[10.5px] text-slate-500">
                   Inf {selected.influence} · Int {selected.interest}
                 </span>
+                <span className="inline-flex rounded-full bg-white/80 px-2 py-0.5 font-mono text-[10.5px] font-semibold text-slate-700">
+                  {playbook.code}
+                </span>
                 <span className="inline-flex rounded-full bg-white/80 px-2 py-0.5 text-xs font-medium text-emerald-800">
                   {playbook.fullLabel}
                 </span>
               </div>
+              <p className="mt-2 text-[11px] leading-snug text-slate-500">{playbook.positionHint}</p>
             </div>
 
             <div>
@@ -101,8 +105,11 @@ export function StakeholderDetailPanel({
                 Estrategia
                 <span className="h-px flex-1 bg-slate-200" />
               </p>
-              <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-900">
-                {playbook.strategy}
+              <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5">
+                <p className="text-sm font-semibold text-slate-900">{playbook.strategy}</p>
+                <p className="mt-1.5 text-[12px] leading-relaxed text-slate-600">
+                  {playbook.strategyRationale}
+                </p>
               </div>
             </div>
 

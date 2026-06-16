@@ -1,5 +1,7 @@
 "use client";
 
+import { QUADRANT_PLAYBOOK, getQuadrantId } from "@/lib/stakeholder-playbook";
+
 import type { MatrixStakeholder } from "./stakeholder-matrix-client";
 import { StakeholderDetailPanel } from "./stakeholder-detail-panel";
 import { StakeholderQuadrantBadge, exportStakeholdersCsv } from "./stakeholder-quadrant-ui";
@@ -41,20 +43,23 @@ export function StakeholdersRegisterView({
           </button>
         </div>
         <div className="overflow-x-auto">
-          <table className="pmo-table pmo-row-hover w-full min-w-[880px] text-sm">
+          <table className="pmo-table pmo-row-hover w-full min-w-[1040px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-slate-500">
                 <th>Nombre</th>
                 <th>Rol</th>
-                <th>Proyecto</th>
+                <th>Subproyecto</th>
                 <th>Cuadrante</th>
-                <th className="text-center">Influencia</th>
-                <th className="text-center">Interés</th>
+                <th>Estrategia</th>
+                <th className="text-center">Inf.</th>
+                <th className="text-center">Int.</th>
                 <th>Observación</th>
               </tr>
             </thead>
             <tbody>
-              {stakeholders.map((s) => (
+              {stakeholders.map((s) => {
+                const pb = QUADRANT_PLAYBOOK[getQuadrantId(s.influence, s.interest)];
+                return (
                 <tr
                   key={s.id}
                   className={`cursor-pointer ${selectedId === s.id ? "bg-slate-100" : ""}`}
@@ -64,16 +69,25 @@ export function StakeholdersRegisterView({
                   <td className="text-slate-600">{s.role || "—"}</td>
                   <td className="text-slate-600">{s.projectName}</td>
                   <td>
-                    <StakeholderQuadrantBadge influence={s.influence} interest={s.interest} />
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-mono text-[10px] font-semibold text-slate-400">
+                        {pb.code}
+                      </span>
+                      <StakeholderQuadrantBadge influence={s.influence} interest={s.interest} />
+                    </div>
+                  </td>
+                  <td className="max-w-[140px] truncate text-slate-600" title={pb.strategy}>
+                    {pb.strategy}
                   </td>
                   <td className="text-center tabular-nums text-slate-700">{s.influence}</td>
                   <td className="text-center tabular-nums text-slate-700">{s.interest}</td>
                   <td className="max-w-[200px] truncate text-slate-500">{s.observation || "—"}</td>
                 </tr>
-              ))}
+              );
+              })}
               {stakeholders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-400">
+                  <td colSpan={8} className="py-10 text-center text-slate-400">
                     Sin interesados con los filtros actuales.
                   </td>
                 </tr>

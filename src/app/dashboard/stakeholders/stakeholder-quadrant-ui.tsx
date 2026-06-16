@@ -1,5 +1,10 @@
 import type { QuadrantId } from "@/lib/stakeholder-playbook";
-import { QUADRANT_PLAYBOOK, getQuadrantId, quadrantLabelFull } from "@/lib/stakeholder-playbook";
+import {
+  QUADRANT_PLAYBOOK,
+  formatQuadrantTacticsForExport,
+  getQuadrantId,
+  quadrantLabelFull,
+} from "@/lib/stakeholder-playbook";
 
 import type { MatrixStakeholder } from "./stakeholder-matrix-client";
 
@@ -45,37 +50,53 @@ function csvCell(value: string) {
 }
 
 export function exportStakeholdersCsv(rows: MatrixStakeholder[]) {
+  const exportedAt = new Date().toISOString().slice(0, 10);
   const header = [
+    "ID",
     "Nombre",
     "Rol",
-    "Proyecto",
+    "Subproyecto",
     "Influencia",
     "Interés",
+    "Código cuadrante",
+    "Perfil",
     "Cuadrante",
+    "Posición en matriz",
     "Estrategia",
+    "Fundamento estrategia",
+    "Frecuencia comunicación",
+    "Tácticas",
     "Observación",
+    "Fecha exportación",
   ];
   const lines = [
     header.join(","),
     ...rows.map((s) => {
-      const qid = getQuadrantId(s.influence, s.interest);
-      const pb = QUADRANT_PLAYBOOK[qid];
+      const pb = QUADRANT_PLAYBOOK[getQuadrantId(s.influence, s.interest)];
       return [
+        csvCell(s.id),
         csvCell(s.name),
         csvCell(s.role ?? ""),
         csvCell(s.projectName),
         String(s.influence),
         String(s.interest),
+        csvCell(pb.code),
+        csvCell(pb.shortLabel),
         csvCell(pb.fullLabel),
+        csvCell(pb.positionHint),
         csvCell(pb.strategy),
+        csvCell(pb.strategyRationale),
+        csvCell(pb.freq),
+        csvCell(formatQuadrantTacticsForExport(pb.tactics)),
         csvCell(s.observation ?? ""),
+        csvCell(exportedAt),
       ].join(",");
     }),
   ];
   const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "registro-interesados.csv";
+  a.download = `registro-interesados-${exportedAt}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
