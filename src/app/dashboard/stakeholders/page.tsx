@@ -28,6 +28,8 @@ type StakeholdersPageProps = {
     project?: string;
     projectId?: string;
     q?: string;
+    view?: string;
+    quadrant?: string;
   }>;
 };
 
@@ -188,6 +190,8 @@ export default async function StakeholdersPage({ searchParams }: StakeholdersPag
           id: params.id,
           project: initialProject,
           q: params.q,
+          view: params.view,
+          quadrant: params.quadrant,
         }}
         createAction={createAction}
         updateAction={updateAction}
