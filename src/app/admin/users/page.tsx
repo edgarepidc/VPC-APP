@@ -33,6 +33,7 @@ import { db } from "@/lib/db";
 import { ROLE_LABELS } from "@/lib/role-labels";
 import type { RoleKey } from "@/lib/types";
 import { flashMessageFromParam } from "@/lib/server-action-errors";
+import { auditActionLabel, listPlatformUserAudits } from "@/modules/platform-users/audit";
 import { listRecentInvitationsForPlatform } from "@/modules/invitations/service";
 import { listAllTenants } from "@/modules/platform";
 import {
