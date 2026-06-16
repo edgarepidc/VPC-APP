@@ -16,7 +16,10 @@ export const KPI_VALUE_TONES = {
 export type KpiTileTone = keyof typeof KPI_VALUE_TONES;
 
 export const KPI_CARD_BASE =
-  "rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm";
+  "relative overflow-hidden rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 pl-4 shadow-sm ring-1 ring-slate-200/80";
+
+export const KPI_CARD_ACCENT =
+  "pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-lg bg-slate-700";
 
 export const dashKpiTilesGrid =
   "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
@@ -51,6 +54,7 @@ export function KpiTile({
 
   return (
     <div className={`${KPI_CARD_BASE} ${className}`}>
+      <span className={KPI_CARD_ACCENT} aria-hidden />
       {typeof label === "string" ? (
         <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
           {label}

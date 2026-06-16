@@ -19,6 +19,7 @@ import {
 import { uiInput, uiLabel, dashAlertError, dashAlertOk } from "@/lib/ui-classes";
 
 import { KpiTile } from "@/app/dashboard/_components/kpi-tile";
+import { FieldHint } from "@/app/dashboard/_components/field-hint";
 import { DashboardScopeSelect } from "@/app/dashboard/_components/dashboard-scope-select";
 import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
@@ -38,6 +39,7 @@ import {
   isDeliverableBlocked,
   projectWeightAssigned,
 } from "./deliverable-utils";
+import { DELIVERABLE_PROGRESS_HINT } from "./deliverable-progress-hints";
 import { approveNeedsAcuseConfirm, statusBlockReason } from "./deliverable-status-rules";
 import { DeliverableSupportFields } from "./deliverable-support-fields";
 import { DeliverableTemplateModal } from "./deliverable-template-modal";
@@ -601,9 +603,12 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
           <div className="rounded-lg border border-slate-200 bg-white px-[18px] py-3.5">
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
               <div>
-                <div className="text-xs font-semibold">Avance ponderado por esfuerzo</div>
+                <div className="flex items-center text-xs font-semibold">
+                  Avance ponderado por esfuerzo
+                  <FieldHint text={DELIVERABLE_PROGRESS_HINT} wide />
+                </div>
                 <div className="mt-0.5 text-xs text-slate-500">
-                  Cada proyecto reparte <strong className="text-slate-900">100%</strong> entre sus
+                  Cada proyecto reparte <strong className="text-slate-900">100 pts</strong> entre sus
                   entregables según complejidad.
                 </div>
               </div>
@@ -612,7 +617,14 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
                   {pct}%
                 </div>
                 <div className="text-xs text-slate-500">
-                  Media de avance por proyecto ({doneWeight}% completado en total)
+                  Promedio entre proyectos
+                  {totalWeight > 0 ? (
+                    <>
+                      {" "}
+                      · <span className="tabular-nums">{doneWeight}</span>/
+                      <span className="tabular-nums">{totalWeight}</span> pts completados
+                    </>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -648,7 +660,9 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
                 Pendiente ({remPct}%)
               </div>
               <span className="ml-auto text-xs text-slate-400">
-                {totalWeight > 0 ? `${totalWeight}% asignado en cartera` : "Sin entregables"}
+                {totalWeight > 0
+                  ? `${projectCount} proyecto${projectCount !== 1 ? "s" : ""} · ${totalWeight} pts en cartera`
+                  : "Sin entregables"}
               </span>
             </div>
           </div>
