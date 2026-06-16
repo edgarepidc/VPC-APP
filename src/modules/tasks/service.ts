@@ -2,7 +2,12 @@ import type { Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
 
-import { normalizeTaskStatus, type TaskKanbanStatus } from "./constants";
+import { normalizeTaskStatus, normalizeTaskPriority, type TaskKanbanStatus } from "./constants";
+import {
+  parseTaskChecklist,
+  serializeTaskChecklist,
+  type TaskChecklistItem,
+} from "./json";
 
 export type ListTasksFilter = {
   projectId?: string;
@@ -51,6 +56,8 @@ export async function createTask(input: {
   projectId: string;
   title: string;
   status?: TaskKanbanStatus;
+  priority?: string;
+  checklist?: TaskChecklistItem[];
   dueDate?: Date | null;
   assigneeUserId?: string | null;
 }) {
@@ -77,6 +84,8 @@ export async function createTask(input: {
       projectId: input.projectId,
       title,
       status: input.status ?? "todo",
+      priority: normalizeTaskPriority(input.priority ?? "medium"),
+      checklist: serializeTaskChecklist(input.checklist ?? []),
       dueDate: input.dueDate ?? undefined,
       assigneeUserId: input.assigneeUserId ?? undefined,
     },
@@ -88,6 +97,8 @@ export async function updateTask(input: {
   taskId: string;
   title?: string;
   status?: string;
+  priority?: string;
+  checklist?: TaskChecklistItem[];
   projectId?: string;
   dueDate?: Date | null;
   assigneeUserId?: string | null;
@@ -124,6 +135,12 @@ export async function updateTask(input: {
   if (input.status !== undefined) {
     data.status = normalizeTaskStatus(input.status);
   }
+  if (input.priority !== undefined) {
+    data.priority = normalizeTaskPriority(input.priority);
+  }
+  if (input.checklist !== undefined) {
+    data.checklist = serializeTaskChecklist(input.checklist);
+  }
   if (input.projectId !== undefined) {
     data.project = { connect: { id: input.projectId } };
   }
@@ -153,5 +170,11 @@ export async function moveTaskToStatus(input: {
     tenantId: input.tenantId,
     taskId: input.taskId,
     status: input.status,
+  });
+}
+
+export async function getTaskById(tenantId: string, taskId: string) {
+  return db.task.findFirst({
+    where: { id: taskId, tenantId },
   });
 }

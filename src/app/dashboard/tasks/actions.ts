@@ -8,10 +8,12 @@ import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { assertCanAccessProject } from "@/modules/memberships/project-access";
 import {
   TASK_KANBAN_STATUSES,
+  normalizeTaskPriority,
   normalizeTaskStatus,
   type TaskKanbanStatus,
 } from "@/modules/tasks/constants";
-import { createTask, moveTaskToStatus, updateTask } from "@/modules/tasks/service";
+import { parseTaskChecklist } from "@/modules/tasks/json";
+import { createTask, getTaskById, moveTaskToStatus, updateTask } from "@/modules/tasks/service";
 
 function buildTasksUrl(input: {
   view: string;
@@ -73,6 +75,7 @@ export async function createTaskWithContextAction(formData: FormData) {
   const dueRaw = String(formData.get("dueDate") ?? "");
   const dueDate = parseOptionalLocalDate(dueRaw);
   const assigneeUserId = String(formData.get("assigneeUserId") ?? "").trim() || undefined;
+  const priority = normalizeTaskPriority(String(formData.get("priority") ?? "medium"));
 
   if (!projectId || !title) {
     redirect(
@@ -97,6 +100,7 @@ export async function createTaskWithContextAction(formData: FormData) {
       tenantId: s.activeTenantId,
       projectId,
       title,
+      priority,
       dueDate: dueDate ?? undefined,
       assigneeUserId,
     });
@@ -156,6 +160,14 @@ export async function updateTaskAction(formData: FormData) {
   const dueRaw = String(formData.get("dueDate") ?? "");
   const assigneeRaw = String(formData.get("assigneeUserId") ?? "").trim();
   const assigneeUserId = assigneeRaw === "" ? null : assigneeRaw;
+  const priority = normalizeTaskPriority(String(formData.get("priority") ?? "medium"));
+  const checklistRaw = String(formData.get("checklistJson") ?? "[]");
+  let checklist = parseTaskChecklist([]);
+  try {
+    checklist = parseTaskChecklist(JSON.parse(checklistRaw));
+  } catch {
+    checklist = [];
+  }
 
   if (!taskId) throw new Error("Tarea inválida");
   if (!title) throw new Error("El título es obligatorio");
@@ -165,6 +177,8 @@ export async function updateTaskAction(formData: FormData) {
     taskId,
     title,
     status: normalizeTaskStatus(status),
+    priority,
+    checklist,
     projectId,
     dueDate: parseOptionalLocalDate(dueRaw),
     assigneeUserId,
@@ -196,6 +210,30 @@ export async function quickCreateTaskAction(formData: FormData) {
     projectId,
     title,
     status,
+  });
+  revalidatePath("/dashboard/tasks");
+}
+
+export async function toggleTaskChecklistItemAction(formData: FormData) {
+  const s = await getSessionUser();
+  if (!s?.activeTenantId) throw new Error("No autorizado");
+  if (!canWriteWorkspaceData(s)) throw new Error("Sin permiso");
+
+  const taskId = String(formData.get("taskId") ?? "").trim();
+  const itemId = String(formData.get("itemId") ?? "").trim();
+  if (!taskId || !itemId) throw new Error("Datos inválidos");
+
+  const task = await getTaskById(s.activeTenantId, taskId);
+  if (!task) throw new Error("Tarea no encontrada");
+
+  const checklist = parseTaskChecklist(task.checklist).map((item) =>
+    item.id === itemId ? { ...item, done: !item.done } : item,
+  );
+
+  await updateTask({
+    tenantId: s.activeTenantId,
+    taskId,
+    checklist,
   });
   revalidatePath("/dashboard/tasks");
 }

@@ -155,6 +155,8 @@ model Task {
   projectId      String
   title          String
   status         String   @default("todo")
+  priority       String   @default("medium")
+  checklist      Json     @default("[]")
   assigneeUserId String?
   dueDate        DateTime?
   tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)

@@ -52,6 +52,7 @@ export function TasksHeaderControls({
   return (
     <>
       <input
+        id="tasks-search-input"
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}

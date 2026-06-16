@@ -26,7 +26,8 @@ import {
   workScopeProjectIds,
 } from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
-import { normalizeTaskStatus } from "@/modules/tasks/constants";
+import { normalizeTaskPriority, normalizeTaskStatus, TASK_PRIORITY_LABEL, TASK_PRIORITIES } from "@/modules/tasks/constants";
+import { parseTaskChecklist } from "@/modules/tasks/json";
 import { listMemberUsersForTenant } from "@/modules/memberships/service";
 import { listTasksByTenant } from "@/modules/tasks/service";
 
@@ -35,6 +36,7 @@ import { KanbanBoard } from "./kanban-board";
 import { TasksHeaderControls } from "./tasks-header-controls";
 import { TasksCalendarView } from "./tasks-calendar-view";
 import { TasksGanttView } from "./tasks-gantt-view";
+import { TasksKeyboardLayer, TasksShortcutsHint } from "./tasks-keyboard-layer";
 import { TasksTableView } from "./tasks-table-view";
 import type { TaskCardDTO, TaskMemberOption } from "./task-edit-dialog";
 
@@ -159,6 +161,8 @@ export default async function TasksPage({ searchParams }: PageProps) {
     id: t.id,
     title: t.title,
     status: normalizeTaskStatus(t.status),
+    priority: normalizeTaskPriority(t.priority),
+    checklist: parseTaskChecklist(t.checklist),
     projectId: t.projectId,
     projectName: projectDisplayLabel(
       {
@@ -180,6 +184,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
   return (
     <main className={dashPage}>
+      <TasksKeyboardLayer canWrite={canWrite} />
       <DashboardSectionShell
         eyebrow="Tareas"
         title="Seguimiento de actividades"
@@ -254,12 +259,26 @@ export default async function TasksPage({ searchParams }: PageProps) {
                   className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
-              <div className="sm:col-span-2">
+              <div>
+                <label className={uiLabel}>Prioridad</label>
+                <select
+                  name="priority"
+                  defaultValue="medium"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                >
+                  {TASK_PRIORITIES.map((p) => (
+                    <option key={p} value={p}>
+                      {TASK_PRIORITY_LABEL[p]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className={uiLabel}>Fecha límite (opcional)</label>
                 <input
                   type="date"
                   name="dueDate"
-                  className="mt-1 w-full max-w-xs rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -332,9 +351,20 @@ export default async function TasksPage({ searchParams }: PageProps) {
             nextMonthHref={nextMonthHref}
             highlightTodayDay={highlightTodayDay}
             undatedTasks={undatedTasks}
+            projects={projectOptions}
+            members={members}
+            canWrite={canWrite}
           />
         )}
-        {view === "gantt" && <TasksGanttView tasks={taskCards} />}
+        {view === "gantt" && (
+          <TasksGanttView
+            tasks={taskCards}
+            projects={projectOptions}
+            members={members}
+            canWrite={canWrite}
+          />
+        )}
+        <TasksShortcutsHint canWrite={canWrite} />
         </section>
       </DashboardSectionShell>
     </main>

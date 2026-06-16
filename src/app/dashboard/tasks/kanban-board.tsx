@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -13,6 +13,11 @@ import {
 
 import { moveTaskAction, quickCreateTaskAction } from "./actions";
 import { TaskEditDialog, type TaskCardDTO, type TaskMemberOption } from "./task-edit-dialog";
+import {
+  TaskChecklistInline,
+  TaskChecklistProgress,
+  TaskPriorityDot,
+} from "./task-ui";
 
 type ProjectOption = { id: string; name: string };
 
@@ -58,15 +63,21 @@ function KanbanQuickAdd({
   column,
   projectId,
   theme,
+  openSignal = 0,
 }: {
   column: TaskKanbanStatus;
   projectId: string;
   theme: (typeof TASK_KANBAN_COLUMN_THEME)[TaskKanbanStatus];
+  openSignal?: number;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (openSignal > 0 && column === "todo") setOpen(true);
+  }, [openSignal, column]);
 
   function submit() {
     const trimmed = title.trim();
@@ -133,6 +144,15 @@ export function KanbanBoard({ tasks, projects, members, canWrite, defaultProject
   const [dragOverCol, setDragOverCol] = useState<TaskKanbanStatus | null>(null);
   const [editTask, setEditTask] = useState<TaskCardDTO | null>(null);
   const suppressOpenUntilRef = useRef(0);
+  const [quickAddSignal, setQuickAddSignal] = useState(0);
+
+  useEffect(() => {
+    function onQuickAdd() {
+      setQuickAddSignal((n) => n + 1);
+    }
+    window.addEventListener("tasks:quick-add", onQuickAdd);
+    return () => window.removeEventListener("tasks:quick-add", onQuickAdd);
+  }, []);
 
   const byColumn = useMemo(() => {
     const m: Record<TaskKanbanStatus, TaskCardDTO[]> = {
@@ -246,14 +266,27 @@ export function KanbanBoard({ tasks, projects, members, canWrite, defaultProject
                         col === "done" ? "opacity-90" : ""
                       }`}
                     >
-                      <p
-                        className={`text-sm font-medium leading-snug text-slate-900 ${
-                          col === "done" ? "line-through decoration-slate-400" : ""
-                        }`}
-                      >
-                        {task.title}
-                      </p>
+                      <div className="flex items-start gap-2">
+                        <TaskPriorityDot priority={task.priority} />
+                        <p
+                          className={`min-w-0 flex-1 text-sm font-medium leading-snug text-slate-900 ${
+                            col === "done" ? "line-through decoration-slate-400" : ""
+                          }`}
+                        >
+                          {task.title}
+                        </p>
+                      </div>
                       <p className="mt-1.5 truncate text-[11px] text-slate-500">{task.projectName}</p>
+                      {task.checklist.length > 0 ? (
+                        <div className="mt-2">
+                          <TaskChecklistProgress items={task.checklist} />
+                        </div>
+                      ) : null}
+                      <TaskChecklistInline
+                        taskId={task.id}
+                        items={task.checklist}
+                        canWrite={canWrite}
+                      />
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         {due ? (
                           <span
@@ -281,7 +314,12 @@ export function KanbanBoard({ tasks, projects, members, canWrite, defaultProject
                   <p className="py-6 text-center text-[12px] text-slate-400">Sin tareas en esta columna</p>
                 ) : null}
                 {canWrite && defaultProjectId ? (
-                  <KanbanQuickAdd column={col} projectId={defaultProjectId} theme={theme} />
+                  <KanbanQuickAdd
+                    column={col}
+                    projectId={defaultProjectId}
+                    theme={theme}
+                    openSignal={col === "todo" ? quickAddSignal : 0}
+                  />
                 ) : null}
               </div>
             </section>
