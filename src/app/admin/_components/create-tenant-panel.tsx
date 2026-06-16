@@ -146,7 +146,7 @@ export async function CreateTenantPanel({
           </div>
           <div>
             <label className={uiLabel}>Nombre</label>
-            <input name="name" required className={`mt-1 ${uiInput}`} placeholder="Mobility ADO" />
+            <input name="name" required className={`mt-1 ${uiInput}`} placeholder="MobilityDEMO" />
           </div>
           <div>
             <label className={uiLabel}>Slug</label>
@@ -155,7 +155,7 @@ export async function CreateTenantPanel({
               required
               pattern="[a-z0-9]+(-[a-z0-9]+)*"
               className={`mt-1 ${uiInput}`}
-              placeholder="mobility-ado"
+              placeholder="mobility-demo"
             />
           </div>
           <div>

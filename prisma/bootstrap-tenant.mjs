@@ -3,19 +3,19 @@
  *
  * Uso (DATABASE_URL = pooler de Supabase, misma que en Vercel):
  *   BOOTSTRAP_USER_EMAIL=diazcruzee@gmail.com \\
- *   BOOTSTRAP_TENANT_NAME="Mobility ADO" \\
- *   BOOTSTRAP_TENANT_SLUG=mobility-ado \\
+ *   BOOTSTRAP_TENANT_NAME="MobilityDEMO" \\
+ *   BOOTSTRAP_TENANT_SLUG=mobility-demo \\
  *   node prisma/bootstrap-tenant.mjs
  *
- * Si omites nombre/slug, por defecto: Mobility ADO / mobility-ado
+ * Si omites nombre/slug, por defecto: MobilityDEMO / mobility-demo
  */
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 const email = (process.env.BOOTSTRAP_USER_EMAIL ?? "").trim().toLowerCase();
-const tenantName = (process.env.BOOTSTRAP_TENANT_NAME ?? "Mobility ADO").trim();
-const tenantSlug = (process.env.BOOTSTRAP_TENANT_SLUG ?? "mobility-ado")
+const tenantName = (process.env.BOOTSTRAP_TENANT_NAME ?? "MobilityDEMO").trim();
+const tenantSlug = (process.env.BOOTSTRAP_TENANT_SLUG ?? "mobility-demo")
   .trim()
   .toLowerCase()
   .replace(/[^a-z0-9-]+/g, "-")

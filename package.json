@@ -14,6 +14,8 @@
     "prisma:seed": "node prisma/seed.mjs",
     "prisma:bootstrap-tenant": "node prisma/bootstrap-tenant.mjs",
     "prisma:seed-demo": "node prisma/seed-demo.mjs",
+    "prisma:reset-demo": "node prisma/reset-demo.mjs",
+    "prisma:demo-fresh": "node prisma/reset-demo.mjs && node prisma/seed-demo.mjs",
     "prisma:promote-superadmin": "node prisma/promote-superadmin.mjs"
   },
   "dependencies": {
