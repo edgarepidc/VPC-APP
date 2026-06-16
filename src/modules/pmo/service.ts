@@ -313,6 +313,23 @@ export async function getPmoSnapshot(
   );
   const totalMeetingCostMxn = meetingsLast30.reduce((sum, row) => sum + row.totalCost, 0);
 
+  const now = new Date();
+  const navBadgeSource = {
+    overdueDeliverables: deliverables
+      .filter(
+        (d) =>
+          d.dueDate &&
+          d.dueDate < now &&
+          d.status !== "delivered" &&
+          d.status !== "approved",
+      )
+      .map((d) => ({ projectId: d.projectId })),
+    criticalRisks: criticalRiskRowsAll.map((risk) => ({ projectId: risk.projectId })),
+    deteriorationAlerts: deteriorationAlerts.map((alert) => ({ projectId: alert.projectId })),
+    meetingCostAlerts: meetingCostAlerts.map((alert) => ({ projectId: alert.projectId })),
+    stakeholderAlerts: stakeholderAlertsAll.map((alert) => ({ projectId: alert.projectId })),
+  };
+
   return {
     kpis: {
       projects: projects.length,
@@ -347,6 +364,7 @@ export async function getPmoSnapshot(
     },
     deteriorationAlerts,
     meetingCostAlerts,
+    navBadgeSource,
     deliverablesRadar: {
       onTimePct: deliverableOnTimePct,
       avgLeadDays: deliverableAvgLeadDays,

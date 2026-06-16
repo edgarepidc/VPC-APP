@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useMemo } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { dashTabActive, dashTabIdle } from "@/lib/ui-classes";
+import type { ProjectHierarchyRow } from "@/lib/project-hierarchy";
 import {
   PMO_HUB,
   PMO_PROJECTS,
@@ -15,7 +17,11 @@ import {
   PMO_STAKEHOLDERS,
 } from "@/lib/dashboard-paths";
 
-import type { PmoNavBadges } from "./pmo-action-utils";
+import {
+  type PmoActionItem,
+  type PmoNavBadgeSource,
+  computeScopedPmoNavBadges,
+} from "./pmo-action-utils";
 
 const TABS = [
   { href: PMO_HUB, label: "Resumen", exact: true, badgeKey: "resumen" as const },
@@ -33,12 +39,28 @@ function isTabActive(pathname: string, href: string, exact: boolean) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function tabHref(baseHref: string, scopeProject: string) {
+  if (!scopeProject) return baseHref;
+  const url = new URL(baseHref, "http://local");
+  url.searchParams.set("project", scopeProject);
+  return `${url.pathname}?${url.searchParams.toString()}`;
+}
+
 type PmoSubnavProps = {
-  badges?: PmoNavBadges;
+  badgeSource: PmoNavBadgeSource;
+  actionItems: PmoActionItem[];
+  projectHierarchy: ProjectHierarchyRow[];
 };
 
-export function PmoSubnav({ badges }: PmoSubnavProps) {
+export function PmoSubnav({ badgeSource, actionItems, projectHierarchy }: PmoSubnavProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const scopeProject = searchParams.get("project") ?? searchParams.get("projectId") ?? "";
+
+  const badges = useMemo(
+    () => computeScopedPmoNavBadges(badgeSource, actionItems, projectHierarchy, scopeProject),
+    [badgeSource, actionItems, projectHierarchy, scopeProject],
+  );
 
   return (
     <nav
@@ -47,11 +69,11 @@ export function PmoSubnav({ badges }: PmoSubnavProps) {
     >
       {TABS.map((tab) => {
         const active = isTabActive(pathname, tab.href, tab.exact);
-        const count = tab.badgeKey && badges ? badges[tab.badgeKey] : 0;
+        const count = tab.badgeKey ? badges[tab.badgeKey] : 0;
         return (
           <Link
             key={tab.href}
-            href={tab.href}
+            href={tabHref(tab.href, scopeProject)}
             className={`${active ? dashTabActive : dashTabIdle} inline-flex shrink-0 items-center whitespace-nowrap`}
             aria-current={active ? "page" : undefined}
           >

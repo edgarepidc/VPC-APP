@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
-import { getSessionProjectIdsFilter } from "@/lib/project-scope";
+import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import { requireTenantId } from "@/lib/tenancy";
 import { getCachedPmoSnapshot } from "@/modules/pmo/cached-snapshot";
 
-import { buildPmoActionQueue, buildPmoNavBadges } from "./pmo-action-utils";
+import { buildPmoActionQueue } from "./pmo-action-utils";
 import { PmoSubnav } from "./pmo-subnav";
 
 export default async function PmoHubLayout({
@@ -16,11 +16,14 @@ export default async function PmoHubLayout({
   const tenantId = await requireTenantId();
   const projectIdsFilter = await getSessionProjectIdsFilter(session, tenantId);
 
-  const snapshot = await getCachedPmoSnapshot(tenantId, {
-    restrictToProjectIds: projectIdsFilter,
-  });
+  const [hierarchy, snapshot] = await Promise.all([
+    getProjectHierarchyForSession(session, tenantId),
+    getCachedPmoSnapshot(tenantId, {
+      restrictToProjectIds: projectIdsFilter,
+    }),
+  ]);
 
-  const actionQueue = buildPmoActionQueue({
+  const actionItems = buildPmoActionQueue({
     overdueDeliverables: snapshot.overdueDeliverables,
     criticalRiskRows: snapshot.criticalRiskRows,
     stakeholderAlerts: snapshot.stakeholderAlerts,
@@ -28,18 +31,13 @@ export default async function PmoHubLayout({
     meetingCostAlerts: snapshot.meetingCostAlerts,
   });
 
-  const badges = buildPmoNavBadges({
-    overdueDeliverablesCount: snapshot.kpis.overdueDeliverables,
-    criticalRisksCount: snapshot.kpis.criticalRisks,
-    deteriorationAlertsCount: snapshot.deteriorationAlerts.length,
-    meetingCostAlertsCount: snapshot.meetingCostAlerts.length,
-    stakeholderAlertsCount: snapshot.stakeholderAlertsCount,
-    actionQueueCount: actionQueue.length,
-  });
-
   return (
     <>
-      <PmoSubnav badges={badges} />
+      <PmoSubnav
+        badgeSource={snapshot.navBadgeSource}
+        actionItems={actionItems}
+        projectHierarchy={hierarchy.projects}
+      />
       {children}
     </>
   );

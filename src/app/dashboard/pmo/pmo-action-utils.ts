@@ -6,6 +6,7 @@ import {
   STAKEHOLDER_DETAIL_IN_PROJECT,
   STAKEHOLDERS_PROJECT,
 } from "@/lib/dashboard-paths";
+import { resolveProjectFilterIds, type ProjectHierarchyRow } from "@/lib/project-hierarchy";
 
 export type PmoActionKind =
   | "escalation_deterioration"
@@ -21,6 +22,15 @@ export type PmoActionItem = {
   sublabel: string;
   href: string;
   priority: number;
+  projectId: string;
+};
+
+export type PmoNavBadgeSource = {
+  overdueDeliverables: { projectId: string }[];
+  criticalRisks: { projectId: string }[];
+  deteriorationAlerts: { projectId: string }[];
+  meetingCostAlerts: { projectId: string }[];
+  stakeholderAlerts: { projectId: string }[];
 };
 
 export type PmoNavBadges = {
@@ -114,6 +124,7 @@ export function buildPmoActionQueue(input: PmoActionQueueInput): PmoActionItem[]
         : `${alert.title} · verde → rojo`,
       href: PMO_ESCALATIONS_PROJECT(alert.projectId),
       priority: kindRank.escalation_deterioration,
+      projectId: alert.projectId,
     });
   }
 
@@ -125,6 +136,7 @@ export function buildPmoActionQueue(input: PmoActionQueueInput): PmoActionItem[]
       sublabel: `${risk.project.name} · score ${risk.residualScore}/25`,
       href: RISK_DETAIL_IN_PROJECT(risk.id, risk.project.id),
       priority: kindRank.risk_critical,
+      projectId: risk.project.id,
     });
   }
 
@@ -138,6 +150,7 @@ export function buildPmoActionQueue(input: PmoActionQueueInput): PmoActionItem[]
       }`,
       href: DELIVERABLE_DETAIL_IN_PROJECT(deliverable.id, deliverable.project.id),
       priority: kindRank.deliverable_overdue,
+      projectId: deliverable.project.id,
     });
   }
 
@@ -149,6 +162,7 @@ export function buildPmoActionQueue(input: PmoActionQueueInput): PmoActionItem[]
       sublabel: `${alert.projectName} · ${meetingAlertLabels[alert.alertType]}`,
       href: PMO_MEETINGS_PROJECT(alert.projectId),
       priority: kindRank.meeting_cost,
+      projectId: alert.projectId,
     });
   }
 
@@ -162,26 +176,41 @@ export function buildPmoActionQueue(input: PmoActionQueueInput): PmoActionItem[]
         ? STAKEHOLDER_DETAIL_IN_PROJECT(alert.stakeholderId, alert.projectId)
         : STAKEHOLDERS_PROJECT(alert.projectId),
       priority: kindRank.stakeholder_alert,
+      projectId: alert.projectId,
     });
   }
 
   return items.sort((a, b) => a.priority - b.priority).slice(0, 12);
 }
 
-export function buildPmoNavBadges(input: {
-  overdueDeliverablesCount: number;
-  criticalRisksCount: number;
-  deteriorationAlertsCount: number;
-  meetingCostAlertsCount: number;
-  stakeholderAlertsCount: number;
-  actionQueueCount: number;
-}): PmoNavBadges {
+function filterByProjectScope<T extends { projectId: string }>(
+  items: T[],
+  filterIds: string[] | null,
+) {
+  if (!filterIds) return items;
+  return items.filter((item) => filterIds.includes(item.projectId));
+}
+
+export function computeScopedPmoNavBadges(
+  source: PmoNavBadgeSource,
+  actionItems: PmoActionItem[],
+  projectHierarchy: ProjectHierarchyRow[],
+  scopeFilterId: string,
+): PmoNavBadges {
+  const filterIds = resolveProjectFilterIds(projectHierarchy, scopeFilterId || null);
+  const overdue = filterByProjectScope(source.overdueDeliverables, filterIds);
+  const risks = filterByProjectScope(source.criticalRisks, filterIds);
+  const escalations = filterByProjectScope(source.deteriorationAlerts, filterIds);
+  const meetings = filterByProjectScope(source.meetingCostAlerts, filterIds);
+  const stakeholders = filterByProjectScope(source.stakeholderAlerts, filterIds);
+  const resumen = filterByProjectScope(actionItems, filterIds).length;
+
   return {
-    resumen: input.actionQueueCount,
-    deliverables: input.overdueDeliverablesCount,
-    risks: input.criticalRisksCount,
-    escalations: input.deteriorationAlertsCount,
-    meetings: input.meetingCostAlertsCount,
-    stakeholders: input.stakeholderAlertsCount,
+    resumen,
+    deliverables: overdue.length,
+    risks: risks.length,
+    escalations: escalations.length,
+    meetings: meetings.length,
+    stakeholders: stakeholders.length,
   };
 }
