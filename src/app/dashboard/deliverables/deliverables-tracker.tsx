@@ -492,8 +492,7 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
   return (
     <DashboardSectionShell
       eyebrow="Entregables"
-      title="Tracker de compromisos"
-      subtitle="Estados, pesos y acuses por subproyecto."
+      title="Estados, pesos y acuses por subproyecto."
       titleAs="h1"
       headerTrailing={
         <>
