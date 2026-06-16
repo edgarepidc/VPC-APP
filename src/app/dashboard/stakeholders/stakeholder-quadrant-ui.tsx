@@ -8,13 +8,6 @@ import {
 
 import type { MatrixStakeholder } from "./stakeholder-matrix-client";
 
-export const QUADRANT_FILTER_OPTIONS: { id: QuadrantId; label: string }[] = [
-  { id: "q1", label: "Q1 · Promotores" },
-  { id: "q2", label: "Q2 · Latentes" },
-  { id: "q3", label: "Q3 · Defensores" },
-  { id: "q4", label: "Q4 · Espectadores" },
-];
-
 export const QUADRANT_BADGE_CLASS: Record<QuadrantId, string> = {
   q1: "bg-emerald-50 text-emerald-800 ring-emerald-200",
   q2: "bg-amber-50 text-amber-900 ring-amber-200",

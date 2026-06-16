@@ -32,7 +32,6 @@ import {
 } from "./stakeholder-action-utils";
 import { STAKEHOLDER_KPI_HINTS } from "./stakeholder-field-hints";
 import { StakeholderKpiLabel } from "./stakeholder-field-label";
-import { QUADRANT_FILTER_OPTIONS } from "./stakeholder-quadrant-ui";
 import { StakeholdersActionQueue } from "./stakeholders-action-queue";
 import {
   StakeholdersKeyboardLayer,
@@ -224,8 +223,6 @@ export function StakeholderManagerView({
       total: projectScoped.length,
       promotores: countQ("q1"),
       latentes: countQ("q2"),
-      defensores: countQ("q3"),
-      espectadores: countQ("q4"),
       gaps,
     };
   }, [projectScoped, actionItems]);
@@ -339,37 +336,6 @@ export function StakeholderManagerView({
             activeId={selectedId}
             onSelect={handleActionSelect}
           />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Cuadrante
-          </span>
-          <select
-            value={quadrantFilter}
-            onChange={(e) => setQuadrant(normalizeQuadrant(e.target.value))}
-            className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-900 shadow-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
-            aria-label="Filtrar por cuadrante"
-          >
-            <option value="">Todos los cuadrantes</option>
-            {QUADRANT_FILTER_OPTIONS.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          {quadrantFilter ? (
-            <button
-              type="button"
-              onClick={() => setQuadrant("")}
-              className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Limpiar cuadrante
-            </button>
-          ) : null}
-          <span className="text-[11px] text-slate-400">
-            Q3: {kpis.defensores} · Q4: {kpis.espectadores}
-          </span>
         </div>
 
         <section className={`${dashCard} p-4`}>
