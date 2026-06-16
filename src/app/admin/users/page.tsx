@@ -32,7 +32,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { ROLE_LABELS } from "@/lib/role-labels";
 import type { RoleKey } from "@/lib/types";
-import { auditActionLabel, listPlatformUserAudits } from "@/modules/platform-users/audit";
+import { flashMessageFromParam } from "@/lib/server-action-errors";
 import { listRecentInvitationsForPlatform } from "@/modules/invitations/service";
 import { listAllTenants } from "@/modules/platform";
 import {
@@ -126,6 +126,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     ...(filterTenant ? { tenantId: filterTenant } : {}),
   }).toString()}`;
 
+  const flashError = flashMessageFromParam(params.error);
+  const flashOk = flashMessageFromParam(params.ok);
+
   return (
     <div className={adminPage}>
       <DashboardPageHeader
@@ -133,16 +136,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         description="Alta, membresías, invitaciones y auditoría de accesos."
       />
 
-      {params.error && (
-        <p className={adminAlertError}>
-          {decodeURIComponent(params.error.replace(/\+/g, " "))}
-        </p>
-      )}
-      {params.ok && (
-        <p className={adminAlertOk}>
-          {decodeURIComponent(params.ok.replace(/\+/g, " "))}
-        </p>
-      )}
+      {flashError && <p className={adminAlertError}>{flashError}</p>}
+      {flashOk && <p className={adminAlertOk}>{flashOk}</p>}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <KpiCard

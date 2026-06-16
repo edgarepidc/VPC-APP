@@ -93,7 +93,7 @@ export function UserMembershipManager({
                       type="submit"
                       className={adminActionBtnSecondary.replace("min-w-[5.25rem]", "min-w-0 px-2")}
                     >
-                      Guardar rol
+                      Guardar rol e iniciativas
                     </button>
                   </div>
                   <AdminManagerProjectScopeFields

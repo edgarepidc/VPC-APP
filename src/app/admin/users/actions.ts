@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { requirePlatformSuperAdmin } from "@/lib/auth/platform-admin";
+import { isNextNavigationError } from "@/lib/server-action-errors";
 import type { RoleKey } from "@/lib/types";
 import { parseManagerProjectScopeFromForm } from "@/modules/memberships/project-access";
 import { PlanLimitError } from "@/modules/platform";
@@ -92,6 +93,7 @@ export async function createUserAction(formData: FormData) {
       }),
     );
   } catch (e) {
+    if (isNextNavigationError(e)) throw e;
     const msg = e instanceof PlanLimitError ? e.message : (e as Error).message;
     redirect(
       usersQuery({
@@ -131,6 +133,7 @@ export async function updateUserAction(formData: FormData) {
     revalidatePath("/admin/users");
     redirect(usersQuery({ q: filterQ, tenantId: filterTenant, ok: "Perfil actualizado" }));
   } catch (e) {
+    if (isNextNavigationError(e)) throw e;
     redirect(
       usersQuery({
         q: filterQ,
@@ -165,6 +168,7 @@ export async function addMembershipAction(formData: FormData) {
     revalidatePath("/admin/users");
     redirect(usersQuery({ q: filterQ, tenantId: filterTenant, ok: "Organización asignada" }));
   } catch (e) {
+    if (isNextNavigationError(e)) throw e;
     const msg = e instanceof PlanLimitError ? e.message : (e as Error).message;
     redirect(usersQuery({ q: filterQ, tenantId: filterTenant, error: msg }));
   }
@@ -192,8 +196,9 @@ export async function changeMembershipRoleAction(formData: FormData) {
       actorUserId: s.userId,
     });
     revalidatePath("/admin/users");
-    redirect(usersQuery({ q: filterQ, tenantId: filterTenant, ok: "Rol actualizado" }));
+    redirect(usersQuery({ q: filterQ, tenantId: filterTenant, ok: "Rol e iniciativas actualizados" }));
   } catch (e) {
+    if (isNextNavigationError(e)) throw e;
     redirect(usersQuery({ q: filterQ, tenantId: filterTenant, error: (e as Error).message }));
   }
 }
@@ -218,6 +223,7 @@ export async function removeMembershipAction(formData: FormData) {
     revalidatePath("/admin/users");
     redirect(usersQuery({ q: filterQ, tenantId: filterTenant, ok: "Usuario removido de la org" }));
   } catch (e) {
+    if (isNextNavigationError(e)) throw e;
     redirect(usersQuery({ q: filterQ, tenantId: filterTenant, error: (e as Error).message }));
   }
 }
