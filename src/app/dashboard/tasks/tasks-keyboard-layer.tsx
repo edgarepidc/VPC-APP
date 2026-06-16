@@ -30,7 +30,7 @@ export function TasksKeyboardLayer({ canWrite }: TasksKeyboardLayerProps) {
 
       if ((e.key === "n" || e.key === "N") && canWrite && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
-        window.dispatchEvent(new CustomEvent("tasks:quick-add"));
+        window.dispatchEvent(new CustomEvent("tasks:open-create"));
       }
     }
 
@@ -51,6 +51,7 @@ export function TasksShortcutsHint({ canWrite }: { canWrite: boolean }) {
           · <kbd className="rounded border border-slate-200 bg-slate-50 px-1">N</kbd> nueva tarea
         </>
       ) : null}
+      . En Kanban también puedes usar el quick-add de cada columna.
     </p>
   );
 }

@@ -6,14 +6,8 @@ import {
   dashAlertError,
   dashAlertOk,
   dashAlertWarn,
-  dashCard,
   dashCardBody,
-  dashDetailsBody,
-  dashDetailsSummary,
   dashPage,
-  dashTabActive,
-  dashTabIdle,
-  uiLabel,
 } from "@/lib/ui-classes";
 import { PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
@@ -26,29 +20,26 @@ import {
   workScopeProjectIds,
 } from "@/lib/project-hierarchy";
 import { requireTenantId } from "@/lib/tenancy";
-import { normalizeTaskPriority, normalizeTaskStatus, TASK_PRIORITY_LABEL, TASK_PRIORITIES } from "@/modules/tasks/constants";
+import {
+  normalizeTaskPriority,
+  normalizeTaskStatus,
+} from "@/modules/tasks/constants";
 import { parseTaskChecklist } from "@/modules/tasks/json";
 import { listMemberUsersForTenant } from "@/modules/memberships/service";
 import { listTasksByTenant } from "@/modules/tasks/service";
 
-import { createTaskWithContextAction } from "./actions";
 import { KanbanBoard } from "./kanban-board";
+import { TasksFilterBar } from "./tasks-filter-bar";
 import { TasksHeaderControls } from "./tasks-header-controls";
 import { TasksCalendarView } from "./tasks-calendar-view";
 import { TasksGanttView } from "./tasks-gantt-view";
 import { TasksKeyboardLayer, TasksShortcutsHint } from "./tasks-keyboard-layer";
+import { buildTasksHref, normalizeTaskView, type TaskView } from "./tasks-query";
 import { TasksTableView } from "./tasks-table-view";
+import { TasksViewBar } from "./tasks-view-bar";
 import type { TaskCardDTO, TaskMemberOption } from "./task-edit-dialog";
 
 export const dynamic = "force-dynamic";
-
-const VIEWS = ["kanban", "table", "calendar", "gantt"] as const;
-type View = (typeof VIEWS)[number];
-
-function normalizeView(raw: string | undefined): View {
-  const v = raw?.trim().toLowerCase();
-  return VIEWS.includes(v as View) ? (v as View) : "kanban";
-}
 
 /** `m` es índice de mes 0–11. */
 function parseYearMonth(raw: string | undefined): { y: number; m: number } {
@@ -73,13 +64,15 @@ function addMonths(y: number, mIndex: number, delta: number): { y: number; m: nu
   return { y: d.getFullYear(), m: d.getMonth() };
 }
 
-function tasksHref(view: View, project: string, q: string, month?: string): string {
-  const sp = new URLSearchParams();
-  sp.set("view", view);
-  if (project.trim()) sp.set("project", project.trim());
-  if (q.trim()) sp.set("q", q.trim());
-  if (month && /^\d{4}-\d{2}$/.test(month)) sp.set("month", month);
-  return `/dashboard/tasks?${sp.toString()}`;
+function resolveAssigneeFilter(
+  raw: string | undefined,
+  currentUserId: string,
+): string | null | undefined {
+  const v = raw?.trim();
+  if (!v) return undefined;
+  if (v === "none") return null;
+  if (v === "me") return currentUserId;
+  return v;
 }
 
 type PageProps = {
@@ -89,6 +82,9 @@ type PageProps = {
     view?: string;
     project?: string;
     q?: string;
+    assignee?: string;
+    priority?: string;
+    status?: string;
     month?: string;
   }>;
 };
@@ -100,18 +96,41 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
   const tenantId = await requireTenantId();
   const canWrite = canWriteWorkspaceData(session);
-  const view = normalizeView(params.view);
+  const view = normalizeTaskView(params.view);
   const projectFilter = params.project?.trim() || undefined;
   const qFilter = params.q?.trim() || undefined;
   const pf = projectFilter ?? "";
   const qf = qFilter ?? "";
+  const assigneeParam = params.assignee?.trim() ?? "";
+  const priorityParam = params.priority?.trim() ?? "";
+  const statusParam = params.status?.trim() ?? "";
 
   const { y: calY, m: calM } = parseYearMonth(params.month);
   const monthQueryValue = formatYearMonth(calY, calM);
   const prevCal = addMonths(calY, calM, -1);
   const nextCal = addMonths(calY, calM, 1);
-  const prevMonthHref = tasksHref("calendar", pf, qf, formatYearMonth(prevCal.y, prevCal.m));
-  const nextMonthHref = tasksHref("calendar", pf, qf, formatYearMonth(nextCal.y, nextCal.m));
+
+  const filterContext = {
+    view,
+    project: pf,
+    q: qf,
+    assignee: assigneeParam || undefined,
+    priority: priorityParam || undefined,
+    status: statusParam || undefined,
+    month: view === "calendar" ? monthQueryValue : undefined,
+  };
+
+  const prevMonthHref = buildTasksHref({
+    ...filterContext,
+    view: "calendar",
+    month: formatYearMonth(prevCal.y, prevCal.m),
+  });
+  const nextMonthHref = buildTasksHref({
+    ...filterContext,
+    view: "calendar",
+    month: formatYearMonth(nextCal.y, nextCal.m),
+  });
+
   const serverNow = new Date();
   const highlightTodayDay =
     serverNow.getFullYear() === calY && serverNow.getMonth() === calM
@@ -128,10 +147,15 @@ export default async function TasksPage({ searchParams }: PageProps) {
       : resolvedFilter;
   }
 
+  const assigneeUserId = resolveAssigneeFilter(assigneeParam, session.userId);
+
   const [items, memberRows] = await Promise.all([
     listTasksByTenant(tenantId, {
       q: qFilter,
       restrictToProjectIds: effectiveRestrict,
+      assigneeUserId,
+      priority: priorityParam || undefined,
+      status: statusParam || undefined,
     }),
     listMemberUsersForTenant(tenantId),
   ]);
@@ -191,9 +215,13 @@ export default async function TasksPage({ searchParams }: PageProps) {
         titleAs="h1"
         headerTrailing={
           <TasksHeaderControls
+            key={`${pf}-${qf}-${assigneeParam}-${priorityParam}-${statusParam}`}
             view={view}
             project={pf}
             q={qf}
+            assignee={assigneeParam}
+            priority={priorityParam}
+            status={statusParam}
             month={view === "calendar" ? monthQueryValue : undefined}
             groups={hierarchy.groups}
           />
@@ -205,166 +233,83 @@ export default async function TasksPage({ searchParams }: PageProps) {
         {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
 
         <section className={`border-t border-slate-100 ${dashCardBody}`}>
-        <nav className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
-          {(
-            [
-              ["kanban", "Kanban"],
-              ["table", "Tabla"],
-              ["calendar", "Calendario"],
-              ["gantt", "Línea de tiempo"],
-            ] as const
-          ).map(([v, label]) => (
-            <Link
-              key={v}
-              href={tasksHref(v, pf, qf, v === "calendar" ? monthQueryValue : undefined)}
-              className={view === v ? dashTabActive : dashTabIdle}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-
-        {canWrite && hasProjects && (
-          <details className={`${dashCard} mt-4`}>
-            <summary className={dashDetailsSummary}>Nueva tarea</summary>
-            <form action={createTaskWithContextAction} className={`grid gap-3 sm:grid-cols-2 ${dashDetailsBody}`}>
-              <input type="hidden" name="view" value={view} />
-              <input type="hidden" name="project" value={pf} />
-              <input type="hidden" name="q" value={qf} />
-              {view === "calendar" ? (
-                <input type="hidden" name="month" value={monthQueryValue} />
-              ) : null}
-              <div className="sm:col-span-2">
-                <label className={uiLabel}>Subproyecto</label>
-                <select
-                  name="projectId"
-                  required
-                  defaultValue={defaultTaskProjectId}
-                  className="mt-1 w-full max-w-md rounded-md border border-slate-300 px-3 py-2 text-sm"
-                >
-                  {projectOptions.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label className={uiLabel}>Título</label>
-                <input
-                  name="title"
-                  required
-                  maxLength={500}
-                  placeholder="Describe la tarea"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className={uiLabel}>Prioridad</label>
-                <select
-                  name="priority"
-                  defaultValue="medium"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                >
-                  {TASK_PRIORITIES.map((p) => (
-                    <option key={p} value={p}>
-                      {TASK_PRIORITY_LABEL[p]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={uiLabel}>Fecha límite (opcional)</label>
-                <input
-                  type="date"
-                  name="dueDate"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className={uiLabel}>Responsable (opcional)</label>
-                <select
-                  name="assigneeUserId"
-                  className="mt-1 w-full max-w-md rounded-md border border-slate-300 px-3 py-2 text-sm"
-                >
-                  <option value="">Sin asignar</option>
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name?.trim() || m.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <button
-                  type="submit"
-                  className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                >
-                  Crear tarea
-                </button>
-              </div>
-            </form>
-          </details>
-        )}
-
-        {canWrite && !hasProjects && (
-          <p className={`mt-4 ${dashAlertWarn}`}>
-            No hay proyectos.{" "}
-            <Link href={PMO_PROJECTS} className="font-medium underline">
-              Crea un proyecto
-            </Link>{" "}
-            primero.
-          </p>
-        )}
-
-        {!canWrite && (
-          <p className={`mt-4 ${dashAlertWarn}`}>
-            Tu rol solo permite ver tareas.
-          </p>
-        )}
-      </section>
-
-      <section className={`border-t border-slate-100 ${dashCardBody}`}>
-        {view === "kanban" && (
-          <KanbanBoard
-            tasks={taskCards}
+          <TasksViewBar
+            view={view as TaskView}
+            filterContext={filterContext}
+            canWrite={canWrite}
+            hasProjects={hasProjects}
             projects={projectOptions}
             members={members}
-            canWrite={canWrite}
             defaultProjectId={defaultTaskProjectId}
           />
-        )}
-        {view === "table" && (
-          <TasksTableView
-            tasks={taskCards}
-            projects={projectOptions}
+
+          <TasksFilterBar
+            view={view}
+            project={pf}
+            q={qf}
+            assignee={assigneeParam}
+            priority={priorityParam}
+            status={statusParam}
+            month={view === "calendar" ? monthQueryValue : undefined}
             members={members}
-            canWrite={canWrite}
           />
-        )}
-        {view === "calendar" && (
-          <TasksCalendarView
-            tasks={taskCards}
-            calendarMonth={calM + 1}
-            calendarYear={calY}
-            prevMonthHref={prevMonthHref}
-            nextMonthHref={nextMonthHref}
-            highlightTodayDay={highlightTodayDay}
-            undatedTasks={undatedTasks}
-            projects={projectOptions}
-            members={members}
-            canWrite={canWrite}
-          />
-        )}
-        {view === "gantt" && (
-          <TasksGanttView
-            tasks={taskCards}
-            projects={projectOptions}
-            members={members}
-            canWrite={canWrite}
-          />
-        )}
-        <TasksShortcutsHint canWrite={canWrite} />
+
+          {canWrite && !hasProjects && (
+            <p className={`mt-4 ${dashAlertWarn}`}>
+              No hay proyectos.{" "}
+              <Link href={PMO_PROJECTS} className="font-medium underline">
+                Crea un proyecto
+              </Link>{" "}
+              primero.
+            </p>
+          )}
+
+          {!canWrite && (
+            <p className={`mt-4 ${dashAlertWarn}`}>Tu rol solo permite ver tareas.</p>
+          )}
+        </section>
+
+        <section className={`border-t border-slate-100 ${dashCardBody}`}>
+          {view === "kanban" && (
+            <KanbanBoard
+              tasks={taskCards}
+              projects={projectOptions}
+              members={members}
+              canWrite={canWrite}
+              defaultProjectId={defaultTaskProjectId}
+            />
+          )}
+          {view === "table" && (
+            <TasksTableView
+              tasks={taskCards}
+              projects={projectOptions}
+              members={members}
+              canWrite={canWrite}
+            />
+          )}
+          {view === "calendar" && (
+            <TasksCalendarView
+              tasks={taskCards}
+              calendarMonth={calM + 1}
+              calendarYear={calY}
+              prevMonthHref={prevMonthHref}
+              nextMonthHref={nextMonthHref}
+              highlightTodayDay={highlightTodayDay}
+              undatedTasks={undatedTasks}
+              projects={projectOptions}
+              members={members}
+              canWrite={canWrite}
+            />
+          )}
+          {view === "gantt" && (
+            <TasksGanttView
+              tasks={taskCards}
+              projects={projectOptions}
+              members={members}
+              canWrite={canWrite}
+            />
+          )}
+          <TasksShortcutsHint canWrite={canWrite} />
         </section>
       </DashboardSectionShell>
     </main>

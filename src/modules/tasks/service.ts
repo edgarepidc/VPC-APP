@@ -13,6 +13,9 @@ export type ListTasksFilter = {
   /** Búsqueda por título */
   q?: string;
   restrictToProjectIds?: string[];
+  assigneeUserId?: string | null;
+  priority?: string;
+  status?: string;
 };
 
 export async function listTasksByTenant(
@@ -26,6 +29,12 @@ export async function listTasksByTenant(
       tenantId,
       ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
       ...(filter?.projectId ? { projectId: filter.projectId } : {}),
+      ...(filter?.assigneeUserId === null ? { assigneeUserId: null } : {}),
+      ...(filter?.assigneeUserId ? { assigneeUserId: filter.assigneeUserId } : {}),
+      ...(filter?.priority
+        ? { priority: normalizeTaskPriority(filter.priority) }
+        : {}),
+      ...(filter?.status ? { status: normalizeTaskStatus(filter.status) } : {}),
       ...(q
         ? {
             title: { contains: q, mode: "insensitive" as const },

@@ -15,23 +15,32 @@ import {
 import { parseTaskChecklist } from "@/modules/tasks/json";
 import { createTask, getTaskById, moveTaskToStatus, updateTask } from "@/modules/tasks/service";
 
+import { buildTasksHref, tasksFilterContextFromForm } from "./tasks-query";
+
 function buildTasksUrl(input: {
   view: string;
   project: string;
   q: string;
+  assignee?: string;
+  priority?: string;
+  status?: string;
   extra?: Record<string, string>;
 }) {
-  const sp = new URLSearchParams();
-  const view = ["kanban", "table", "calendar", "gantt"].includes(input.view)
-    ? input.view
-    : "kanban";
-  sp.set("view", view);
-  if (input.project.trim()) sp.set("project", input.project.trim());
-  if (input.q.trim()) sp.set("q", input.q.trim());
-  if (input.extra) {
-    for (const [k, v] of Object.entries(input.extra)) {
-      sp.set(k, v);
-    }
+  const month = input.extra?.month;
+  const { month: _m, ...extra } = input.extra ?? {};
+  const base = buildTasksHref({
+    view: input.view,
+    project: input.project,
+    q: input.q,
+    assignee: input.assignee,
+    priority: input.priority,
+    status: input.status,
+    month,
+  });
+  if (!extra || Object.keys(extra).length === 0) return base;
+  const sp = new URLSearchParams(base.split("?")[1] ?? "");
+  for (const [k, v] of Object.entries(extra)) {
+    if (k !== "month") sp.set(k, v);
   }
   return `/dashboard/tasks?${sp.toString()}`;
 }
@@ -52,12 +61,17 @@ export async function createTaskWithContextAction(formData: FormData) {
   const s = await getSessionUser();
   if (!s?.activeTenantId) redirect("/login");
 
-  const view = String(formData.get("view") ?? "kanban");
-  const projectFilter = String(formData.get("project") ?? "");
-  const q = String(formData.get("q") ?? "");
-  const month = String(formData.get("month") ?? "").trim();
-  const monthExtra =
-    view === "calendar" && /^\d{4}-\d{2}$/.test(month) ? { month } : undefined;
+  const ctx = tasksFilterContextFromForm(formData);
+  const view = ctx.view;
+  const projectFilter = ctx.project;
+  const q = ctx.q;
+  const month = ctx.month && /^\d{4}-\d{2}$/.test(ctx.month) ? ctx.month : undefined;
+  const monthExtra = view === "calendar" && month ? { month } : undefined;
+  const filterParams = {
+    assignee: ctx.assignee,
+    priority: ctx.priority,
+    status: ctx.status,
+  };
 
   if (!canWriteWorkspaceData(s)) {
     redirect(
@@ -65,6 +79,7 @@ export async function createTaskWithContextAction(formData: FormData) {
         view,
         project: projectFilter,
         q,
+        ...filterParams,
         extra: { ...monthExtra, error: "No tienes permiso para crear tareas" },
       }),
     );
@@ -83,6 +98,7 @@ export async function createTaskWithContextAction(formData: FormData) {
         view,
         project: projectFilter,
         q,
+        ...filterParams,
         extra: { ...monthExtra, error: "Proyecto y título son obligatorios" },
       }),
     );
@@ -109,6 +125,7 @@ export async function createTaskWithContextAction(formData: FormData) {
         view,
         project: projectFilter,
         q,
+        ...filterParams,
         extra: { ...monthExtra, ok: "Tarea creada" },
       }),
     );
@@ -119,6 +136,7 @@ export async function createTaskWithContextAction(formData: FormData) {
         view,
         project: projectFilter,
         q,
+        ...filterParams,
         extra: { ...monthExtra, error: msg },
       }),
     );
