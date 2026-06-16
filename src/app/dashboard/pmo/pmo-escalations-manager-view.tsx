@@ -5,65 +5,45 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { DashboardScopeSelect } from "@/app/dashboard/_components/dashboard-scope-select";
 import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
-import type { EscalationDetailRecord } from "@/app/dashboard/pmo/escalation-detail-dialog";
-import {
-  EscalationDeteriorationAlerts,
-  type DeteriorationAlertRow,
-} from "@/app/dashboard/pmo/escalation-deterioration-alerts";
-import { exportEscalationHistoryCsv } from "@/lib/escalation-export-csv";
-import {
-  type ProjectHierarchyGroup,
-  type ProjectHierarchyRow,
-  workScopeProjectIds,
-  resolveProjectFilterIds,
-} from "@/lib/project-hierarchy";
-import { dashSectionTitle } from "@/lib/ui-classes";
-
-import { EscalometroClient } from "./escalometro-client";
+import { EscalationHistoryList } from "@/app/dashboard/escalometro/escalation-history-list";
 import {
   computeEscalationKpis,
   filterDeteriorationAlerts,
   filterEscalationHistory,
   normalizeEscalationTier,
   type EscalationTierFilter,
-} from "./escalation-filter-utils";
-import { EscalationTierKpiGrid } from "./escalation-tier-kpi-grid";
+} from "@/app/dashboard/escalometro/escalation-filter-utils";
+import { EscalationTierKpiGrid } from "@/app/dashboard/escalometro/escalation-tier-kpi-grid";
 import {
   EscalometroKeyboardLayer,
   EscalometroShortcutsHint,
-} from "./escalometro-keyboard-layer";
-import { EscalationHistoryList } from "./escalation-history-list";
+} from "@/app/dashboard/escalometro/escalometro-keyboard-layer";
+import type { EscalationDetailRecord } from "@/app/dashboard/pmo/escalation-detail-dialog";
+import {
+  EscalationDeteriorationAlerts,
+  type DeteriorationAlertRow,
+} from "@/app/dashboard/pmo/escalation-deterioration-alerts";
+import { exportEscalationHistoryCsv } from "@/lib/escalation-export-csv";
+import type { ProjectHierarchyGroup, ProjectHierarchyRow } from "@/lib/project-hierarchy";
+import { dashSectionTitle } from "@/lib/ui-classes";
 
-function defaultEvaluationProjectId(
-  filter: string,
-  projectHierarchy: ProjectHierarchyRow[],
-): string {
-  if (!filter) return "";
-  const ids = resolveProjectFilterIds(projectHierarchy, filter);
-  if (!ids || ids.length !== 1) return "";
-  const workIds = new Set(workScopeProjectIds(projectHierarchy));
-  return workIds.has(ids[0]!) ? ids[0]! : "";
-}
-
-type EscalometroManagerViewProps = {
-  projects: { id: string; name: string }[];
+type PmoEscalationsManagerViewProps = {
   projectGroups: ProjectHierarchyGroup[];
   projectHierarchy: ProjectHierarchyRow[];
   historyRows: EscalationDetailRecord[];
   deteriorationAlerts: DeteriorationAlertRow[];
-  canSave: boolean;
+  canCreateRisk: boolean;
   initial?: { id?: string; project?: string; projectId?: string; q?: string; tier?: string };
 };
 
-export function EscalometroManagerView({
-  projects,
+export function PmoEscalationsManagerView({
   projectGroups,
   projectHierarchy,
   historyRows,
   deteriorationAlerts,
-  canSave,
+  canCreateRisk,
   initial,
-}: EscalometroManagerViewProps) {
+}: PmoEscalationsManagerViewProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -147,15 +127,10 @@ export function EscalometroManagerView({
     [deteriorationAlerts, projectHierarchy, projectFilter],
   );
 
-  const evaluationDefaultProjectId = useMemo(
-    () => defaultEvaluationProjectId(projectFilter, projectHierarchy),
-    [projectFilter, projectHierarchy],
-  );
-
   return (
     <DashboardSectionShell
-      eyebrow="Escalómetro"
-      title="Evaluación de escalamiento"
+      eyebrow="PMO"
+      title="Escalamientos"
       titleAs="h1"
       headerTrailing={
         <>
@@ -165,7 +140,7 @@ export function EscalometroManagerView({
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar en historial…"
+            placeholder="Buscar evaluaciones…"
             className="h-10 w-[min(100%,12rem)] rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-900 shadow-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 sm:w-[13rem]"
           />
           <DashboardScopeSelect
@@ -182,6 +157,7 @@ export function EscalometroManagerView({
       <div className="space-y-4 text-slate-900">
         <EscalationDeteriorationAlerts
           alerts={scopedAlerts}
+          viewAllHref={false}
           onProjectSelect={setProject}
         />
 
@@ -192,16 +168,9 @@ export function EscalometroManagerView({
           onToggleTier={toggleTier}
         />
 
-        <EscalometroClient
-          projects={projects}
-          projectGroups={projectGroups}
-          canSave={canSave}
-          defaultProjectId={evaluationDefaultProjectId}
-        />
-
         <section>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className={dashSectionTitle}>Registros recientes</h2>
+            <h2 className={dashSectionTitle}>Historial de evaluaciones</h2>
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm text-slate-500">
                 <strong className="text-slate-800">{scopedHistory.length}</strong> en el alcance
@@ -220,15 +189,15 @@ export function EscalometroManagerView({
             {scopedHistory.length > 0 ? (
               <EscalationHistoryList
                 rows={scopedHistory}
-                canCreateRisk={canSave}
+                canCreateRisk={canCreateRisk}
                 selectedId={selectedId}
                 onSelectedIdChange={(id) => (id ? openDetail(id) : closeDetail())}
               />
             ) : (
-              <li className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
+              <li className="rounded-lg border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
                 {projectFilter || q.trim() || tierFilter
                   ? "No hay evaluaciones con los filtros actuales."
-                  : "Aún no hay evaluaciones registradas. Completa el escalómetro y pulsa Evaluar."}
+                  : "Sin evaluaciones registradas."}
               </li>
             )}
           </ul>

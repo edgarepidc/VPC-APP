@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ESCALOMETRO_REPORT } from "@/lib/dashboard-paths";
 import {
@@ -22,24 +22,56 @@ import {
 type EscalationHistoryListProps = {
   rows: EscalationDetailRecord[];
   canCreateRisk?: boolean;
+  selectedId?: string | null;
+  onSelectedIdChange?: (id: string | null) => void;
 };
 
-export function EscalationHistoryList({ rows, canCreateRisk = false }: EscalationHistoryListProps) {
-  const [selected, setSelected] = useState<EscalationDetailRecord | null>(null);
+export function EscalationHistoryList({
+  rows,
+  canCreateRisk = false,
+  selectedId: controlledSelectedId,
+  onSelectedIdChange,
+}: EscalationHistoryListProps) {
+  const [internalSelected, setInternalSelected] = useState<EscalationDetailRecord | null>(null);
+  const isControlled = onSelectedIdChange !== undefined;
+
+  const selected = isControlled
+    ? rows.find((row) => row.id === controlledSelectedId) ?? null
+    : internalSelected;
+
+  useEffect(() => {
+    if (!isControlled || !controlledSelectedId) return;
+    const row = rows.find((r) => r.id === controlledSelectedId);
+    if (!row) onSelectedIdChange(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear stale deep link
+  }, [controlledSelectedId, rows, isControlled, onSelectedIdChange]);
+
+  function openRecord(record: EscalationDetailRecord) {
+    if (isControlled) onSelectedIdChange(record.id);
+    else setInternalSelected(record);
+  }
+
+  function closeRecord() {
+    if (isControlled) onSelectedIdChange(null);
+    else setInternalSelected(null);
+  }
 
   return (
     <>
       {rows.map((check) => {
         const badge = getEscalationTierBadge(check.tier);
+        const isActive = selected?.id === check.id;
         return (
           <li
             key={check.id}
-            className={`rounded-lg p-3 text-sm shadow-sm transition ${getEscalationTierCardClass(check.tier)}`}
+            className={`rounded-lg p-3 text-sm shadow-sm transition ${getEscalationTierCardClass(check.tier)} ${
+              isActive ? "ring-2 ring-slate-800 ring-offset-1" : ""
+            }`}
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <button
                 type="button"
-                onClick={() => setSelected(check)}
+                onClick={() => openRecord(check)}
                 className="min-w-0 flex-1 text-left hover:opacity-90"
               >
                 <p className="font-medium text-slate-900">
@@ -81,7 +113,7 @@ export function EscalationHistoryList({ rows, canCreateRisk = false }: Escalatio
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setSelected(check)}
+                  onClick={() => openRecord(check)}
                   className="text-xs font-medium text-slate-700 underline hover:text-slate-900"
                 >
                   Ver detalle
@@ -100,7 +132,7 @@ export function EscalationHistoryList({ rows, canCreateRisk = false }: Escalatio
       })}
       <EscalationDetailDialog
         record={selected}
-        onClose={() => setSelected(null)}
+        onClose={closeRecord}
         canCreateRisk={canCreateRisk}
       />
     </>

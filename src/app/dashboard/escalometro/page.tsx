@@ -14,6 +14,7 @@ import { dashAlertWarn, dashPage } from "@/lib/ui-classes";
 import { serializeEscalationChecks } from "@/lib/escalation-serialize";
 import { escalationTableMissingMessage } from "@/lib/prisma-errors";
 import {
+  findGreenToRedDeteriorations,
   isEscalationStorageReady,
   listEscalationChecksByTenant,
 } from "@/modules/escalations/service";
@@ -22,6 +23,7 @@ export const dynamic = "force-dynamic";
 
 type EscalometroPageProps = {
   searchParams: Promise<{
+    id?: string;
     project?: string;
     projectId?: string;
     q?: string;
@@ -47,15 +49,27 @@ export default async function EscalometroPage({ searchParams }: EscalometroPageP
       name: projectDisplayLabel(p, initiativeNameFor(hierarchy.projects, p.id)),
     }));
 
-  const [recentChecks, storageReady] = await Promise.all([
+  const [recentChecks, deteriorationAlerts, storageReady] = await Promise.all([
     listEscalationChecksByTenant(tenantId, {
       restrictToProjectIds: projectIdsFilter,
-      limit: 50,
+      limit: 100,
+    }),
+    findGreenToRedDeteriorations(tenantId, {
+      restrictToProjectIds: projectIdsFilter,
+      withinDays: 7,
     }),
     isEscalationStorageReady(),
   ]);
 
   const historyRows = serializeEscalationChecks(recentChecks);
+  const alertRows = deteriorationAlerts.map((a) => ({
+    projectId: a.projectId,
+    projectName: a.projectName,
+    previousAt: a.previousAt.toISOString(),
+    currentAt: a.currentAt.toISOString(),
+    topic: a.topic,
+    title: a.title,
+  }));
   const initialProject = params.project ?? params.projectId;
 
   return (
@@ -72,8 +86,10 @@ export default async function EscalometroPage({ searchParams }: EscalometroPageP
         projectGroups={hierarchy.groups}
         projectHierarchy={hierarchy.projects}
         historyRows={historyRows}
+        deteriorationAlerts={alertRows}
         canSave={canSave}
         initial={{
+          id: params.id,
           project: initialProject,
           q: params.q,
           tier: params.tier,

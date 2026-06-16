@@ -40,6 +40,12 @@ export const STAKEHOLDERS_QUADRANT = (quadrant: string, projectId?: string) => {
 };
 
 export const ESCALOMETRO_HUB = "/dashboard/escalometro";
+export const ESCALOMETRO_DETAIL = (id: string) =>
+  `/dashboard/escalometro?id=${encodeURIComponent(id)}`;
+export const ESCALOMETRO_DETAIL_IN_PROJECT = (id: string, projectId: string) =>
+  `/dashboard/escalometro?id=${encodeURIComponent(id)}&project=${encodeURIComponent(projectId)}`;
+export const ESCALOMETRO_PROJECT = (projectId: string) =>
+  `/dashboard/escalometro?project=${encodeURIComponent(projectId)}`;
 export const ROI_MEETINGS_HUB = "/dashboard/roi-meetings";
 export const MINUTES_HUB = "/dashboard/minutes";
 export const MINUTES_DETAIL = (minuteId: string) =>
@@ -47,7 +53,9 @@ export const MINUTES_DETAIL = (minuteId: string) =>
 export const TASKS_HUB = "/dashboard/tasks";
 
 export const PMO_ESCALATIONS_PROJECT = (projectId: string) =>
-  `${PMO_ESCALATIONS}?projectId=${encodeURIComponent(projectId)}`;
+  `${PMO_ESCALATIONS}?project=${encodeURIComponent(projectId)}`;
+export const PMO_ESCALATIONS_DETAIL = (id: string) =>
+  `${PMO_ESCALATIONS}?id=${encodeURIComponent(id)}`;
 export const PMO_MEETINGS_PROJECT = (projectId: string) =>
   `${PMO_MEETINGS}?projectId=${encodeURIComponent(projectId)}`;
 
