@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import type { TaskLabelRecord } from "@/modules/tasks/labels";
+
 import { TaskEditDialog, type TaskCardDTO, type TaskMemberOption } from "./task-edit-dialog";
 import { TaskPriorityDot, taskGanttBarClass } from "./task-ui";
 
@@ -11,11 +13,12 @@ type Props = {
   tasks: TaskCardDTO[];
   projects: ProjectOption[];
   members: TaskMemberOption[];
+  labelCatalog: TaskLabelRecord[];
   canWrite: boolean;
 };
 
 /** Vista tipo timeline simple: inicio = creación, fin = vence o +3 días. */
-export function TasksGanttView({ tasks, projects, members, canWrite }: Props) {
+export function TasksGanttView({ tasks, projects, members, labelCatalog, canWrite }: Props) {
   const [editTask, setEditTask] = useState<TaskCardDTO | null>(null);
 
   if (tasks.length === 0) {
@@ -85,6 +88,7 @@ export function TasksGanttView({ tasks, projects, members, canWrite }: Props) {
         task={editTask}
         projects={projects}
         members={members}
+        labelCatalog={labelCatalog}
         onClose={() => setEditTask(null)}
       />
     </>

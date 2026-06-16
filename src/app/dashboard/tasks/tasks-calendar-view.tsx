@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import type { TaskLabelRecord } from "@/modules/tasks/labels";
+
 import { TaskEditDialog, type TaskCardDTO, type TaskMemberOption } from "./task-edit-dialog";
 import { TaskPriorityDot, taskCalendarChipClass } from "./task-ui";
 
@@ -20,6 +22,7 @@ type Props = {
   undatedTasks: TaskCardDTO[];
   projects: ProjectOption[];
   members: TaskMemberOption[];
+  labelCatalog: TaskLabelRecord[];
   canWrite: boolean;
 };
 
@@ -39,6 +42,7 @@ export function TasksCalendarView({
   undatedTasks,
   projects,
   members,
+  labelCatalog,
   canWrite,
 }: Props) {
   const [editTask, setEditTask] = useState<TaskCardDTO | null>(null);
@@ -200,6 +204,7 @@ export function TasksCalendarView({
         task={editTask}
         projects={projects}
         members={members}
+        labelCatalog={labelCatalog}
         onClose={() => setEditTask(null)}
       />
     </>

@@ -15,6 +15,7 @@ type TasksHeaderControlsProps = {
   assignee: string;
   priority: string;
   status: string;
+  label: string;
   month?: string;
   groups: ProjectHierarchyGroup[];
 };
@@ -26,6 +27,7 @@ export function TasksHeaderControls({
   assignee: initialAssignee,
   priority: initialPriority,
   status: initialStatus,
+  label: initialLabel,
   month,
   groups,
 }: TasksHeaderControlsProps) {
@@ -38,6 +40,7 @@ export function TasksHeaderControls({
   const assignee = searchParams.get("assignee") ?? initialAssignee;
   const priority = searchParams.get("priority") ?? initialPriority;
   const status = searchParams.get("status") ?? initialStatus;
+  const label = searchParams.get("label") ?? initialLabel;
 
   function syncUrl(next: { project?: string; q?: string }) {
     const qs = buildTasksQuery({
@@ -47,6 +50,7 @@ export function TasksHeaderControls({
       assignee,
       priority,
       status,
+      label,
       month,
     });
     const target = qs ? `${pathname}?${qs}` : pathname;

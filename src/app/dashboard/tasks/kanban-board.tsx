@@ -13,11 +13,13 @@ import {
 
 import { moveTaskAction, quickCreateTaskAction } from "./actions";
 import { TaskEditDialog, type TaskCardDTO, type TaskMemberOption } from "./task-edit-dialog";
+import { TaskLabelChips } from "./task-label-picker";
 import {
   TaskChecklistInline,
   TaskChecklistProgress,
   TaskPriorityDot,
 } from "./task-ui";
+import type { TaskLabelRecord } from "@/modules/tasks/labels";
 
 type ProjectOption = { id: string; name: string };
 
@@ -25,6 +27,7 @@ type Props = {
   tasks: TaskCardDTO[];
   projects: ProjectOption[];
   members: TaskMemberOption[];
+  labelCatalog: TaskLabelRecord[];
   canWrite: boolean;
   defaultProjectId: string;
 };
@@ -133,7 +136,7 @@ function KanbanQuickAdd({
   );
 }
 
-export function KanbanBoard({ tasks, projects, members, canWrite, defaultProjectId }: Props) {
+export function KanbanBoard({ tasks, projects, members, labelCatalog, canWrite, defaultProjectId }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [dragId, setDragId] = useState<string | null>(null);
@@ -273,6 +276,11 @@ export function KanbanBoard({ tasks, projects, members, canWrite, defaultProject
                         </p>
                       </div>
                       <p className="mt-1.5 truncate text-[11px] text-slate-500">{task.projectName}</p>
+                      {task.labels.length > 0 ? (
+                        <div className="mt-2">
+                          <TaskLabelChips labels={task.labels} max={2} size="xs" />
+                        </div>
+                      ) : null}
                       {task.checklist.length > 0 ? (
                         <div className="mt-2">
                           <TaskChecklistProgress items={task.checklist} />
@@ -327,6 +335,7 @@ export function KanbanBoard({ tasks, projects, members, canWrite, defaultProject
         task={editTask}
         projects={projects}
         members={members}
+        labelCatalog={labelCatalog}
         onClose={() => {
           suppressOpenUntilRef.current = Date.now() + 400;
           setEditTask(null);

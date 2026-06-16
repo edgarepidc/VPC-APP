@@ -4,6 +4,10 @@ import { db } from "@/lib/db";
 
 import { normalizeTaskStatus, normalizeTaskPriority, type TaskKanbanStatus } from "./constants";
 import {
+  parseTaskLabelIds,
+  serializeTaskLabelIds,
+} from "./labels";
+import {
   serializeTaskChecklist,
   type TaskChecklistItem,
 } from "./json";
@@ -16,6 +20,7 @@ export type ListTasksFilter = {
   assigneeUserId?: string | null;
   priority?: string;
   status?: string;
+  labelId?: string;
 };
 
 export async function listTasksByTenant(
@@ -24,7 +29,7 @@ export async function listTasksByTenant(
 ) {
   const q = filter?.q?.trim();
   const restrict = filter?.restrictToProjectIds;
-  return db.task.findMany({
+  const rows = await db.task.findMany({
     where: {
       tenantId,
       ...(restrict !== undefined ? { projectId: { in: restrict } } : {}),
@@ -47,6 +52,11 @@ export async function listTasksByTenant(
       assignee: { select: { id: true, name: true, email: true } },
     },
   });
+
+  if (!filter?.labelId) return rows;
+
+  const labelId = filter.labelId;
+  return rows.filter((row) => parseTaskLabelIds(row.labelIds).includes(labelId));
 }
 
 async function assertActiveMember(tenantId: string, userId: string) {
@@ -66,6 +76,7 @@ export async function createTask(input: {
   status?: TaskKanbanStatus;
   priority?: string;
   checklist?: TaskChecklistItem[];
+  labelIds?: string[];
   dueDate?: Date | null;
   assigneeUserId?: string | null;
 }) {
@@ -94,6 +105,7 @@ export async function createTask(input: {
       status: input.status ?? "todo",
       priority: normalizeTaskPriority(input.priority ?? "medium"),
       checklist: serializeTaskChecklist(input.checklist ?? []),
+      labelIds: serializeTaskLabelIds(input.labelIds ?? []),
       dueDate: input.dueDate ?? undefined,
       assigneeUserId: input.assigneeUserId ?? undefined,
     },
@@ -107,6 +119,7 @@ export async function updateTask(input: {
   status?: string;
   priority?: string;
   checklist?: TaskChecklistItem[];
+  labelIds?: string[];
   projectId?: string;
   dueDate?: Date | null;
   assigneeUserId?: string | null;
@@ -149,6 +162,9 @@ export async function updateTask(input: {
   if (input.checklist !== undefined) {
     data.checklist = serializeTaskChecklist(input.checklist);
   }
+  if (input.labelIds !== undefined) {
+    data.labelIds = serializeTaskLabelIds(input.labelIds);
+  }
   if (input.projectId !== undefined) {
     data.project = { connect: { id: input.projectId } };
   }
@@ -178,6 +194,18 @@ export async function moveTaskToStatus(input: {
     tenantId: input.tenantId,
     taskId: input.taskId,
     status: input.status,
+  });
+}
+
+export async function assignTaskToUser(input: {
+  tenantId: string;
+  taskId: string;
+  assigneeUserId: string | null;
+}) {
+  await updateTask({
+    tenantId: input.tenantId,
+    taskId: input.taskId,
+    assigneeUserId: input.assigneeUserId,
   });
 }
 

@@ -7,9 +7,11 @@ import { dashTabActive, dashTabIdle } from "@/lib/ui-classes";
 import { TaskCreateDialog, useTaskCreateDialog } from "./task-create-dialog";
 import type { TaskMemberOption } from "./task-edit-dialog";
 import { buildTasksHref, type TaskView, type TasksFilterParams } from "./tasks-query";
+import type { TaskLabelRecord } from "@/modules/tasks/labels";
 
 const VIEW_LABELS: { id: TaskView; label: string }[] = [
   { id: "kanban", label: "Kanban" },
+  { id: "people", label: "Por persona" },
   { id: "table", label: "Tabla" },
   { id: "calendar", label: "Calendario" },
   { id: "gantt", label: "Línea de tiempo" },
@@ -24,6 +26,7 @@ type Props = {
   hasProjects: boolean;
   projects: ProjectOption[];
   members: TaskMemberOption[];
+  labelCatalog: TaskLabelRecord[];
   defaultProjectId: string;
 };
 
@@ -34,6 +37,7 @@ export function TasksViewBar({
   hasProjects,
   projects,
   members,
+  labelCatalog,
   defaultProjectId,
 }: Props) {
   const { open, setOpen } = useTaskCreateDialog();
@@ -75,6 +79,7 @@ export function TasksViewBar({
         hasProjects={hasProjects}
         projects={projects}
         members={members}
+        labelCatalog={labelCatalog}
         defaultProjectId={defaultProjectId}
         filterContext={filterContext}
       />

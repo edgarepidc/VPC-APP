@@ -1,4 +1,4 @@
-export const TASK_VIEWS = ["kanban", "table", "calendar", "gantt"] as const;
+export const TASK_VIEWS = ["kanban", "table", "calendar", "gantt", "people"] as const;
 export type TaskView = (typeof TASK_VIEWS)[number];
 
 export type TasksFilterParams = {
@@ -8,6 +8,7 @@ export type TasksFilterParams = {
   assignee?: string;
   priority?: string;
   status?: string;
+  label?: string;
   month?: string;
 };
 
@@ -23,6 +24,7 @@ export function buildTasksQuery({
   assignee,
   priority,
   status,
+  label,
   month,
 }: TasksFilterParams): string {
   const sp = new URLSearchParams();
@@ -33,6 +35,7 @@ export function buildTasksQuery({
   if (assignee?.trim()) sp.set("assignee", assignee.trim());
   if (priority?.trim()) sp.set("priority", priority.trim());
   if (status?.trim()) sp.set("status", status.trim());
+  if (label?.trim()) sp.set("label", label.trim());
   if (month && /^\d{4}-\d{2}$/.test(month)) sp.set("month", month);
   return sp.toString();
 }
@@ -50,6 +53,7 @@ export function tasksFilterContextFromForm(formData: FormData) {
     assignee: String(formData.get("assignee") ?? "").trim() || undefined,
     priority: String(formData.get("priorityFilter") ?? "").trim() || undefined,
     status: String(formData.get("statusFilter") ?? "").trim() || undefined,
+    label: String(formData.get("labelFilter") ?? "").trim() || undefined,
     month: String(formData.get("month") ?? "").trim() || undefined,
   };
 }

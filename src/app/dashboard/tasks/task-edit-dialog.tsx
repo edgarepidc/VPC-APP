@@ -18,8 +18,10 @@ import {
   serializeTaskChecklist,
   type TaskChecklistItem,
 } from "@/modules/tasks/json";
+import { serializeTaskLabelIds, type TaskLabelRecord } from "@/modules/tasks/labels";
 
 import { updateTaskAction } from "./actions";
+import { TaskLabelPicker } from "./task-label-picker";
 import { TaskPriorityBadge, TaskStatusBadge } from "./task-ui";
 
 export type TaskMemberOption = {
@@ -34,6 +36,8 @@ export type TaskCardDTO = {
   status: string;
   priority: string;
   checklist: TaskChecklistItem[];
+  labelIds: string[];
+  labels: TaskLabelRecord[];
   projectId: string;
   projectName: string;
   dueDate: string | null;
@@ -49,6 +53,7 @@ type Props = {
   task: TaskCardDTO | null;
   projects: ProjectOption[];
   members: TaskMemberOption[];
+  labelCatalog: TaskLabelRecord[];
   onClose: () => void;
 };
 
@@ -66,11 +71,13 @@ function TaskEditForm({
   task,
   projects,
   members,
+  labelCatalog,
   onClose,
 }: {
   task: TaskCardDTO;
   projects: ProjectOption[];
   members: TaskMemberOption[];
+  labelCatalog: TaskLabelRecord[];
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -78,6 +85,7 @@ function TaskEditForm({
   const pr = normalizeTaskPriority(task.priority);
   const statusTheme = TASK_KANBAN_COLUMN_THEME[st];
   const [checklist, setChecklist] = useState<TaskChecklistItem[]>(task.checklist);
+  const [labelIds, setLabelIds] = useState<string[]>(task.labelIds);
   const [newItem, setNewItem] = useState("");
 
   function addChecklistItem() {
@@ -93,6 +101,7 @@ function TaskEditForm({
     const fd = new FormData(form);
     fd.set("taskId", task.id);
     fd.set("checklistJson", JSON.stringify(serializeTaskChecklist(checklist)));
+    fd.set("labelIdsJson", JSON.stringify(serializeTaskLabelIds(labelIds)));
     try {
       await updateTaskAction(fd);
       router.refresh();
@@ -218,6 +227,19 @@ function TaskEditForm({
           </div>
           <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Etiquetas
+            </label>
+            <div className="mt-2">
+              <TaskLabelPicker
+                catalog={labelCatalog}
+                selectedIds={labelIds}
+                onChange={setLabelIds}
+                canWrite
+              />
+            </div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
               Checklist
             </label>
             <ul className="mt-2 space-y-1.5">
@@ -300,7 +322,7 @@ function TaskEditForm({
   );
 }
 
-export function TaskEditDialog({ task, projects, members, onClose }: Props) {
+export function TaskEditDialog({ task, projects, members, labelCatalog, onClose }: Props) {
   if (!task) return null;
   return (
     <TaskEditForm
@@ -308,6 +330,7 @@ export function TaskEditDialog({ task, projects, members, onClose }: Props) {
       task={task}
       projects={projects}
       members={members}
+      labelCatalog={labelCatalog}
       onClose={onClose}
     />
   );

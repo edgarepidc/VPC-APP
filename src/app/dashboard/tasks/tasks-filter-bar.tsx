@@ -10,6 +10,7 @@ import {
   TASK_STATUS_LABEL,
   type TaskKanbanStatus,
 } from "@/modules/tasks/constants";
+import type { TaskLabelRecord } from "@/modules/tasks/labels";
 
 import type { TaskMemberOption } from "./task-edit-dialog";
 import { buildTasksQuery, type TasksFilterParams } from "./tasks-query";
@@ -24,8 +25,10 @@ type Props = {
   assignee: string;
   priority: string;
   status: string;
+  label: string;
   month?: string;
   members: TaskMemberOption[];
+  labelCatalog: TaskLabelRecord[];
 };
 
 export function TasksFilterBar({
@@ -35,8 +38,10 @@ export function TasksFilterBar({
   assignee: initialAssignee,
   priority: initialPriority,
   status: initialStatus,
+  label: initialLabel,
   month,
   members,
+  labelCatalog,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -45,8 +50,9 @@ export function TasksFilterBar({
   const assignee = searchParams.get("assignee") ?? initialAssignee;
   const priority = searchParams.get("priority") ?? initialPriority;
   const status = searchParams.get("status") ?? initialStatus;
+  const label = searchParams.get("label") ?? initialLabel;
 
-  const hasActiveFilters = Boolean(assignee || priority || status);
+  const hasActiveFilters = Boolean(assignee || priority || status || label);
 
   const memberLabelById = useMemo(() => {
     const m = new Map<string, string>();
@@ -64,6 +70,7 @@ export function TasksFilterBar({
       assignee: next.assignee ?? assignee,
       priority: next.priority ?? priority,
       status: next.status ?? status,
+      label: next.label ?? label,
       month,
     });
     const target = qs ? `${pathname}?${qs}` : pathname;
@@ -73,7 +80,7 @@ export function TasksFilterBar({
   }
 
   function clearFilters() {
-    pushFilters({ assignee: "", priority: "", status: "" });
+    pushFilters({ assignee: "", priority: "", status: "", label: "" });
   }
 
   return (
@@ -93,6 +100,19 @@ export function TasksFilterBar({
         {members.map((m) => (
           <option key={m.id} value={m.id}>
             {memberLabelById.get(m.id)}
+          </option>
+        ))}
+      </select>
+      <select
+        value={label}
+        onChange={(e) => pushFilters({ label: e.target.value })}
+        className={selectClass}
+        aria-label="Filtrar por etiqueta"
+      >
+        <option value="">Todas las etiquetas</option>
+        {labelCatalog.map((row) => (
+          <option key={row.id} value={row.id}>
+            {row.name}
           </option>
         ))}
       </select>
@@ -136,7 +156,6 @@ export function TasksFilterBar({
           Vista personal
         </span>
       ) : null}
-      {/* Reservado para futuras etiquetas / buckets tipo Planner */}
     </div>
   );
 }

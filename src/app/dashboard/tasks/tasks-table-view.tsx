@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 
+import type { TaskLabelRecord } from "@/modules/tasks/labels";
+
 import { TaskEditDialog, type TaskCardDTO, type TaskMemberOption } from "./task-edit-dialog";
+import { TaskLabelChips } from "./task-label-picker";
 import {
   TaskChecklistProgress,
   TaskPriorityBadge,
@@ -15,10 +18,11 @@ type Props = {
   tasks: TaskCardDTO[];
   projects: ProjectOption[];
   members: TaskMemberOption[];
+  labelCatalog: TaskLabelRecord[];
   canWrite: boolean;
 };
 
-export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
+export function TasksTableView({ tasks, projects, members, labelCatalog, canWrite }: Props) {
   const [editTask, setEditTask] = useState<TaskCardDTO | null>(null);
 
   return (
@@ -30,6 +34,7 @@ export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
               <th>Tarea</th>
               <th>Prioridad</th>
               <th>Estado</th>
+              <th>Etiquetas</th>
               <th>Checklist</th>
               <th>Proyecto</th>
               <th>Responsable</th>
@@ -50,6 +55,13 @@ export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
                 <td>
                   <TaskStatusBadge status={task.status} />
                 </td>
+                <td className="min-w-[8rem]">
+                  {task.labels.length > 0 ? (
+                    <TaskLabelChips labels={task.labels} max={2} size="xs" />
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
+                </td>
                 <td className="min-w-[7rem]">
                   {task.checklist.length > 0 ? (
                     <TaskChecklistProgress items={task.checklist} />
@@ -69,7 +81,7 @@ export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
             ))}
             {tasks.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-slate-500">
+                <td colSpan={8} className="py-8 text-center text-slate-500">
                   No hay tareas con los filtros actuales.
                 </td>
               </tr>
@@ -81,6 +93,7 @@ export function TasksTableView({ tasks, projects, members, canWrite }: Props) {
         task={editTask}
         projects={projects}
         members={members}
+        labelCatalog={labelCatalog}
         onClose={() => setEditTask(null)}
       />
     </>

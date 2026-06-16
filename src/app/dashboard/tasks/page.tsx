@@ -25,6 +25,8 @@ import {
   normalizeTaskStatus,
 } from "@/modules/tasks/constants";
 import { parseTaskChecklist } from "@/modules/tasks/json";
+import { parseTaskLabelIds, resolveTaskLabels } from "@/modules/tasks/labels";
+import { listOrSeedTaskLabelsForTenant } from "@/modules/tasks/label-service";
 import { listMemberUsersForTenant } from "@/modules/memberships/service";
 import { listTasksByTenant } from "@/modules/tasks/service";
 
@@ -34,6 +36,7 @@ import { TasksHeaderControls } from "./tasks-header-controls";
 import { TasksCalendarView } from "./tasks-calendar-view";
 import { TasksGanttView } from "./tasks-gantt-view";
 import { TasksKeyboardLayer, TasksShortcutsHint } from "./tasks-keyboard-layer";
+import { TasksPeopleView } from "./tasks-people-view";
 import { buildTasksHref, normalizeTaskView, type TaskView } from "./tasks-query";
 import { TasksTableView } from "./tasks-table-view";
 import { TasksViewBar } from "./tasks-view-bar";
@@ -85,6 +88,7 @@ type PageProps = {
     assignee?: string;
     priority?: string;
     status?: string;
+    label?: string;
     month?: string;
   }>;
 };
@@ -104,6 +108,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
   const assigneeParam = params.assignee?.trim() ?? "";
   const priorityParam = params.priority?.trim() ?? "";
   const statusParam = params.status?.trim() ?? "";
+  const labelParam = params.label?.trim() ?? "";
 
   const { y: calY, m: calM } = parseYearMonth(params.month);
   const monthQueryValue = formatYearMonth(calY, calM);
@@ -117,6 +122,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
     assignee: assigneeParam || undefined,
     priority: priorityParam || undefined,
     status: statusParam || undefined,
+    label: labelParam || undefined,
     month: view === "calendar" ? monthQueryValue : undefined,
   };
 
@@ -149,15 +155,17 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
   const assigneeUserId = resolveAssigneeFilter(assigneeParam, session.userId);
 
-  const [items, memberRows] = await Promise.all([
+  const [items, memberRows, labelCatalog] = await Promise.all([
     listTasksByTenant(tenantId, {
       q: qFilter,
       restrictToProjectIds: effectiveRestrict,
       assigneeUserId,
       priority: priorityParam || undefined,
       status: statusParam || undefined,
+      labelId: labelParam || undefined,
     }),
     listMemberUsersForTenant(tenantId),
+    listOrSeedTaskLabelsForTenant(tenantId),
   ]);
 
   const workIds = new Set(workScopeProjectIds(hierarchy.projects));
@@ -181,28 +189,33 @@ export default async function TasksPage({ searchParams }: PageProps) {
     email: u.email,
   }));
 
-  const taskCards: TaskCardDTO[] = items.map((t) => ({
-    id: t.id,
-    title: t.title,
-    status: normalizeTaskStatus(t.status),
-    priority: normalizeTaskPriority(t.priority),
-    checklist: parseTaskChecklist(t.checklist),
-    projectId: t.projectId,
-    projectName: projectDisplayLabel(
-      {
-        id: t.projectId,
-        name: t.project.name,
-        parentProjectId:
-          hierarchy.projects.find((p) => p.id === t.projectId)?.parentProjectId ?? null,
-      },
-      initiativeNameFor(hierarchy.projects, t.projectId),
-    ),
-    dueDate: t.dueDate?.toISOString() ?? null,
-    createdAt: t.createdAt.toISOString(),
-    assigneeUserId: t.assigneeUserId ?? null,
-    assigneeName: t.assignee?.name ?? null,
-    assigneeEmail: t.assignee?.email ?? null,
-  }));
+  const taskCards: TaskCardDTO[] = items.map((t) => {
+    const labelIds = parseTaskLabelIds(t.labelIds);
+    return {
+      id: t.id,
+      title: t.title,
+      status: normalizeTaskStatus(t.status),
+      priority: normalizeTaskPriority(t.priority),
+      checklist: parseTaskChecklist(t.checklist),
+      labelIds,
+      labels: resolveTaskLabels(labelIds, labelCatalog),
+      projectId: t.projectId,
+      projectName: projectDisplayLabel(
+        {
+          id: t.projectId,
+          name: t.project.name,
+          parentProjectId:
+            hierarchy.projects.find((p) => p.id === t.projectId)?.parentProjectId ?? null,
+        },
+        initiativeNameFor(hierarchy.projects, t.projectId),
+      ),
+      dueDate: t.dueDate?.toISOString() ?? null,
+      createdAt: t.createdAt.toISOString(),
+      assigneeUserId: t.assigneeUserId ?? null,
+      assigneeName: t.assignee?.name ?? null,
+      assigneeEmail: t.assignee?.email ?? null,
+    };
+  });
 
   const undatedTasks = taskCards.filter((t) => !t.dueDate);
 
@@ -215,13 +228,14 @@ export default async function TasksPage({ searchParams }: PageProps) {
         titleAs="h1"
         headerTrailing={
           <TasksHeaderControls
-            key={`${pf}-${qf}-${assigneeParam}-${priorityParam}-${statusParam}`}
+            key={`${pf}-${qf}-${assigneeParam}-${priorityParam}-${statusParam}-${labelParam}`}
             view={view}
             project={pf}
             q={qf}
             assignee={assigneeParam}
             priority={priorityParam}
             status={statusParam}
+            label={labelParam}
             month={view === "calendar" ? monthQueryValue : undefined}
             groups={hierarchy.groups}
           />
@@ -240,6 +254,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
             hasProjects={hasProjects}
             projects={projectOptions}
             members={members}
+            labelCatalog={labelCatalog}
             defaultProjectId={defaultTaskProjectId}
           />
 
@@ -250,8 +265,10 @@ export default async function TasksPage({ searchParams }: PageProps) {
             assignee={assigneeParam}
             priority={priorityParam}
             status={statusParam}
+            label={labelParam}
             month={view === "calendar" ? monthQueryValue : undefined}
             members={members}
+            labelCatalog={labelCatalog}
           />
 
           {canWrite && !hasProjects && (
@@ -275,8 +292,18 @@ export default async function TasksPage({ searchParams }: PageProps) {
               tasks={taskCards}
               projects={projectOptions}
               members={members}
+              labelCatalog={labelCatalog}
               canWrite={canWrite}
               defaultProjectId={defaultTaskProjectId}
+            />
+          )}
+          {view === "people" && (
+            <TasksPeopleView
+              tasks={taskCards}
+              members={members}
+              projects={projectOptions}
+              labelCatalog={labelCatalog}
+              canWrite={canWrite}
             />
           )}
           {view === "table" && (
@@ -284,6 +311,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
               tasks={taskCards}
               projects={projectOptions}
               members={members}
+              labelCatalog={labelCatalog}
               canWrite={canWrite}
             />
           )}
@@ -298,6 +326,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
               undatedTasks={undatedTasks}
               projects={projectOptions}
               members={members}
+              labelCatalog={labelCatalog}
               canWrite={canWrite}
             />
           )}
@@ -306,6 +335,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
               tasks={taskCards}
               projects={projectOptions}
               members={members}
+              labelCatalog={labelCatalog}
               canWrite={canWrite}
             />
           )}
