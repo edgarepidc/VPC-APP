@@ -18,7 +18,7 @@ import {
 } from "@/lib/deliverable-weight-utils";
 import { uiInput, uiLabel, dashAlertError, dashAlertOk } from "@/lib/ui-classes";
 
-import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
+import { KpiTile } from "@/app/dashboard/_components/kpi-tile";
 import { DashboardScopeSelect } from "@/app/dashboard/_components/dashboard-scope-select";
 import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
@@ -548,7 +548,7 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
               </button>
             </div>
           ) : null}
-          <div className={dashKpiTilesGrid}>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <KpiTile label="Total entregables" value={total} sub="registrados" tone="slate" />
             <KpiTile
               label="Completados"
@@ -570,12 +570,6 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
               tone="amber"
             />
             <KpiTile
-              label="Avance ponderado"
-              value={`${pct}%`}
-              sub={`${projectCount} proyecto${projectCount !== 1 ? "s" : ""} · media ponderada`}
-              tone="accent"
-            />
-            <KpiTile
               label="A tiempo"
               value={compliance.onTimePct !== null ? `${compliance.onTimePct}%` : "—"}
               sub={
@@ -584,12 +578,6 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
                   : "sin cierres medibles"
               }
               tone="emerald"
-            />
-            <KpiTile
-              label="Lead time medio"
-              value={compliance.avgLeadDays !== null ? `${compliance.avgLeadDays}d` : "—"}
-              sub="registro → entrega"
-              tone="slate"
             />
           </div>
 
