@@ -244,6 +244,8 @@ export function RiskManagerView({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const rowRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const suppressOpenUntilRef = useRef(0);
+  const initialIdAppliedRef = useRef<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(initial?.id ?? null);
   const [focusId, setFocusId] = useState<string | null>(initial?.id ?? null);
   const [projectFilter, setProjectFilter] = useState(initial?.project ?? "");
@@ -261,6 +263,7 @@ export function RiskManagerView({
   }
 
   function openDetail(id: string) {
+    if (Date.now() < suppressOpenUntilRef.current) return;
     setDetailId(id);
     setFocusId(id);
     syncUrl({ id });
@@ -270,6 +273,7 @@ export function RiskManagerView({
   }
 
   function closeDetail() {
+    suppressOpenUntilRef.current = Date.now() + 400;
     setDetailId(null);
     setFocusId(null);
     syncUrl({ id: null });
@@ -281,10 +285,12 @@ export function RiskManagerView({
   }, [prefill, canEdit]);
 
   useEffect(() => {
-    if (initial?.id && risks.some((r) => r.id === initial.id)) {
-      openDetail(initial.id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- deep link once
+    if (!initial?.id) return;
+    if (initialIdAppliedRef.current === initial.id) return;
+    if (!risks.some((r) => r.id === initial.id)) return;
+    initialIdAppliedRef.current = initial.id;
+    openDetail(initial.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deep link once per id
   }, [initial?.id, risks]);
 
   useEffect(() => {
@@ -685,17 +691,22 @@ export function RiskManagerView({
       {/* Detalle */}
       {detail && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           role="presentation"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeDetail();
-          }}
         >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            aria-label="Cerrar detalle"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              closeDetail();
+            }}
+          />
           <div
             role="dialog"
             aria-modal="true"
             className="relative max-h-[min(90vh,720px)] w-full max-w-xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-7 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
