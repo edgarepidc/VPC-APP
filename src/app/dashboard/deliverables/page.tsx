@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import {
   dashAlertError,
   dashAlertOk,
@@ -169,46 +168,39 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
 
   return (
     <main className={dashPage}>
-      <DashboardSectionShell
-        eyebrow="Entregables"
-        title="Tracker de compromisos"
-        titleAs="h1"
-      >
-        {params.error ? (
-          <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p>
-        ) : null}
-        {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
-        {projects.length === 0 ? (
-          <div className="p-4">
-            <p className="text-sm text-slate-700">
-              No hay iniciativas.{" "}
-              <Link href={PMO_PROJECTS} className="font-medium underline">
-                Crea una iniciativa
-              </Link>{" "}
-              para registrar entregables.
-            </p>
-          </div>
-        ) : (
-          <DeliverablesTracker
-            rows={rows}
-            projects={projectOptions}
-            projectGroups={projectGroups}
-            projectHierarchy={projects}
-            canEdit={canEdit}
-            initial={{
-              id: params.id,
-              project: params.project,
-              q: params.q,
-              st: params.st,
-              phase: params.phase,
-            }}
-          />
-        )}
+      {params.error ? <p className={dashAlertError}>{params.error}</p> : null}
+      {params.ok ? <p className={dashAlertOk}>{params.ok}</p> : null}
 
-        {!canEdit && projects.length > 0 ? (
-          <p className={`mx-4 mb-4 ${dashAlertWarn}`}>Tu rol solo permite ver el tracker.</p>
-        ) : null}
-      </DashboardSectionShell>
+      {projects.length === 0 ? (
+        <section className={`${dashCard} p-4`}>
+          <p className="text-sm text-slate-700">
+            No hay iniciativas.{" "}
+            <Link href={PMO_PROJECTS} className="font-medium underline">
+              Crea una iniciativa
+            </Link>{" "}
+            para registrar entregables.
+          </p>
+        </section>
+      ) : (
+        <DeliverablesTracker
+          rows={rows}
+          projects={projectOptions}
+          projectGroups={projectGroups}
+          projectHierarchy={projects}
+          canEdit={canEdit}
+          initial={{
+            id: params.id,
+            project: params.project,
+            q: params.q,
+            st: params.st,
+            phase: params.phase,
+          }}
+        />
+      )}
+
+      {!canEdit && projects.length > 0 ? (
+        <p className={dashAlertWarn}>Tu rol solo permite ver el tracker.</p>
+      ) : null}
     </main>
   );
 }

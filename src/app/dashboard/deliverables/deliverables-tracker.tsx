@@ -19,6 +19,8 @@ import {
 import { uiInput, uiLabel, dashAlertError, dashAlertOk } from "@/lib/ui-classes";
 
 import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
+import { DashboardScopeSelect } from "@/app/dashboard/_components/dashboard-scope-select";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
 import {
   initiativeNameFor,
@@ -488,6 +490,35 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
   }
 
   return (
+    <DashboardSectionShell
+      title="Entregables"
+      titleAs="h1"
+      headerLead={
+        <>
+          <DashboardScopeSelect
+            value={projectFilter}
+            onChange={(v) => {
+              setProjectFilter(v);
+              setFocusId(null);
+            }}
+            groups={projectGroups}
+            allLabel="Todas las iniciativas"
+            aria-label="Filtrar por iniciativa o subproyecto"
+          />
+          {weightAssigned !== null ? (
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                weightAssigned === TARGET_SUM
+                  ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200"
+                  : "bg-amber-50 text-amber-900 ring-1 ring-amber-200"
+              }`}
+            >
+              Peso {weightAssigned}/{TARGET_SUM}%
+            </span>
+          ) : null}
+        </>
+      }
+    >
     <div
       className="flex min-h-0 flex-col text-slate-900"
       style={
@@ -559,32 +590,6 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
               sub="registro → entrega"
               tone="slate"
             />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="text-xs font-medium text-slate-600">Iniciativa / subproyecto</label>
-            <ProjectHierarchySelect
-              value={projectFilter}
-              onChange={(v) => {
-                setProjectFilter(v);
-                setFocusId(null);
-              }}
-              groups={projectGroups}
-              allLabel="Todas las iniciativas"
-              className="h-[34px] rounded-lg border border-slate-300 bg-white px-2.5 text-sm outline-none focus:border-[var(--accent)]"
-              aria-label="Filtrar por iniciativa o subproyecto"
-            />
-            {weightAssigned !== null ? (
-              <span
-                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                  weightAssigned === TARGET_SUM
-                    ? "bg-emerald-50 text-emerald-800"
-                    : "bg-amber-50 text-amber-900"
-                }`}
-              >
-                Peso asignado: {weightAssigned}/{TARGET_SUM}%
-              </span>
-            ) : null}
           </div>
 
           <DeliverablesActionQueue
@@ -914,6 +919,7 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
         />
       ) : null}
     </div>
+    </DashboardSectionShell>
   );
 }
 
