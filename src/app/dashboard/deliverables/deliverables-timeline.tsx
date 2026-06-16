@@ -43,7 +43,7 @@ const TRACK_SIDE_PAD = 48;
 /** A partir de cuántos hitos usamos espaciado uniforme (evita solapamiento). */
 const EQUAL_SPACING_FROM = 4;
 const SLOT_WIDTH_PX = 112;
-const CONNECTOR_H = 28;
+const CONNECTOR_H = 40;
 
 type TimelineItem = { row: DeliverableTrackerRow; date: Date };
 
@@ -195,7 +195,7 @@ export function DeliverablesTimeline({
           className="relative mx-auto"
           style={{
             minWidth: trackMinWidth,
-            height: 168,
+            height: 220,
             paddingLeft: TRACK_SIDE_PAD,
             paddingRight: TRACK_SIDE_PAD,
           }}
@@ -259,9 +259,7 @@ export function DeliverablesTimeline({
               return (
                 <div
                   key={row.id}
-                  className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 ${
-                    isHighlighted ? "z-20" : "z-10"
-                  }`}
+                  className={`absolute top-1/2 ${isHighlighted ? "z-20" : "z-10"}`}
                   style={{ left: `${left}%` }}
                 >
                   <button
@@ -272,31 +270,12 @@ export function DeliverablesTimeline({
                       onFocusChange?.(row.id);
                       onSelect(row.id);
                     }}
-                    className="flex flex-col items-center outline-none"
+                    className="relative block h-0 w-0 border-0 bg-transparent p-0 outline-none"
                     aria-label={`${row.title}, ${day} ${month}`}
                     aria-pressed={isHighlighted}
                   >
-                    {isAbove ? (
-                      <>
-                        <MilestoneChip
-                          row={row}
-                          theme={theme}
-                          day={day}
-                          month={month}
-                          isDone={isDone}
-                          isActive={isHighlighted}
-                          overdue={overdue}
-                        />
-                        <div
-                          className="w-px shrink-0"
-                          style={{ height: CONNECTOR_H, backgroundColor: theme.accent }}
-                          aria-hidden
-                        />
-                      </>
-                    ) : null}
-
-                    <div
-                      className={`relative shrink-0 rounded-full border-2 border-white shadow-sm ${
+                    <span
+                      className={`absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-sm ${
                         isDone ? "h-3.5 w-3.5" : "h-3 w-3"
                       } ${isHighlighted ? "ring-2 ring-offset-1" : ""}`}
                       style={{
@@ -307,25 +286,31 @@ export function DeliverablesTimeline({
                       }}
                       aria-hidden
                     />
-
-                    {!isAbove ? (
-                      <>
-                        <div
-                          className="w-px shrink-0"
-                          style={{ height: CONNECTOR_H, backgroundColor: theme.accent }}
-                          aria-hidden
-                        />
-                        <MilestoneChip
-                          row={row}
-                          theme={theme}
-                          day={day}
-                          month={month}
-                          isDone={isDone}
-                          isActive={isHighlighted}
-                          overdue={overdue}
-                        />
-                      </>
-                    ) : null}
+                    <span
+                      className="absolute left-0 w-px"
+                      style={{
+                        height: CONNECTOR_H,
+                        backgroundColor: theme.accent,
+                        ...(isAbove
+                          ? { bottom: 0, transform: "translate(-50%, -100%)" }
+                          : { top: 0, transform: "translateX(-50%)" }),
+                      }}
+                      aria-hidden
+                    />
+                    <div
+                      className="absolute left-0 -translate-x-1/2"
+                      style={isAbove ? { bottom: CONNECTOR_H } : { top: CONNECTOR_H }}
+                    >
+                      <MilestoneChip
+                        row={row}
+                        theme={theme}
+                        day={day}
+                        month={month}
+                        isDone={isDone}
+                        isActive={isHighlighted}
+                        overdue={overdue}
+                      />
+                    </div>
                   </button>
                 </div>
               );

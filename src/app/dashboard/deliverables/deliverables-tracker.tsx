@@ -551,7 +551,7 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
             </div>
           ) : null}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <KpiTile label="Total entregables" value={total} sub="registrados" tone="slate" />
+            <KpiTile label="Total entregables" value={total} sub="registrados" tone="sky" />
             <KpiTile
               label="Completados"
               value={comp}
