@@ -493,7 +493,7 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
     <DashboardSectionShell
       title="Entregables"
       titleAs="h1"
-      headerLead={
+      headerTrailing={
         <>
           <DashboardScopeSelect
             value={projectFilter}

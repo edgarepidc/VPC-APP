@@ -11,8 +11,8 @@ export type DashboardSectionShellProps = {
   eyebrow?: string;
   title: string;
   subtitle?: ReactNode;
-  /** Selector de alcance u otra acción destacada a la izquierda del título. */
-  headerLead?: ReactNode;
+  /** Acciones o selectores alineados a la derecha del encabezado (misma línea que el título). */
+  headerTrailing?: ReactNode;
   headerExtra?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -26,7 +26,7 @@ export function DashboardSectionShell({
   eyebrow,
   title,
   subtitle,
-  headerLead,
+  headerTrailing,
   headerExtra,
   children,
   className = "",
@@ -35,40 +35,27 @@ export function DashboardSectionShell({
 }: DashboardSectionShellProps) {
   const hasMeta = Boolean(subtitle || headerExtra);
   const TitleTag = titleAs;
-  const compactHeader = Boolean(headerLead);
 
   return (
     <section className={`${dashCard} overflow-hidden ${className}`}>
       <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
-        <div
-          className={
-            compactHeader
-              ? "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-              : "flex items-start gap-3"
-          }
-        >
-          {compactHeader ? (
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-3">
-              {headerLead}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <div
+              className="mt-1 hidden h-9 w-0.5 shrink-0 rounded-full bg-slate-300 sm:block"
+              aria-hidden
+            />
+            <div className="min-w-0">
+              {eyebrow ? <p className={uiSectionLabel}>{eyebrow}</p> : null}
+              <TitleTag className={`${dashSectionTitle} ${eyebrow ? "mt-1" : ""}`}>
+                {title}
+              </TitleTag>
             </div>
-          ) : (
-            <>
-              <div
-                className="mt-1 hidden h-9 w-0.5 shrink-0 rounded-full bg-slate-300 sm:block"
-                aria-hidden
-              />
-              <div className="min-w-0 flex-1">
-                {eyebrow ? <p className={uiSectionLabel}>{eyebrow}</p> : null}
-                <TitleTag className={`${dashSectionTitle} ${eyebrow ? "mt-1" : ""}`}>
-                  {title}
-                </TitleTag>
-              </div>
-            </>
-          )}
+          </div>
 
-          {compactHeader ? (
-            <div className="shrink-0 sm:text-right">
-              <TitleTag className={dashSectionTitle}>{title}</TitleTag>
+          {headerTrailing ? (
+            <div className="flex shrink-0 flex-wrap items-center justify-start gap-2 sm:justify-end">
+              {headerTrailing}
             </div>
           ) : null}
         </div>
