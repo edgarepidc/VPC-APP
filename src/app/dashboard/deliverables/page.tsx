@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DashboardPageHeader } from "@/app/dashboard/_components/page-header";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import {
   dashAlertError,
   dashAlertOk,
@@ -169,50 +169,55 @@ export default async function DeliverablesPage({ searchParams }: PageProps) {
 
   return (
     <main className={dashPage}>
-      <DashboardPageHeader
-        title="Entregables"
-        description="Tracker de compromisos, estados y acuses por proyecto."
+      <DashboardSectionShell
+        eyebrow="Entregables"
+        title="Tracker de compromisos"
+        titleAs="h1"
+        subtitle="Estados, pesos y acuses por subproyecto."
+        headerExtra={
+          <>
+            <Link
+              href={PMO_DELIVERABLES}
+              className="inline-flex text-sm font-medium text-slate-600 underline hover:text-slate-900"
+            >
+              Ver resumen PMO de entregables
+            </Link>
+            {params.error ? <p className={`mt-3 ${dashAlertError}`}>{params.error}</p> : null}
+            {params.ok ? <p className={`mt-3 ${dashAlertOk}`}>{params.ok}</p> : null}
+          </>
+        }
       >
-        <Link
-          href={PMO_DELIVERABLES}
-          className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-        >
-          Ver resumen PMO de entregables
-        </Link>
-        {params.error && <p className={`mt-2 ${dashAlertError}`}>{params.error}</p>}
-        {params.ok && <p className={`mt-2 ${dashAlertOk}`}>{params.ok}</p>}
-      </DashboardPageHeader>
+        {projects.length === 0 ? (
+          <div className="p-4">
+            <p className="text-sm text-slate-700">
+              No hay iniciativas.{" "}
+              <Link href={PMO_PROJECTS} className="font-medium underline">
+                Crea una iniciativa
+              </Link>{" "}
+              para registrar entregables.
+            </p>
+          </div>
+        ) : (
+          <DeliverablesTracker
+            rows={rows}
+            projects={projectOptions}
+            projectGroups={projectGroups}
+            projectHierarchy={projects}
+            canEdit={canEdit}
+            initial={{
+              id: params.id,
+              project: params.project,
+              q: params.q,
+              st: params.st,
+              phase: params.phase,
+            }}
+          />
+        )}
 
-      {projects.length === 0 ? (
-        <section className={`${dashCard} p-4`}>
-          <p className="text-sm text-slate-700">
-            No hay iniciativas.{" "}
-            <Link href={PMO_PROJECTS} className="font-medium underline">
-              Crea una iniciativa
-            </Link>{" "}
-            para registrar entregables.
-          </p>
-        </section>
-      ) : (
-        <DeliverablesTracker
-          rows={rows}
-          projects={projectOptions}
-          projectGroups={projectGroups}
-          projectHierarchy={projects}
-          canEdit={canEdit}
-          initial={{
-            id: params.id,
-            project: params.project,
-            q: params.q,
-            st: params.st,
-            phase: params.phase,
-          }}
-        />
-      )}
-
-      {!canEdit && projects.length > 0 ? (
-        <p className={dashAlertWarn}>Tu rol solo permite ver el tracker.</p>
-      ) : null}
+        {!canEdit && projects.length > 0 ? (
+          <p className={`mx-4 mb-4 ${dashAlertWarn}`}>Tu rol solo permite ver el tracker.</p>
+        ) : null}
+      </DashboardSectionShell>
     </main>
   );
 }

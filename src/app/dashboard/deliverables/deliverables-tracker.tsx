@@ -489,7 +489,7 @@ export function DeliverablesTracker({ rows, projects, projectGroups, projectHier
 
   return (
     <div
-      className="flex min-h-0 flex-col rounded-lg border border-slate-200 bg-white text-slate-900"
+      className="flex min-h-0 flex-col text-slate-900"
       style={
         {
           ["--accent" as string]: ACCENT,
