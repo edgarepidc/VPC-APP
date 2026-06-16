@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { getSessionUser } from "@/lib/auth/session";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
@@ -226,13 +225,13 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
 
   return (
     <main className={dashPage}>
-      <DashboardSectionShell eyebrow="Riesgos" title="Matriz y registro" titleAs="h1">
-        {params.error ? (
-          <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p>
-        ) : null}
-        {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
-        <div className="p-4">
-          <RiskManagerView
+      {params.error ? (
+        <p className={`mx-auto mb-4 max-w-[1600px] px-4 ${dashAlertError}`}>{params.error}</p>
+      ) : null}
+      {params.ok ? (
+        <p className={`mx-auto mb-4 max-w-[1600px] px-4 ${dashAlertOk}`}>{params.ok}</p>
+      ) : null}
+      <RiskManagerView
             risks={risksClient}
             projects={projects}
             projectGroups={projectGroups}
@@ -252,9 +251,7 @@ export default async function RisksPage({ searchParams }: RisksPageProps) {
             createAction={createAction}
             updateAction={updateAction}
             deleteAction={deleteAction}
-          />
-        </div>
-      </DashboardSectionShell>
+      />
     </main>
   );
 }

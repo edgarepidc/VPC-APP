@@ -9,7 +9,8 @@ import {
   DELIVERABLE_DETAIL_IN_PROJECT,
   RISKS_PROJECT,
 } from "@/lib/dashboard-paths";
-import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
+import { DashboardScopeSelect } from "@/app/dashboard/_components/dashboard-scope-select";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { resolveProjectFilterIds, type ProjectHierarchyGroup, type ProjectHierarchyRow } from "@/lib/project-hierarchy";
 
 import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
@@ -18,7 +19,6 @@ import {
   dashCard,
   dashKpiLabel,
   dashSectionTitle,
-  uiInput,
   uiLabel,
 } from "@/lib/ui-classes";
 
@@ -77,38 +77,55 @@ function startOfToday() {
   return d;
 }
 
+const HEATMAP_CELL = "h-[3.75rem] w-[3.75rem]";
+
 function HeatmapBlock({
   label,
   before,
   risks,
+  onOpenRisk,
 }: {
   label: string;
   before: boolean;
   risks: RiskClientRow[];
+  onOpenRisk: (id: string) => void;
 }) {
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
+
+  const risksByCell = useMemo(() => {
+    const map = new Map<string, RiskClientRow[]>();
+    for (const risk of risks) {
+      const pl = before ? p2l(risk.probability) : p2l(risk.residualProb);
+      const il = i2l(risk.impactAmount);
+      const key = `${pl}-${il}`;
+      const list = map.get(key) ?? [];
+      list.push(risk);
+      map.set(key, list);
+    }
+    return map;
+  }, [risks, before]);
+
   const rows = useMemo(() => {
     const out: { pl: number; il: number; count: number; score: number }[][] = [];
     for (let pi = 0; pi < 5; pi++) {
       const pl = 5 - pi;
       const row: { pl: number; il: number; count: number; score: number }[] = [];
       for (let il = 1; il <= 5; il++) {
-        const count = risks.filter((r) => {
-          const rp = before ? p2l(r.probability) : p2l(r.residualProb);
-          return rp === pl && i2l(r.impactAmount) === il;
-        }).length;
-        row.push({ pl, il, count, score: pl * il });
+        const key = `${pl}-${il}`;
+        const cellRisks = risksByCell.get(key) ?? [];
+        row.push({ pl, il, count: cellRisks.length, score: pl * il });
       }
       out.push(row);
     }
     return out;
-  }, [risks, before]);
+  }, [risksByCell]);
 
   return (
-    <div className="mx-auto w-full max-w-[440px]">
+    <div className="mx-auto w-full max-w-[540px]">
       <p className={`mb-2.5 ${uiLabel}`}>{label}</p>
       <div className="flex gap-1.5">
         <div
-          className="flex items-center pb-5 text-[10px] font-medium text-slate-400"
+          className="flex items-center pb-6 text-[10px] font-medium text-slate-400"
           style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
         >
           Prob.
@@ -117,30 +134,78 @@ function HeatmapBlock({
           <div className="flex gap-1">
             <div className="grid shrink-0 grid-rows-5 gap-1 py-0 pr-1.5 text-[10px] leading-none text-slate-400">
               {[5, 4, 3, 2, 1].map((n) => (
-                <div key={n} className="flex h-14 w-4 items-center justify-end">
+                <div key={n} className="flex h-[3.75rem] w-4 items-center justify-end">
                   {n}
                 </div>
               ))}
             </div>
             <div>
               <div className="grid grid-cols-5 gap-1">
-                {rows.flatMap((row) =>
+                {rows.flatMap((row, rowIndex) =>
                   row.map(({ pl, il, count, score }) => {
                     const { bg, fg } = heatmapTone(score);
+                    const cellKey = `${pl}-${il}`;
+                    const cellRisks = risksByCell.get(cellKey) ?? [];
+                    const isOpen = hoverKey === cellKey;
+                    const popoverAbove = rowIndex >= 3;
+
                     return (
                       <div
                         key={`${pl}-${il}-${before}`}
-                        title={`Score ${score} · Prob.${pl} × Imp.${il}${count ? ` · ${count} riesgo(s)` : ""}`}
-                        className="flex h-14 w-14 items-center justify-center rounded-md transition-transform hover:z-[1] hover:scale-110"
-                        style={{ backgroundColor: bg, color: fg }}
+                        className={`relative ${isOpen ? "z-30" : "z-0"}`}
+                        onMouseEnter={() => {
+                          if (count > 0) setHoverKey(cellKey);
+                        }}
+                        onMouseLeave={() => setHoverKey(null)}
                       >
-                        {count > 0 ? (
-                          <span
-                            className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold"
-                            style={{ backgroundColor: `${fg}28`, color: fg }}
+                        <div
+                          title={
+                            count > 0
+                              ? `Score ${score} · Prob.${pl} × Imp.${il} · ${count} riesgo(s)`
+                              : `Score ${score} · Prob.${pl} × Imp.${il}`
+                          }
+                          className={`flex ${HEATMAP_CELL} items-center justify-center rounded-md transition-transform ${
+                            count > 0 ? "cursor-pointer hover:scale-105" : ""
+                          } ${isOpen ? "scale-105 ring-2 ring-slate-400/60" : ""}`}
+                          style={{ backgroundColor: bg, color: fg }}
+                        >
+                          {count > 0 ? (
+                            <span
+                              className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
+                              style={{ backgroundColor: `${fg}28`, color: fg }}
+                            >
+                              {count}
+                            </span>
+                          ) : null}
+                        </div>
+                        {isOpen && count > 0 ? (
+                          <div
+                            className={`pointer-events-auto absolute left-1/2 z-40 w-64 -translate-x-1/2 rounded-lg border border-slate-200 bg-white p-2 shadow-lg ${
+                              popoverAbove ? "bottom-[calc(100%+6px)]" : "top-[calc(100%+6px)]"
+                            }`}
                           >
-                            {count}
-                          </span>
+                            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                              Prob. {pl} × Imp. {il} · {count}
+                            </p>
+                            <ul className="max-h-44 space-y-0.5 overflow-y-auto">
+                              {cellRisks.map((risk) => (
+                                <li key={risk.id}>
+                                  <button
+                                    type="button"
+                                    className="w-full rounded-md px-2 py-1.5 text-left hover:bg-slate-50"
+                                    onClick={() => onOpenRisk(risk.id)}
+                                  >
+                                    <span className="line-clamp-2 text-xs font-medium text-slate-800">
+                                      {risk.title}
+                                    </span>
+                                    <span className="mt-0.5 block truncate text-[10px] text-slate-500">
+                                      {risk.project.name}
+                                    </span>
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         ) : null}
                       </div>
                     );
@@ -149,7 +214,7 @@ function HeatmapBlock({
               </div>
               <div className="mt-1 grid grid-cols-5 gap-1 text-center text-[10px] text-slate-400">
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <span key={n} className="w-14">
+                  <span key={n} className="w-[3.75rem]">
                     {n}
                   </span>
                 ))}
@@ -251,18 +316,18 @@ export function RiskManagerView({
 
   const today = useMemo(() => startOfToday(), []);
 
-  const activeRisks = useMemo(
-    () => risks.filter((r) => !r.dueDate || new Date(r.dueDate) >= today),
-    [risks, today],
+  const scopedActiveRisks = useMemo(
+    () => scopedRisks.filter((r) => !r.dueDate || new Date(r.dueDate) >= today),
+    [scopedRisks, today],
   );
 
   const kpis = useMemo(() => {
-    const grossV = activeRisks.reduce((s, r) => s + vmeGross(r.probability, r.impactAmount), 0);
-    const resV = activeRisks.reduce((s, r) => s + vmeResidual(r.residualProb, r.impactAmount), 0);
-    const critical = activeRisks.filter((r) => residualScore(r.residualProb, r.impactAmount) > 10).length;
+    const grossV = scopedActiveRisks.reduce((s, r) => s + vmeGross(r.probability, r.impactAmount), 0);
+    const resV = scopedActiveRisks.reduce((s, r) => s + vmeResidual(r.residualProb, r.impactAmount), 0);
+    const critical = scopedActiveRisks.filter((r) => residualScore(r.residualProb, r.impactAmount) > 10).length;
     const eff = grossV > 0 ? Math.round((1 - resV / grossV) * 100) : null;
-    return { grossV, resV, critical, eff, activeCount: activeRisks.length };
-  }, [activeRisks]);
+    return { grossV, resV, critical, eff, activeCount: scopedActiveRisks.length };
+  }, [scopedActiveRisks]);
 
   const detail = scopedRisks.find((x) => x.id === detailId) ?? risks.find((x) => x.id === detailId) ?? null;
 
@@ -275,9 +340,9 @@ export function RiskManagerView({
       day: "numeric",
     });
     const expired = risks.filter((r) => r.dueDate && new Date(r.dueDate) < today);
-    const critical = activeRisks.filter((r) => residualScore(r.residualProb, r.impactAmount) > 10);
-    const tV = activeRisks.reduce((s, r) => s + vmeGross(r.probability, r.impactAmount), 0);
-    const tR = activeRisks.reduce((s, r) => s + vmeResidual(r.residualProb, r.impactAmount), 0);
+    const critical = scopedActiveRisks.filter((r) => residualScore(r.residualProb, r.impactAmount) > 10);
+    const tV = scopedActiveRisks.reduce((s, r) => s + vmeGross(r.probability, r.impactAmount), 0);
+    const tR = scopedActiveRisks.reduce((s, r) => s + vmeResidual(r.residualProb, r.impactAmount), 0);
     const eff = tV > 0 ? Math.round((1 - tR / tV) * 100) : 0;
     const L = "─".repeat(68);
     const D = "═".repeat(68);
@@ -291,8 +356,8 @@ ${L}
 
 RESUMEN EJECUTIVO
 ${L}
-Riesgos en registro     : ${risks.length}
-Riesgos activos         : ${activeRisks.length}
+Riesgos en registro     : ${scopedRisks.length}
+Riesgos activos         : ${scopedActiveRisks.length}
 Riesgos vencidos        : ${expired.length}
 
 EXPOSICIÓN FINANCIERA (VME · MXN)
@@ -311,7 +376,7 @@ ${
 ${L}
 DETALLE POR RIESGO (ACTIVOS)
 ${L}
-${activeRisks
+${scopedActiveRisks
   .map((r) => {
     const gs = grossScore(r.probability, r.impactAmount);
     const rs = residualScore(r.residualProb, r.impactAmount);
@@ -337,9 +402,36 @@ ${D}
 Generado desde EMBUS — Risk Manager
 ${D}`;
     return body.trim();
-  }, [risks, activeRisks, today]);
+  }, [risks, scopedRisks, scopedActiveRisks, today]);
 
   return (
+    <DashboardSectionShell
+      eyebrow="Riesgos"
+      title="Matriz y registro"
+      titleAs="h1"
+      headerTrailing={
+        <>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar riesgo…"
+            className="h-10 w-[min(100%,12rem)] rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-900 shadow-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100 sm:w-[13rem]"
+          />
+          <DashboardScopeSelect
+            value={projectFilter}
+            onChange={(v) => {
+              setProjectFilter(v);
+              setFocusId(null);
+            }}
+            groups={projectGroups}
+            allLabel="Todas las iniciativas"
+            aria-label="Filtrar por iniciativa o subproyecto"
+          />
+        </>
+      }
+      bodyClassName="p-4"
+    >
     <div className="space-y-4 text-slate-900">
       <div className={dashKpiTilesGrid}>
         <KpiTile
@@ -388,6 +480,12 @@ ${D}`;
         />
       </div>
 
+      <RisksActionQueue
+        items={actionItems}
+        activeId={focusId}
+        onSelect={openDetail}
+      />
+
       <section className={`${dashCard} p-4`}>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className={dashSectionTitle}>Mapa de calor</h2>
@@ -400,8 +498,8 @@ ${D}`;
           </button>
         </div>
         <div className="grid gap-8 sm:grid-cols-2">
-          <HeatmapBlock label="Antes de mitigación" before={true} risks={risks} />
-          <HeatmapBlock label="Después de mitigación" before={false} risks={risks} />
+          <HeatmapBlock label="Antes de mitigación" before={true} risks={scopedRisks} onOpenRisk={openDetail} />
+          <HeatmapBlock label="Después de mitigación" before={false} risks={scopedRisks} onOpenRisk={openDetail} />
         </div>
       </section>
 
@@ -421,31 +519,6 @@ ${D}`;
               <p className={`${dashAlertWarn} py-1`}>Tu rol es solo lectura para este módulo.</p>
             )}
           </div>
-        </div>
-
-        <RisksActionQueue
-          items={actionItems}
-          activeId={focusId}
-          onSelect={openDetail}
-        />
-
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <label className={uiLabel}>Iniciativa / subproyecto</label>
-          <ProjectHierarchySelect
-            value={projectFilter}
-            onChange={setProjectFilter}
-            groups={projectGroups}
-            allLabel="Todas"
-            className={`h-9 ${uiInput} w-auto min-w-[180px] py-1.5`}
-            aria-label="Filtrar por iniciativa o subproyecto"
-          />
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar riesgo…"
-            className={`h-9 w-[200px] max-w-full py-1.5 ${uiInput}`}
-          />
         </div>
 
         <div className="space-y-2 lg:hidden">
@@ -802,5 +875,6 @@ ${D}`;
         </div>
       )}
     </div>
+    </DashboardSectionShell>
   );
 }

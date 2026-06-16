@@ -27,7 +27,9 @@ export function RisksActionQueue({ items, activeId, onSelect }: RisksActionQueue
   return (
     <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-3 py-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-slate-600">Requiere acción</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Requiere acción
+        </p>
         <span className="text-xs text-slate-500">{items.length}</span>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
