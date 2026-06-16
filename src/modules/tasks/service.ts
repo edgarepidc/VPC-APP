@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 
 import { normalizeTaskStatus, normalizeTaskPriority, type TaskKanbanStatus } from "./constants";
 import {
-  parseTaskChecklist,
   serializeTaskChecklist,
   type TaskChecklistItem,
 } from "./json";

@@ -63,21 +63,17 @@ function KanbanQuickAdd({
   column,
   projectId,
   theme,
-  openSignal = 0,
+  autoOpen = false,
 }: {
   column: TaskKanbanStatus;
   projectId: string;
   theme: (typeof TASK_KANBAN_COLUMN_THEME)[TaskKanbanStatus];
-  openSignal?: number;
+  autoOpen?: boolean;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(autoOpen);
   const [title, setTitle] = useState("");
   const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (openSignal > 0 && column === "todo") setOpen(true);
-  }, [openSignal, column]);
 
   function submit() {
     const trimmed = title.trim();
@@ -315,10 +311,11 @@ export function KanbanBoard({ tasks, projects, members, canWrite, defaultProject
                 ) : null}
                 {canWrite && defaultProjectId ? (
                   <KanbanQuickAdd
+                    key={col === "todo" ? `quick-add-${quickAddSignal}` : col}
                     column={col}
                     projectId={defaultProjectId}
                     theme={theme}
-                    openSignal={col === "todo" ? quickAddSignal : 0}
+                    autoOpen={col === "todo" && quickAddSignal > 0}
                   />
                 ) : null}
               </div>
