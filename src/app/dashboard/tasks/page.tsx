@@ -18,7 +18,6 @@ import {
 import { PMO_PROJECTS } from "@/lib/dashboard-paths";
 import { getSessionUser } from "@/lib/auth/session";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
-import { ProjectHierarchyFilterSelect } from "@/app/dashboard/_components/project-hierarchy-filter-select";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
 import {
   initiativeNameFor,
@@ -33,6 +32,7 @@ import { listTasksByTenant } from "@/modules/tasks/service";
 
 import { createTaskWithContextAction } from "./actions";
 import { KanbanBoard } from "./kanban-board";
+import { TasksHeaderControls } from "./tasks-header-controls";
 import { TasksCalendarView } from "./tasks-calendar-view";
 import { TasksGanttView } from "./tasks-gantt-view";
 import { TasksTableView } from "./tasks-table-view";
@@ -180,7 +180,20 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
   return (
     <main className={dashPage}>
-      <DashboardSectionShell eyebrow="Tareas" title="Seguimiento de actividades" titleAs="h1">
+      <DashboardSectionShell
+        eyebrow="Tareas"
+        title="Seguimiento de actividades"
+        titleAs="h1"
+        headerTrailing={
+          <TasksHeaderControls
+            view={view}
+            project={pf}
+            q={qf}
+            month={view === "calendar" ? monthQueryValue : undefined}
+            groups={hierarchy.groups}
+          />
+        }
+      >
         {params.error ? (
           <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p>
         ) : null}
@@ -205,56 +218,6 @@ export default async function TasksPage({ searchParams }: PageProps) {
             </Link>
           ))}
         </nav>
-
-        <form
-          method="GET"
-          action="/dashboard/tasks"
-          className="mt-4 flex flex-wrap items-end gap-3 border-b border-slate-200 pb-4"
-        >
-          <input type="hidden" name="view" value={view} />
-          {view === "calendar" ? (
-            <input type="hidden" name="month" value={monthQueryValue} />
-          ) : null}
-          <div>
-            <label className={uiLabel}>Iniciativa / subproyecto</label>
-            <ProjectHierarchyFilterSelect
-              name="project"
-              groups={hierarchy.groups}
-              defaultValue={pf}
-              allLabel="Todas las iniciativas"
-              className="mt-1 block min-w-[220px] rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="min-w-[200px] flex-1">
-            <label className={uiLabel}>Buscar</label>
-            <input
-              name="q"
-              type="search"
-              defaultValue={qf}
-              placeholder="Título de la tarea…"
-              className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-          <button
-            type="submit"
-            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900"
-          >
-            Aplicar filtros
-          </button>
-          {(pf || qf) && (
-            <Link
-              href={tasksHref(
-                view,
-                "",
-                "",
-                view === "calendar" ? monthQueryValue : undefined,
-              )}
-              className="text-sm font-medium text-slate-600 underline"
-            >
-              Limpiar
-            </Link>
-          )}
-        </form>
 
         {canWrite && hasProjects && (
           <details className={`${dashCard} mt-4`}>
@@ -349,6 +312,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
             projects={projectOptions}
             members={members}
             canWrite={canWrite}
+            defaultProjectId={defaultTaskProjectId}
           />
         )}
         {view === "table" && (

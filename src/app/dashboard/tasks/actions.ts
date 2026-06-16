@@ -171,3 +171,31 @@ export async function updateTaskAction(formData: FormData) {
   });
   revalidatePath("/dashboard/tasks");
 }
+
+export async function quickCreateTaskAction(formData: FormData) {
+  const s = await getSessionUser();
+  if (!s?.activeTenantId) throw new Error("No autorizado");
+  if (!canWriteWorkspaceData(s)) throw new Error("Sin permiso");
+
+  const projectId = String(formData.get("projectId") ?? "").trim();
+  const title = String(formData.get("title") ?? "").trim();
+  const status = normalizeTaskStatus(String(formData.get("status") ?? "todo"));
+
+  if (!projectId || !title) throw new Error("Proyecto y título son obligatorios");
+
+  await assertCanAccessProject({
+    tenantId: s.activeTenantId,
+    userId: s.userId,
+    role: s.role,
+    projectId,
+    isPlatformVisit: s.isPlatformVisit,
+  });
+
+  await createTask({
+    tenantId: s.activeTenantId,
+    projectId,
+    title,
+    status,
+  });
+  revalidatePath("/dashboard/tasks");
+}

@@ -50,6 +50,7 @@ export async function createTask(input: {
   tenantId: string;
   projectId: string;
   title: string;
+  status?: TaskKanbanStatus;
   dueDate?: Date | null;
   assigneeUserId?: string | null;
 }) {
@@ -75,7 +76,7 @@ export async function createTask(input: {
       tenantId: input.tenantId,
       projectId: input.projectId,
       title,
-      status: "todo",
+      status: input.status ?? "todo",
       dueDate: input.dueDate ?? undefined,
       assigneeUserId: input.assigneeUserId ?? undefined,
     },
