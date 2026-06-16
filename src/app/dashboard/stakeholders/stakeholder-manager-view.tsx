@@ -4,16 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { getQuadrantId } from "@/lib/stakeholder-playbook";
+import { DashboardScopeSelect } from "@/app/dashboard/_components/dashboard-scope-select";
+import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
 import {
   dashAlertWarn,
   dashCard,
   dashSectionTitle,
-  uiInput,
-  uiLabel,
 } from "@/lib/ui-classes";
 
-import { ProjectHierarchySelect } from "@/app/dashboard/_components/project-hierarchy-select";
 import {
   resolveProjectFilterIds,
   type ProjectHierarchyGroup,
@@ -173,6 +172,30 @@ export function StakeholderManagerView({
   }
 
   return (
+    <DashboardSectionShell
+      eyebrow="Interesados"
+      title="Mapa de poder e interés"
+      titleAs="h1"
+      headerTrailing={
+        <>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar interesado…"
+            className="h-10 w-[min(100%,12rem)] rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-900 shadow-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100 sm:w-[13rem]"
+          />
+          <DashboardScopeSelect
+            value={projectFilter}
+            onChange={setProjectFilter}
+            groups={projectGroups}
+            allLabel="Todas las iniciativas"
+            aria-label="Filtrar por iniciativa o subproyecto"
+          />
+        </>
+      }
+      bodyClassName="p-4"
+    >
     <div className="space-y-4 text-slate-900">
       <div className={dashKpiTilesGrid}>
         <KpiTile
@@ -216,43 +239,20 @@ export function StakeholderManagerView({
       <section className={`${dashCard} p-4`}>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className={dashSectionTitle}>Matriz de interesados</h2>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="flex items-center gap-2">
-              <span className={uiLabel}>Buscar</span>
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Nombre, rol, cuadrante…"
-                className={`${uiInput} w-44 sm:w-52`}
-              />
-            </label>
-            {canEdit ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditTarget(null);
-                  setCreateOpen(true);
-                }}
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-              >
-                + Nuevo interesado
-              </button>
-            ) : (
-              <p className={`${dashAlertWarn} py-1`}>Tu rol es solo lectura para este módulo.</p>
-            )}
-          </div>
-        </div>
-
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <label className={uiLabel}>Iniciativa / subproyecto</label>
-          <ProjectHierarchySelect
-            value={projectFilter}
-            onChange={setProjectFilter}
-            groups={projectGroups}
-            allLabel="Todas"
-            className={`h-9 ${uiInput} w-auto min-w-[180px] py-1.5`}
-            aria-label="Filtrar por iniciativa o subproyecto"
-          />
+          {canEdit ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditTarget(null);
+                setCreateOpen(true);
+              }}
+              className="h-9 shrink-0 whitespace-nowrap rounded-lg border border-violet-600 bg-violet-600 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+            >
+              + Nuevo interesado
+            </button>
+          ) : (
+            <p className={`${dashAlertWarn} py-1`}>Tu rol es solo lectura para este módulo.</p>
+          )}
         </div>
 
         <StakeholderMatrixClient
@@ -326,5 +326,6 @@ export function StakeholderManagerView({
         </div>
       ) : null}
     </div>
+    </DashboardSectionShell>
   );
 }

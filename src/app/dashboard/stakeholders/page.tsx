@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
 import { getSessionUser } from "@/lib/auth/session";
 import { canWriteWorkspaceData } from "@/lib/workspace-access";
 import { getProjectHierarchyForSession, getSessionProjectIdsFilter } from "@/lib/project-scope";
@@ -173,29 +172,27 @@ export default async function StakeholdersPage({ searchParams }: StakeholdersPag
 
   return (
     <main className={dashPage}>
-      <DashboardSectionShell eyebrow="Interesados" title="Mapa de poder e interés" titleAs="h1">
-        {params.error ? (
-          <p className={`mx-4 mt-4 ${dashAlertError}`}>{params.error}</p>
-        ) : null}
-        {params.ok ? <p className={`mx-4 mt-4 ${dashAlertOk}`}>{params.ok}</p> : null}
-        <div className="p-4">
-          <StakeholderManagerView
-            stakeholders={matrixItems}
-            projects={projects}
-            projectGroups={projectGroups}
-            projectHierarchy={hierarchyProjects}
-            canEdit={canEdit}
-            initial={{
-              id: params.id,
-              project: initialProject,
-              q: params.q,
-            }}
-            createAction={createAction}
-            updateAction={updateAction}
-            deleteAction={deleteAction}
-          />
-        </div>
-      </DashboardSectionShell>
+      {params.error ? (
+        <p className={`mx-auto mb-4 max-w-[1600px] px-4 ${dashAlertError}`}>{params.error}</p>
+      ) : null}
+      {params.ok ? (
+        <p className={`mx-auto mb-4 max-w-[1600px] px-4 ${dashAlertOk}`}>{params.ok}</p>
+      ) : null}
+      <StakeholderManagerView
+        stakeholders={matrixItems}
+        projects={projects}
+        projectGroups={projectGroups}
+        projectHierarchy={hierarchyProjects}
+        canEdit={canEdit}
+        initial={{
+          id: params.id,
+          project: initialProject,
+          q: params.q,
+        }}
+        createAction={createAction}
+        updateAction={updateAction}
+        deleteAction={deleteAction}
+      />
     </main>
   );
 }
