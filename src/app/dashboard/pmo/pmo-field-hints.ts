@@ -1,5 +1,5 @@
 export const PMO_KPI_HINTS = {
-  projects: "Iniciativas activas visibles según tu rol y alcance asignado.",
+  projects: "Iniciativas de primer nivel en tu alcance (sin contar subproyectos).",
   deliverables: "Compromisos registrados en el portafolio visible.",
   onTime: "Porcentaje de entregables cerrados antes o en su fecha límite.",
   leadTime: "Días promedio entre el registro y la entrega efectiva.",

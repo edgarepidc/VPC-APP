@@ -52,6 +52,17 @@ export function buildProjectHierarchyGroups(
   });
 }
 
+/** Cuenta iniciativas de primer nivel visibles (no subproyectos). */
+export function countInitiativesInScope(
+  projects: Pick<ProjectHierarchyRow, "id" | "parentProjectId">[],
+): number {
+  const initiativeIds = new Set<string>();
+  for (const p of projects) {
+    initiativeIds.add(p.parentProjectId ?? p.id);
+  }
+  return initiativeIds.size;
+}
+
 /** IDs de subproyectos bajo una iniciativa (vacío si no tiene hijos). */
 export function subprojectIdsUnder(
   projects: ProjectHierarchyRow[],

@@ -6,6 +6,7 @@ import {
   weightedProgressPct,
   type DeliverableMetricRow,
 } from "@/lib/deliverable-pmo-utils";
+import { countInitiativesInScope } from "@/lib/project-hierarchy";
 import { residualScore } from "@/app/dashboard/risks/risk-utils";
 import { getQuadrantId } from "@/lib/stakeholder-playbook";
 import { buildEscalationTrendsByProject } from "@/lib/escalation-utils";
@@ -51,7 +52,7 @@ export async function getPmoSnapshot(
   ] = await Promise.all([
     db.project.findMany({
       where: projectWhere,
-      select: { id: true, name: true, status: true, createdAt: true },
+      select: { id: true, name: true, status: true, createdAt: true, parentProjectId: true },
       orderBy: { createdAt: "desc" },
     }),
     db.deliverable.findMany({
@@ -332,7 +333,7 @@ export async function getPmoSnapshot(
 
   return {
     kpis: {
-      projects: projects.length,
+      projects: countInitiativesInScope(projects),
       deliverables: deliverables.length,
       risks: risks.length,
       stakeholders: stakeholders.length,

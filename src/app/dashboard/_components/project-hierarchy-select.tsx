@@ -19,6 +19,52 @@ export type ProjectHierarchySelectProps = {
   "aria-label"?: string;
 };
 
+function ProjectHierarchyOptions({
+  groups,
+  workScopeOnly,
+}: {
+  groups: ProjectHierarchyGroup[];
+  workScopeOnly: boolean;
+}) {
+  if (workScopeOnly) {
+    return groups.map((g) => {
+      if (g.subprojects.length === 0) {
+        return (
+          <option key={g.initiative.id} value={g.initiative.id}>
+            {g.initiative.name}
+          </option>
+        );
+      }
+      return (
+        <optgroup key={g.initiative.id} label={g.initiative.name}>
+          {g.subprojects.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </optgroup>
+      );
+    });
+  }
+
+  return groups.flatMap((g) => {
+    const options = [
+      <option key={g.initiative.id} value={g.initiative.id}>
+        {g.initiative.name}
+      </option>,
+    ];
+    for (const s of g.subprojects) {
+      options.push(
+        <option key={s.id} value={s.id}>
+          {"\u00a0\u00a0"}
+          {s.name}
+        </option>,
+      );
+    }
+    return options;
+  });
+}
+
 export function ProjectHierarchySelect({
   value,
   onChange,
@@ -45,45 +91,7 @@ export function ProjectHierarchySelect({
       {!allowAll && placeholderLabel ? (
         <option value="">{placeholderLabel}</option>
       ) : null}
-      {groups.map((g) => {
-        if (g.subprojects.length === 0) {
-          if (workScopeOnly) {
-            return (
-              <option key={g.initiative.id} value={g.initiative.id}>
-                {g.initiative.name}
-              </option>
-            );
-          }
-          return (
-            <optgroup key={g.initiative.id} label={g.initiative.name}>
-              <option value={g.initiative.id}>{g.initiative.name} (iniciativa)</option>
-            </optgroup>
-          );
-        }
-
-        if (workScopeOnly) {
-          return (
-            <optgroup key={g.initiative.id} label={g.initiative.name}>
-              {g.subprojects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </optgroup>
-          );
-        }
-
-        return (
-          <optgroup key={g.initiative.id} label={g.initiative.name}>
-            <option value={g.initiative.id}>Toda la iniciativa</option>
-            {g.subprojects.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </optgroup>
-        );
-      })}
+      <ProjectHierarchyOptions groups={groups} workScopeOnly={workScopeOnly} />
     </select>
   );
 }
