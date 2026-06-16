@@ -33,7 +33,7 @@ export function DashboardSectionShell({
   titleAs = "h2",
   bodyClassName = "",
 }: DashboardSectionShellProps) {
-  const hasMeta = Boolean(subtitle || headerExtra);
+  const hasMeta = Boolean(headerExtra);
   const TitleTag = titleAs;
 
   return (
@@ -50,6 +50,9 @@ export function DashboardSectionShell({
               <TitleTag className={`${dashSectionTitle} ${eyebrow ? "mt-1" : ""}`}>
                 {title}
               </TitleTag>
+              {subtitle ? (
+                <p className={`mt-1 max-w-2xl ${dashSectionSub}`}>{subtitle}</p>
+              ) : null}
             </div>
           </div>
 
@@ -63,10 +66,7 @@ export function DashboardSectionShell({
 
       {hasMeta ? (
         <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5">
-          {subtitle ? (
-            <div className={`max-w-3xl ${dashSectionSub}`}>{subtitle}</div>
-          ) : null}
-          {headerExtra ? <div className={subtitle ? "mt-3" : ""}>{headerExtra}</div> : null}
+          {headerExtra}
         </div>
       ) : null}
 
