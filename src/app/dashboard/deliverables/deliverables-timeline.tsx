@@ -270,12 +270,22 @@ export function DeliverablesTimeline({
                       onFocusChange?.(row.id);
                       onSelect(row.id);
                     }}
-                    className="relative block h-0 w-0 border-0 bg-transparent p-0 outline-none"
+                    className="relative block h-0 w-0 overflow-visible border-0 bg-transparent p-0 outline-none"
                     aria-label={`${row.title}, ${day} ${month}`}
                     aria-pressed={isHighlighted}
                   >
                     <span
-                      className={`absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-sm ${
+                      className="absolute left-0 z-0 w-px"
+                      style={{
+                        height: CONNECTOR_H,
+                        backgroundColor: theme.accent,
+                        top: 0,
+                        transform: isAbove ? "translate(-50%, -100%)" : "translateX(-50%)",
+                      }}
+                      aria-hidden
+                    />
+                    <span
+                      className={`absolute left-0 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-sm ${
                         isDone ? "h-3.5 w-3.5" : "h-3 w-3"
                       } ${isHighlighted ? "ring-2 ring-offset-1" : ""}`}
                       style={{
@@ -286,19 +296,8 @@ export function DeliverablesTimeline({
                       }}
                       aria-hidden
                     />
-                    <span
-                      className="absolute left-0 w-px"
-                      style={{
-                        height: CONNECTOR_H,
-                        backgroundColor: theme.accent,
-                        ...(isAbove
-                          ? { bottom: 0, transform: "translate(-50%, -100%)" }
-                          : { top: 0, transform: "translateX(-50%)" }),
-                      }}
-                      aria-hidden
-                    />
                     <div
-                      className="absolute left-0 -translate-x-1/2"
+                      className="absolute left-0 z-[5] -translate-x-1/2"
                       style={isAbove ? { bottom: CONNECTOR_H } : { top: CONNECTOR_H }}
                     >
                       <MilestoneChip
