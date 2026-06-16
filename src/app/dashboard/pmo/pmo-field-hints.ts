@@ -6,6 +6,7 @@ export const PMO_KPI_HINTS = {
   risks: "Riesgos formales en el registro del portafolio.",
   residualVme: "Suma del valor monetario esperado residual (probabilidad × impacto) en pesos mexicanos.",
   escalations: "Evaluaciones del Escalómetro guardadas en los últimos 30 días.",
+  portfolioProgress: "Porcentaje de entregables cerrados en el portafolio visible.",
   meetings: "Sesiones de reuniones registradas en los últimos 30 días y su costo acumulado.",
   stakeholders: "Interesados mapeados en la matriz de poder e interés.",
   team: "Miembros del equipo, roles e invitaciones del tenant.",

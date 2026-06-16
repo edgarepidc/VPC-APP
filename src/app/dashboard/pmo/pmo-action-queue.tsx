@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { PMO_PROJECTS } from "@/lib/dashboard-paths";
+import { dashCard } from "@/lib/ui-classes";
+
 import { type PmoActionItem, type PmoActionKind, pmoActionKindLabel } from "./pmo-action-utils";
 
 const kindStyle: Record<PmoActionKind, string> = {
@@ -17,17 +20,27 @@ type PmoActionQueueProps = {
 export function PmoActionQueue({ items }: PmoActionQueueProps) {
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-emerald-200 bg-emerald-50/50 px-4 py-3 text-sm text-emerald-800">
-        Sin elementos que requieran acción inmediata en el portafolio visible.
+      <div className={`${dashCard} border-emerald-200 bg-emerald-50/50 p-4`}>
+        <h2 className="text-sm font-semibold text-emerald-950">Cola de acción</h2>
+        <p className="mt-1 text-sm text-emerald-800">
+          Portafolio estable: sin deterioros, vencimientos ni alertas que requieran acción inmediata.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-3 py-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-slate-600">Requiere acción</p>
-        <span className="text-xs text-slate-500">{items.length}</span>
+    <section className={`${dashCard} p-4`}>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-base font-semibold text-slate-900">Cola de acción</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Priorizado por impacto — abre el detalle desde cada tarjeta.
+          </p>
+        </div>
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+          {items.length} pendiente{items.length !== 1 ? "s" : ""}
+        </span>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {items.map((item) => (
@@ -46,6 +59,12 @@ export function PmoActionQueue({ items }: PmoActionQueueProps) {
           </Link>
         ))}
       </div>
-    </div>
+      <p className="mt-3 text-center text-[11px] text-slate-400">
+        Módulos detallados en las pestañas superiores ·{" "}
+        <Link href={PMO_PROJECTS} className="underline hover:text-slate-600">
+          Ver iniciativas
+        </Link>
+      </p>
+    </section>
   );
 }

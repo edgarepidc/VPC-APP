@@ -4,7 +4,6 @@ import type { MeetingCostTrendDirection } from "@/lib/meeting-roi-utils";
 import type { EscalationTrendDirection } from "@/lib/escalation-utils";
 import { getEscalationTierBadge } from "@/lib/escalation-utils";
 import {
-  DELIVERABLES_HUB,
   DELIVERABLES_PROJECT,
   PMO_ESCALATIONS_PROJECT,
   PMO_MEETINGS_PROJECT,
@@ -171,25 +170,21 @@ function ProjectHealthCard({
 
 export function ProjectHealthPanel({ rows, portfolioProgressPct }: ProjectHealthPanelProps) {
   return (
-    <div className={`${dashCard} p-4 lg:col-span-2`}>
+    <div className={`${dashCard} p-4`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-slate-900">Salud por iniciativa / subproyecto</h2>
-        <Link
-          href={DELIVERABLES_HUB}
-          className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
-        >
-          Avance portafolio: {portfolioProgressPct}%
-        </Link>
-      </div>
-
-      {rows.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div>
+          <h2 className="text-base font-semibold text-slate-900">Salud del portafolio</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Vista por iniciativa y subproyecto · avance global {portfolioProgressPct}%
+          </p>
+        </div>
+        {rows.length > 0 ? (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-slate-400" aria-hidden />
             {rows.length} proyecto{rows.length !== 1 ? "s" : ""}
           </span>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {rows.map((project, index) => (
