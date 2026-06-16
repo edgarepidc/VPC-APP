@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { saveEscalationAction } from "@/app/dashboard/escalometro/actions";
@@ -24,16 +24,26 @@ type EscalometroClientProps = {
   projects: ProjectOption[];
   projectGroups: ProjectHierarchyGroup[];
   canSave: boolean;
+  defaultProjectId?: string;
 };
 
-export function EscalometroClient({ projects, projectGroups, canSave }: EscalometroClientProps) {
+export function EscalometroClient({
+  projects,
+  projectGroups,
+  canSave,
+  defaultProjectId = "",
+}: EscalometroClientProps) {
   const router = useRouter();
-  const [projectId, setProjectId] = useState("");
+  const [projectId, setProjectId] = useState(defaultProjectId);
   const [topic, setTopic] = useState("");
   const [feedback, setFeedback] = useState<{ type: "ok" | "error"; message: string } | null>(
     null,
   );
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (defaultProjectId) setProjectId(defaultProjectId);
+  }, [defaultProjectId]);
 
   const selectedProject = projects.find((p) => p.id === projectId);
 
