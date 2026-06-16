@@ -18,16 +18,16 @@ export function RiskFieldLabel({ children, hint, required }: RiskFieldLabelProps
         {children}
         {required ? " *" : null}
       </span>
-      {hint ? <FieldHint text={hint} /> : null}
+      {hint ? <FieldHint text={hint} placement="bottom" /> : null}
     </span>
   );
 }
 
 export function RiskKpiLabel({ children, hint }: { children: ReactNode; hint?: string }) {
   return (
-    <p className="mb-2 flex items-center text-xs text-slate-500">
+    <span className="flex items-center text-[11px] font-semibold uppercase tracking-wide text-slate-500">
       <span>{children}</span>
-      {hint ? <FieldHint text={hint} /> : null}
-    </p>
+      {hint ? <FieldHint text={hint} placement="bottom" /> : null}
+    </span>
   );
 }

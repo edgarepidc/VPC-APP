@@ -29,7 +29,7 @@ export const KPI_ACCENT_BG = {
 export type KpiTileTone = keyof typeof KPI_VALUE_TONES;
 
 export const KPI_CARD_BASE =
-  "relative overflow-hidden rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 pl-4 shadow-sm ring-1 ring-slate-200/80";
+  "relative overflow-visible rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 pl-4 shadow-sm ring-1 ring-slate-200/80";
 
 export const KPI_CARD_ACCENT =
   "pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-lg";

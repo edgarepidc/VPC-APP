@@ -13,7 +13,7 @@ export function PmoKpiLabel({ children, hint }: PmoKpiLabelProps) {
   return (
     <p className="mb-1 flex items-center text-xs text-slate-500">
       <span>{children}</span>
-      {hint ? <FieldHint text={hint} /> : null}
+      {hint ? <FieldHint text={hint} placement="bottom" /> : null}
     </p>
   );
 }

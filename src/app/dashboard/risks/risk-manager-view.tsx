@@ -26,7 +26,6 @@ import { CreateRiskModal } from "./create-risk-modal";
 import { RiskDetailEditForm } from "./risk-detail-edit-form";
 import {
   fmtMoneyMxn,
-  grossScore,
   heatmapTone,
   i2l,
   p2l,
@@ -250,7 +249,6 @@ export function RiskManagerView({
   const [projectFilter, setProjectFilter] = useState(initial?.project ?? "");
   const [q, setQ] = useState(initial?.q ?? "");
   const [createOpen, setCreateOpen] = useState(false);
-  const [memoOpen, setMemoOpen] = useState(false);
 
   function syncUrl(patch: Record<string, string | null>) {
     const p = new URLSearchParams(searchParams.toString());
@@ -331,78 +329,55 @@ export function RiskManagerView({
 
   const detail = scopedRisks.find((x) => x.id === detailId) ?? risks.find((x) => x.id === detailId) ?? null;
 
-  const memoText = useMemo(() => {
-    const now = new Date();
-    const ds = now.toLocaleDateString("es-MX", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+  function exportRisksCsv() {
+    const hdr = [
+      "Proyecto",
+      "Descripción",
+      "Categoría",
+      "Dueño",
+      "Entregable",
+      "Probabilidad %",
+      "Impacto MXN",
+      "VME bruto",
+      "Prob. residual %",
+      "VME residual",
+      "Score residual",
+      "Caducidad",
+      "Plan B",
+    ];
+    const esc = (v: string) => `"${v.replace(/"/g, "'")}"`;
+    const lines = [hdr.join(",")];
+    for (const risk of scopedRisks) {
+      const rs = residualScore(risk.residualProb, risk.impactAmount);
+      const planB =
+        rs > 10 ? (risk.contingency?.trim() ? "Definido" : "Falta") : "—";
+      lines.push(
+        [
+          esc(risk.project.name),
+          esc(risk.title),
+          esc(risk.category),
+          esc(risk.ownerName),
+          esc(risk.deliverable?.title ?? ""),
+          risk.probability,
+          risk.impactAmount,
+          vmeGross(risk.probability, risk.impactAmount),
+          risk.residualProb,
+          vmeResidual(risk.residualProb, risk.impactAmount),
+          rs,
+          risk.dueDate ? new Date(risk.dueDate).toLocaleDateString("es-MX") : "",
+          planB,
+        ].join(","),
+      );
+    }
+    const blob = new Blob(["\uFEFF" + lines.join("\n")], {
+      type: "text/csv;charset=utf-8",
     });
-    const expired = risks.filter((r) => r.dueDate && new Date(r.dueDate) < today);
-    const critical = scopedActiveRisks.filter((r) => residualScore(r.residualProb, r.impactAmount) > 10);
-    const tV = scopedActiveRisks.reduce((s, r) => s + vmeGross(r.probability, r.impactAmount), 0);
-    const tR = scopedActiveRisks.reduce((s, r) => s + vmeResidual(r.residualProb, r.impactAmount), 0);
-    const eff = tV > 0 ? Math.round((1 - tR / tV) * 100) : 0;
-    const L = "─".repeat(68);
-    const D = "═".repeat(68);
-    const body = `${D}
-                  RISK MEMO — EXPOSICIÓN FINANCIERA
-                      PARA COMITÉ DE DIRECCIÓN
-${D}
-Fecha          : ${ds}
-Clasificación  : CONFIDENCIAL — USO INTERNO
-${L}
-
-RESUMEN EJECUTIVO
-${L}
-Riesgos en registro     : ${scopedRisks.length}
-Riesgos activos         : ${scopedActiveRisks.length}
-Riesgos vencidos        : ${expired.length}
-
-EXPOSICIÓN FINANCIERA (VME · MXN)
-${L}
-  VME bruto (sin mitigación)    : ${fmtMoneyMxn(tV)}
-  VME residual (con mitigación) : ${fmtMoneyMxn(tR)}
-  Ahorro por mitigación         : ${fmtMoneyMxn(tV - tR)}
-  Eficiencia de mitigación      : ${eff}%
-
-${
-  critical.length
-    ? `ALERTA: ${critical.length} riesgo(s) con score residual > 10 requieren Plan de Contingencia validado.`
-    : "Estado: todos los riesgos activos dentro del umbral de tolerancia (score residual ≤ 10) o con plan definido."
-}
-
-${L}
-DETALLE POR RIESGO (ACTIVOS)
-${L}
-${scopedActiveRisks
-  .map((r) => {
-    const gs = grossScore(r.probability, r.impactAmount);
-    const rs = residualScore(r.residualProb, r.impactAmount);
-    const vg = vmeGross(r.probability, r.impactAmount);
-    const vr = vmeResidual(r.residualProb, r.impactAmount);
-    return `
-# ${r.title}
-  Proyecto       : ${r.project.name}
-  Categoría      : ${r.category} · Dueño: ${r.ownerName}
-  Entregable     : ${r.deliverable?.title ?? "—"}
-  Prob. / Impacto: ${r.probability}% · ${fmtMoneyMxn(r.impactAmount)}
-  Score bruto    : ${gs}/25 · VME bruto: ${fmtMoneyMxn(vg)}
-  Prob. residual : ${r.residualProb}% · Score residual: ${rs}/25 · VME residual: ${fmtMoneyMxn(vr)}
-  Mitigación     : ${r.mitigation ?? "—"}
-  Disparador B   : ${r.trigger ?? "—"}
-  Contingencia   : ${r.contingency ?? "—"}
-  Caducidad      : ${r.dueDate ? new Date(r.dueDate).toLocaleDateString("es-MX") : "—"}
-`;
-  })
-  .join("\n" + L + "\n")}
-
-${D}
-Generado desde EMBUS — Risk Manager
-${D}`;
-    return body.trim();
-  }, [risks, scopedRisks, scopedActiveRisks, today]);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "registro-riesgos.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   return (
     <DashboardSectionShell
@@ -487,15 +462,8 @@ ${D}`;
       />
 
       <section className={`${dashCard} p-4`}>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4">
           <h2 className={dashSectionTitle}>Mapa de calor</h2>
-          <button
-            type="button"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            onClick={() => setMemoOpen(true)}
-          >
-            Exportar Risk Memo
-          </button>
         </div>
         <div className="grid gap-8 sm:grid-cols-2">
           <HeatmapBlock label="Antes de mitigación" before={true} risks={scopedRisks} onOpenRisk={openDetail} />
@@ -511,13 +479,20 @@ ${D}`;
               <button
                 type="button"
                 onClick={() => setCreateOpen(true)}
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                className="h-[34px] whitespace-nowrap rounded-lg bg-slate-900 px-3.5 text-xs font-medium text-white hover:bg-slate-800"
               >
                 + Nuevo riesgo
               </button>
             ) : (
               <p className={`${dashAlertWarn} py-1`}>Tu rol es solo lectura para este módulo.</p>
             )}
+            <button
+              type="button"
+              onClick={exportRisksCsv}
+              className="h-[34px] whitespace-nowrap rounded-lg border border-slate-300 bg-white px-3.5 text-xs font-medium hover:bg-slate-50"
+            >
+              CSV
+            </button>
           </div>
         </div>
 
@@ -818,62 +793,6 @@ ${D}`;
           onClose={() => setCreateOpen(false)}
         />
       ) : null}
-
-      {/* Memo */}
-      {memoOpen && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-          role="presentation"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setMemoOpen(false);
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="relative max-h-[min(90vh,640px)] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-7 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-500 transition hover:bg-slate-100"
-              onClick={() => setMemoOpen(false)}
-              aria-label="Cerrar"
-            >
-              ✕
-            </button>
-            <h2 className="pr-10 text-lg font-semibold">Risk Memo — Exposición financiera</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                onClick={() => {
-                  void navigator.clipboard.writeText(memoText).then(() => window.alert("Memo copiado al portapapeles"));
-                }}
-              >
-                Copiar
-              </button>
-              <button
-                type="button"
-                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                onClick={() => {
-                  const blob = new Blob([memoText], { type: "text/plain;charset=utf-8" });
-                  const a = document.createElement("a");
-                  a.href = URL.createObjectURL(blob);
-                  a.download = `RiskMemo_${new Date().toISOString().slice(0, 10)}.txt`;
-                  a.click();
-                  URL.revokeObjectURL(a.href);
-                }}
-              >
-                Descargar .txt
-              </button>
-            </div>
-            <pre className="mt-4 max-h-[min(50vh,480px)] overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-5 font-mono text-[11.5px] leading-relaxed text-slate-700">
-              {memoText}
-            </pre>
-          </div>
-        </div>
-      )}
     </div>
     </DashboardSectionShell>
   );
