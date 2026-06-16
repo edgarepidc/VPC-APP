@@ -16,5 +16,9 @@ export const STAKEHOLDER_KPI_HINTS = {
     "Jugadores clave (Q1): alta influencia y bajo interés aparente — gestionar de cerca.",
   latentes:
     "Cumplidores (Q2): alta influencia e interés — mantener satisfechos con comunicación ejecutiva.",
+  defensores:
+    "Aliados (Q3): baja influencia y bajo interés — mantener informados como embajadores internos.",
+  espectadores:
+    "Q4: baja influencia y alto interés — monitorear con comunicación general de hitos.",
   gaps: "Subproyectos sin interesados o sin promotores identificados en la matriz.",
 } as const;

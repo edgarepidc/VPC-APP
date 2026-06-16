@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type QuadrantId, getQuadrantId } from "@/lib/stakeholder-playbook";
 import { DashboardScopeSelect } from "@/app/dashboard/_components/dashboard-scope-select";
 import { DashboardSectionShell } from "@/app/dashboard/_components/section-shell";
-import { KpiTile, dashKpiTilesGrid } from "@/app/dashboard/_components/kpi-tile";
+import { KpiTile } from "@/app/dashboard/_components/kpi-tile";
 import {
   dashAlertWarn,
   dashCard,
@@ -41,6 +41,12 @@ import { StakeholdersRegisterView } from "./stakeholders-register-view";
 
 const STAKEHOLDER_VIEWS = ["matrix", "register"] as const;
 type StakeholderView = (typeof STAKEHOLDER_VIEWS)[number];
+
+const stakeholderKpiGrid =
+  "grid grid-cols-3 gap-1.5 min-[720px]:grid-cols-6 min-[720px]:gap-2";
+
+const stakeholderKpiTileClass = "!px-2 !py-1.5 !pl-2.5 min-w-0";
+const stakeholderKpiValueClass = "!text-xl";
 
 function normalizeView(raw: string | undefined): StakeholderView {
   const v = raw?.trim().toLowerCase();
@@ -223,9 +229,15 @@ export function StakeholderManagerView({
       total: projectScoped.length,
       promotores: countQ("q1"),
       latentes: countQ("q2"),
+      defensores: countQ("q3"),
+      espectadores: countQ("q4"),
       gaps,
     };
   }, [projectScoped, actionItems]);
+
+  function toggleQuadrantFilter(qid: QuadrantId) {
+    setQuadrant(quadrantFilter === qid ? "" : qid);
+  }
 
   function handleActionSelect(item: StakeholderActionItem) {
     if (projectFilter !== item.projectId) {
@@ -279,50 +291,80 @@ export function StakeholderManagerView({
       bodyClassName="p-4"
     >
       <div className="space-y-4 text-slate-900">
-        <div className={dashKpiTilesGrid}>
+        <div className={stakeholderKpiGrid}>
           <ClickableKpi active={!quadrantFilter} onClick={() => setQuadrant("")}>
             <KpiTile
               tone="slate"
+              className={stakeholderKpiTileClass}
+              valueClassName={stakeholderKpiValueClass}
               label={
-                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.total}>Interesados</StakeholderKpiLabel>
+                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.total} compact>
+                  Interesados
+                </StakeholderKpiLabel>
               }
               value={kpis.total}
             />
           </ClickableKpi>
-          <ClickableKpi
-            active={quadrantFilter === "q1"}
-            onClick={() => setQuadrant(quadrantFilter === "q1" ? "" : "q1")}
-          >
+          <ClickableKpi active={quadrantFilter === "q1"} onClick={() => toggleQuadrantFilter("q1")}>
             <KpiTile
               tone="emerald"
+              className={stakeholderKpiTileClass}
+              valueClassName={stakeholderKpiValueClass}
               label={
-                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.promotores}>
-                  Promotores (Q1)
+                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.promotores} compact>
+                  Q1 Promotores
                 </StakeholderKpiLabel>
               }
               value={kpis.promotores}
             />
           </ClickableKpi>
-          <ClickableKpi
-            active={quadrantFilter === "q2"}
-            onClick={() => setQuadrant(quadrantFilter === "q2" ? "" : "q2")}
-          >
+          <ClickableKpi active={quadrantFilter === "q2"} onClick={() => toggleQuadrantFilter("q2")}>
             <KpiTile
               tone="amber"
+              className={stakeholderKpiTileClass}
+              valueClassName={stakeholderKpiValueClass}
               label={
-                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.latentes}>
-                  Latentes (Q2)
+                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.latentes} compact>
+                  Q2 Latentes
                 </StakeholderKpiLabel>
               }
               value={kpis.latentes}
             />
           </ClickableKpi>
+          <ClickableKpi active={quadrantFilter === "q3"} onClick={() => toggleQuadrantFilter("q3")}>
+            <KpiTile
+              tone="sky"
+              className={stakeholderKpiTileClass}
+              valueClassName={stakeholderKpiValueClass}
+              label={
+                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.defensores} compact>
+                  Q3 Defensores
+                </StakeholderKpiLabel>
+              }
+              value={kpis.defensores}
+            />
+          </ClickableKpi>
+          <ClickableKpi active={quadrantFilter === "q4"} onClick={() => toggleQuadrantFilter("q4")}>
+            <KpiTile
+              tone="purple"
+              className={stakeholderKpiTileClass}
+              valueClassName={stakeholderKpiValueClass}
+              label={
+                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.espectadores} compact>
+                  Q4 Espectadores
+                </StakeholderKpiLabel>
+              }
+              value={kpis.espectadores}
+            />
+          </ClickableKpi>
           <ClickableKpi onClick={scrollToActionQueue}>
             <KpiTile
               tone="rose"
+              className={stakeholderKpiTileClass}
+              valueClassName={stakeholderKpiValueClass}
               label={
-                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.gaps}>
-                  Brechas de cobertura
+                <StakeholderKpiLabel hint={STAKEHOLDER_KPI_HINTS.gaps} compact>
+                  Brechas
                 </StakeholderKpiLabel>
               }
               value={kpis.gaps}

@@ -23,10 +23,22 @@ export function StakeholderFieldLabel({ children, hint, required }: StakeholderF
   );
 }
 
-export function StakeholderKpiLabel({ children, hint }: { children: ReactNode; hint?: string }) {
+export function StakeholderKpiLabel({
+  children,
+  hint,
+  compact,
+}: {
+  children: ReactNode;
+  hint?: string;
+  compact?: boolean;
+}) {
   return (
-    <p className="mb-2 flex items-center text-xs text-slate-500">
-      <span>{children}</span>
+    <p
+      className={`flex items-center text-slate-500 ${
+        compact ? "mb-0 text-[10px] leading-tight" : "mb-2 text-xs"
+      }`}
+    >
+      <span className="truncate">{children}</span>
       {hint ? <FieldHint text={hint} /> : null}
     </p>
   );
